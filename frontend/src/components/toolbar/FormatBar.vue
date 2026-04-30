@@ -26,27 +26,72 @@ export interface ImageData {
   url: string
 }
 
+export interface CodeBlockData {
+  language: string
+}
+
+// 常用编程语言列表
+const codeLanguages = [
+  { key: '', label: '自动识别' },
+  { key: 'javascript', label: 'JavaScript' },
+  { key: 'typescript', label: 'TypeScript' },
+  { key: 'python', label: 'Python' },
+  { key: 'java', label: 'Java' },
+  { key: 'c', label: 'C' },
+  { key: 'cpp', label: 'C++' },
+  { key: 'csharp', label: 'C#' },
+  { key: 'go', label: 'Go' },
+  { key: 'rust', label: 'Rust' },
+  { key: 'php', label: 'PHP' },
+  { key: 'ruby', label: 'Ruby' },
+  { key: 'swift', label: 'Swift' },
+  { key: 'kotlin', label: 'Kotlin' },
+  { key: 'sql', label: 'SQL' },
+  { key: 'html', label: 'HTML' },
+  { key: 'css', label: 'CSS' },
+  { key: 'json', label: 'JSON' },
+  { key: 'yaml', label: 'YAML' },
+  { key: 'markdown', label: 'Markdown' },
+  { key: 'bash', label: 'Bash' },
+  { key: 'shell', label: 'Shell' },
+]
+
 const emit = defineEmits<{
   format: [type: FormatType]
   insertLink: [data: LinkData]
   insertImage: [data: ImageData]
+  insertCodeBlock: [data: CodeBlockData]
 }>()
 
 const showHeadingMenu = ref(false)
+const showCodeMenu = ref(false)
 const showLinkModal = ref(false)
 const showImageModal = ref(false)
 
 const handleFormat = (type: FormatType) => {
   emit('format', type)
   showHeadingMenu.value = false
+  showCodeMenu.value = false
 }
 
 const toggleHeadingMenu = () => {
   showHeadingMenu.value = !showHeadingMenu.value
+  showCodeMenu.value = false
+}
+
+const toggleCodeMenu = () => {
+  showCodeMenu.value = !showCodeMenu.value
+  showHeadingMenu.value = false
 }
 
 const closeMenu = () => {
   showHeadingMenu.value = false
+  showCodeMenu.value = false
+}
+
+const handleCodeSelect = (language: string) => {
+  emit('insertCodeBlock', { language })
+  showCodeMenu.value = false
 }
 
 const openLinkModal = () => {
@@ -93,17 +138,41 @@ const handleImageConfirm = (values: Record<string, string>) => {
       <span class="btn-label">斜体</span>
     </button>
 
-    <button
-      class="format-btn code-btn"
-      title="代码块 (Ctrl+`)"
-      @click="handleFormat('code')"
-    >
-      <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-        <polyline points="16,18 22,12 16,6"/>
-        <polyline points="8,6 2,12 8,18"/>
-      </svg>
-      <span class="btn-label">代码</span>
-    </button>
+    <div class="dropdown code-dropdown">
+      <button
+        class="format-btn"
+        :class="{ active: showCodeMenu }"
+        title="代码块"
+        @click="toggleCodeMenu"
+      >
+        <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <polyline points="16,18 22,12 16,6"/>
+          <polyline points="8,6 2,12 8,18"/>
+        </svg>
+        <span class="btn-label">代码</span>
+        <svg class="chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <polyline points="6,9 12,15 18,9"/>
+        </svg>
+      </button>
+
+      <div v-if="showCodeMenu" class="dropdown-menu code-menu">
+        <button
+          class="dropdown-option default-option"
+          @click="handleCodeSelect('')"
+        >
+          自动识别（不指定语言）
+        </button>
+        <div class="menu-divider"></div>
+        <button
+          v-for="lang in codeLanguages.slice(1)"
+          :key="lang.key"
+          class="dropdown-option"
+          @click="handleCodeSelect(lang.key)"
+        >
+          {{ lang.label }}
+        </button>
+      </div>
+    </div>
 
     <button
       class="format-btn"
@@ -117,7 +186,7 @@ const handleImageConfirm = (values: Record<string, string>) => {
       <span class="btn-label">引用</span>
     </button>
 
-    <div class="heading-dropdown">
+    <div class="dropdown">
       <button
         class="format-btn"
         :class="{ active: showHeadingMenu }"
@@ -136,12 +205,12 @@ const handleImageConfirm = (values: Record<string, string>) => {
         </svg>
       </button>
 
-      <div v-if="showHeadingMenu" class="heading-menu">
+      <div v-if="showHeadingMenu" class="dropdown-menu">
         <button
           v-for="level in 6"
           :key="level"
-          class="heading-option"
-          :style="{ fontSize: `${1.25 - level * 0.1}rem` }"
+          class="dropdown-option"
+          :style="{ fontSize: `${1.1 - level * 0.08}rem` }"
           @click="handleFormat(`h${level}` as FormatType)"
         >
           H{{ level }} 标题 {{ level }}
@@ -297,11 +366,11 @@ const handleImageConfirm = (values: Record<string, string>) => {
   margin: 0 0.5rem;
 }
 
-.heading-dropdown {
+.dropdown {
   position: relative;
 }
 
-.heading-menu {
+.dropdown-menu {
   position: absolute;
   top: 100%;
   left: 0;
@@ -309,6 +378,8 @@ const handleImageConfirm = (values: Record<string, string>) => {
   display: flex;
   flex-direction: column;
   min-width: 140px;
+  max-height: 300px;
+  overflow-y: auto;
   padding: 0.25rem;
   background-color: var(--bg-toolbar);
   border: 1px solid var(--border-color);
@@ -316,7 +387,11 @@ const handleImageConfirm = (values: Record<string, string>) => {
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
 }
 
-.heading-option {
+.code-menu {
+  min-width: 180px;
+}
+
+.dropdown-option {
   display: block;
   width: 100%;
   padding: 0.5rem 0.75rem;
@@ -325,23 +400,23 @@ const handleImageConfirm = (values: Record<string, string>) => {
   border-radius: 4px;
   color: var(--text-primary);
   text-align: left;
+  font-size: 0.875rem;
   cursor: pointer;
   transition: background-color 0.15s ease;
 }
 
-.heading-option:hover {
+.dropdown-option:hover {
   background-color: var(--bg-hover);
 }
 
-/* Code button - more visible */
-.code-btn {
-  background-color: rgba(255, 255, 255, 0.05);
-  border: 1px solid var(--border-color);
+.default-option {
+  color: var(--text-secondary);
 }
 
-.code-btn:hover {
-  background-color: rgba(255, 255, 255, 0.1);
-  border-color: var(--accent-color);
+.menu-divider {
+  height: 1px;
+  background-color: var(--border-color);
+  margin: 0.25rem 0;
 }
 
 @media (max-width: 768px) {

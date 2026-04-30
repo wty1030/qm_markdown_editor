@@ -8,7 +8,7 @@ import Preview from './components/preview/Preview.vue'
 import Sidebar from './components/sidebar/Sidebar.vue'
 import { useScrollSync } from './composables/useScrollSync'
 import { useFileOperations } from './composables/useFileOperations'
-import { useFormat, type FormatType, type LinkData, type ImageData } from './composables/useFormat'
+import { useFormat, type FormatType, type LinkData, type ImageData, type CodeBlockData } from './composables/useFormat'
 
 const markdownContent = ref('')
 const showSidebar = ref(false)
@@ -33,7 +33,7 @@ const {
 } = useFileOperations()
 
 const { handleEditorScroll, handlePreviewScroll } = useScrollSync()
-const { format, insertLink, insertImage } = useFormat(textareaRef)
+const { format, insertLink, insertImage, insertCodeBlock } = useFormat(textareaRef)
 
 const handleEditorScrollEvent = (scrollTop: number, scrollHeight: number, clientHeight: number) => {
   if (previewRef.value?.previewRef) {
@@ -105,6 +105,13 @@ const handleInsertImage = (data: ImageData) => {
   }
 }
 
+const handleInsertCodeBlock = (data: CodeBlockData) => {
+  const newText = insertCodeBlock(data, markdownContent)
+  if (newText !== undefined) {
+    markdownContent.value = newText
+  }
+}
+
 // Track modifications
 watch(markdownContent, () => {
   markModified()
@@ -124,6 +131,7 @@ watch(markdownContent, () => {
       @format="handleFormat"
       @insert-link="handleInsertLink"
       @insert-image="handleInsertImage"
+      @insert-code-block="handleInsertCodeBlock"
     />
     <main class="main-content">
       <div class="content-wrapper">

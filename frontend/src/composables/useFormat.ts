@@ -24,6 +24,10 @@ export interface ImageData {
   url: string
 }
 
+export interface CodeBlockData {
+  language: string
+}
+
 export function useFormat(editorRef: Ref<HTMLTextAreaElement | null>) {
   const wrapSelection = (before: string, after: string) => {
     if (!editorRef.value) return
@@ -154,12 +158,21 @@ export function useFormat(editorRef: Ref<HTMLTextAreaElement | null>) {
     return insertAtCursor(`![${alt}](${url})`)
   }
 
+  const insertCodeBlock = (data: CodeBlockData, content: Ref<string>): string | undefined => {
+    const lang = data.language || ''
+    const codeTemplate = lang
+      ? `\`\`\`${lang}\n代码内容\n\`\`\`\n`
+      : `\`\`\`\n代码内容\n\`\`\`\n`
+    return insertAtCursor(codeTemplate)
+  }
+
   return {
     format,
     wrapSelection,
     insertAtCursor,
     insertLineBefore,
     insertLink,
-    insertImage
+    insertImage,
+    insertCodeBlock
   }
 }
