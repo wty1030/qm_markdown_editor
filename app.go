@@ -7,6 +7,8 @@ import (
 	"os/exec"
 	"path/filepath"
 	"strings"
+
+	"github.com/wailsapp/wails/v2/pkg/runtime"
 )
 
 // FileInfo represents file or directory information
@@ -156,6 +158,69 @@ func (a *App) IsMarkdownFile(path string) bool {
 // NewFile clears the current file
 func (a *App) NewFile() {
 	a.currentFile = ""
+}
+
+// OpenFileDialog opens a file dialog and returns the selected file path
+func (a *App) OpenFileDialog() string {
+	result, err := runtime.OpenFileDialog(a.ctx, runtime.OpenDialogOptions{
+		Title: "打开 Markdown 文件",
+		Filters: []runtime.FileFilter{
+			{DisplayName: "Markdown 文件", Pattern: "*.md;*.markdown"},
+			{DisplayName: "所有文件", Pattern: "*.*"},
+		},
+	})
+	if err != nil {
+		return ""
+	}
+	return result
+}
+
+// SaveFileDialog opens a save file dialog and returns the selected path
+func (a *App) SaveFileDialog(defaultFilename string, filterType string) string {
+	var filters []runtime.FileFilter
+	var title string
+
+	switch filterType {
+	case "html":
+		title = "导出为 HTML"
+		filters = []runtime.FileFilter{
+			{DisplayName: "HTML 文件", Pattern: "*.html;*.htm"},
+			{DisplayName: "所有文件", Pattern: "*.*"},
+		}
+	case "pdf":
+		title = "导出为 PDF"
+		filters = []runtime.FileFilter{
+			{DisplayName: "PDF 文件", Pattern: "*.pdf"},
+			{DisplayName: "所有文件", Pattern: "*.*"},
+		}
+	default:
+		title = "保存 Markdown 文件"
+		filters = []runtime.FileFilter{
+			{DisplayName: "Markdown 文件", Pattern: "*.md"},
+			{DisplayName: "所有文件", Pattern: "*.*"},
+		}
+	}
+
+	result, err := runtime.SaveFileDialog(a.ctx, runtime.SaveDialogOptions{
+		Title:           title,
+		DefaultFilename: defaultFilename,
+		Filters:         filters,
+	})
+	if err != nil {
+		return ""
+	}
+	return result
+}
+
+// OpenDirectoryDialog opens a directory dialog and returns the selected path
+func (a *App) OpenDirectoryDialog() string {
+	result, err := runtime.OpenDirectoryDialog(a.ctx, runtime.OpenDialogOptions{
+		Title: "打开文件夹",
+	})
+	if err != nil {
+		return ""
+	}
+	return result
 }
 
 // ExportToHTML exports markdown content to an HTML file with embedded styles

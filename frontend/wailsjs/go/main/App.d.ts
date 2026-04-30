@@ -18,10 +18,16 @@ export function ListDirectory(arg1:string):Promise<Array<main.FileInfo>>;
 
 export function NewFile():Promise<void>;
 
+export function OpenDirectoryDialog():Promise<string>;
+
+export function OpenFileDialog():Promise<string>;
+
 export function OpenNewWindow():Promise<void>;
 
 export function ReadFile(arg1:string):Promise<main.FileResult>;
 
 export function SaveFile(arg1:string):Promise<main.FileResult>;
+
+export function SaveFileDialog(arg1:string,arg2:string):Promise<string>;
 
 export function WriteFile(arg1:string,arg2:string):Promise<main.FileResult>;

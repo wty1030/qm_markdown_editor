@@ -34,6 +34,14 @@ export function NewFile() {
   return window['go']['main']['App']['NewFile']();
 }
 
+export function OpenDirectoryDialog() {
+  return window['go']['main']['App']['OpenDirectoryDialog']();
+}
+
+export function OpenFileDialog() {
+  return window['go']['main']['App']['OpenFileDialog']();
+}
+
 export function OpenNewWindow() {
   return window['go']['main']['App']['OpenNewWindow']();
 }
@@ -44,6 +52,10 @@ export function ReadFile(arg1) {
 
 export function SaveFile(arg1) {
   return window['go']['main']['App']['SaveFile'](arg1);
+}
+
+export function SaveFileDialog(arg1, arg2) {
+  return window['go']['main']['App']['SaveFileDialog'](arg1, arg2);
 }
 
 export function WriteFile(arg1, arg2) {

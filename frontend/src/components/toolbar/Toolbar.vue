@@ -49,7 +49,7 @@ onUnmounted(() => {
   <header class="toolbar">
     <div class="toolbar-left">
       <button
-        class="toolbar-btn primary"
+        class="toolbar-btn"
         title="新建窗口 (Ctrl+N)"
         @click="emit('newWindow')"
       >
@@ -87,7 +87,7 @@ onUnmounted(() => {
       </button>
 
       <button
-        class="toolbar-btn primary"
+        class="toolbar-btn"
         title="保存 (Ctrl+S)"
         @click="emit('save')"
       >
@@ -221,15 +221,6 @@ onUnmounted(() => {
 .toolbar-btn.active {
   background-color: var(--accent-color);
   color: var(--btn-active-text);
-}
-
-.toolbar-btn.primary {
-  border-color: var(--accent-color);
-}
-
-.toolbar-btn.primary:hover {
-  background-color: var(--bg-hover);
-  border-color: var(--accent-hover);
 }
 
 .icon {

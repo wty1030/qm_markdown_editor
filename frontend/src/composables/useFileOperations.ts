@@ -1,4 +1,16 @@
-import { ref, type Ref } from 'vue'
+import { ref } from 'vue'
+import {
+  ReadFile,
+  WriteFile,
+  SaveFile,
+  ListDirectory,
+  ExportToHTML,
+  ExportToPDF,
+  OpenNewWindow,
+  OpenFileDialog,
+  SaveFileDialog,
+  OpenDirectoryDialog,
+} from '../../wailsjs/go/main/App'
 
 interface FileInfo {
   name: string
@@ -13,46 +25,6 @@ interface FileResult {
   error?: string
 }
 
-// Declare Wails bindings
-declare global {
-  interface Window {
-    go?: {
-      main?: {
-        App?: {
-          ReadFile: (path: string) => Promise<FileResult>
-          WriteFile: (path: string, content: string) => Promise<FileResult>
-          SaveFile: (content: string) => Promise<FileResult>
-          GetCurrentFile: () => Promise<string>
-          ListDirectory: (path: string) => Promise<FileInfo[]>
-          FileExists: (path: string) => Promise<boolean>
-          CreateFile: (path: string) => Promise<FileResult>
-          NewFile: () => Promise<void>
-          IsMarkdownFile: (path: string) => Promise<boolean>
-          ExportToHTML: (path: string, content: string, title: string) => Promise<FileResult>
-          ExportToPDF: (path: string, content: string, title: string) => Promise<FileResult>
-          OpenNewWindow: () => Promise<void>
-        }
-      }
-    }
-    runtime?: {
-      Browser?: {
-        OpenFileDialog: (options: {
-          Title?: string
-          Filters?: Array<{ DisplayName: string; Pattern: string }>
-        }) => Promise<string>
-        SaveFileDialog: (options: {
-          Title?: string
-          DefaultFilename?: string
-          Filters?: Array<{ DisplayName: string; Pattern: string }>
-        }) => Promise<string>
-        OpenDirectoryDialog: (options: {
-          Title?: string
-        }) => Promise<string>
-      }
-    }
-  }
-}
-
 export type ExportFormat = 'md' | 'html' | 'pdf'
 
 export function useFileOperations() {
@@ -61,49 +33,19 @@ export function useFileOperations() {
   const fileTree = ref<FileInfo[]>([])
   const currentDirectory = ref<string>('')
 
-  const getApp = () => {
-    if (typeof window !== 'undefined' && window.go?.main?.App) {
-      return window.go.main.App
-    }
-    return null
-  }
-
-  const getRuntime = () => {
-    if (typeof window !== 'undefined' && window.runtime?.Browser) {
-      return window.runtime.Browser
-    }
-    return null
-  }
-
   const openNewWindow = async () => {
-    const app = getApp()
-    if (app?.OpenNewWindow) {
-      await app.OpenNewWindow()
-    }
+    await OpenNewWindow()
   }
 
   const openFile = async (): Promise<{ success: boolean; content?: string; error?: string }> => {
-    const runtime = getRuntime()
-    const app = getApp()
-
-    if (!runtime?.OpenFileDialog || !app?.ReadFile) {
-      return { success: false, error: 'Wails runtime not available' }
-    }
-
     try {
-      const path = await runtime.OpenFileDialog({
-        Title: '打开 Markdown 文件',
-        Filters: [
-          { DisplayName: 'Markdown 文件', Pattern: '*.md;*.markdown' },
-          { DisplayName: '所有文件', Pattern: '*.*' }
-        ]
-      })
+      const path = await OpenFileDialog()
 
       if (!path) {
         return { success: false, error: '未选择文件' }
       }
 
-      const result = await app.ReadFile(path)
+      const result = await ReadFile(path) as FileResult
       if (result.success) {
         currentFile.value = path
         isModified.value = false
@@ -115,12 +57,7 @@ export function useFileOperations() {
   }
 
   const openFileByPath = async (path: string): Promise<{ success: boolean; content?: string; error?: string }> => {
-    const app = getApp()
-    if (!app?.ReadFile) {
-      return { success: false, error: 'Wails runtime not available' }
-    }
-
-    const result = await app.ReadFile(path)
+    const result = await ReadFile(path) as FileResult
     if (result.success) {
       currentFile.value = path
       isModified.value = false
@@ -129,17 +66,11 @@ export function useFileOperations() {
   }
 
   const saveFile = async (content: string): Promise<{ success: boolean; error?: string }> => {
-    const app = getApp()
-
     if (!currentFile.value) {
       return saveFileAs(content, 'md')
     }
 
-    if (!app?.SaveFile) {
-      return { success: false, error: 'Wails runtime not available' }
-    }
-
-    const result = await app.SaveFile(content)
+    const result = await SaveFile(content) as FileResult
     if (result.success) {
       isModified.value = false
     }
@@ -147,22 +78,9 @@ export function useFileOperations() {
   }
 
   const saveFileAs = async (content: string, format: ExportFormat = 'md'): Promise<{ success: boolean; error?: string }> => {
-    const runtime = getRuntime()
-    const app = getApp()
-
-    if (!runtime?.SaveFileDialog || !app?.WriteFile) {
-      return { success: false, error: 'Wails runtime not available' }
-    }
-
     try {
-      const filters = getFiltersForFormat(format)
       const defaultName = getDefaultNameForFormat(format)
-
-      const path = await runtime.SaveFileDialog({
-        Title: getTitleForFormat(format),
-        DefaultFilename: defaultName,
-        Filters: filters
-      })
+      const path = await SaveFileDialog(defaultName, format)
 
       if (!path) {
         return { success: false, error: '未选择保存位置' }
@@ -172,12 +90,12 @@ export function useFileOperations() {
 
       if (format === 'html') {
         const title = getFileNameWithoutExtension(currentFile.value) || '未命名'
-        result = await app.ExportToHTML(path, content, title)
+        result = await ExportToHTML(path, content, title) as FileResult
       } else if (format === 'pdf') {
         const title = getFileNameWithoutExtension(currentFile.value) || '未命名'
-        result = await app.ExportToPDF(path, content, title)
+        result = await ExportToPDF(path, content, title) as FileResult
       } else {
-        result = await app.WriteFile(path, content)
+        result = await WriteFile(path, content) as FileResult
       }
 
       if (result.success && format === 'md') {
@@ -191,23 +109,14 @@ export function useFileOperations() {
   }
 
   const openDirectory = async (): Promise<{ success: boolean; files?: FileInfo[]; error?: string }> => {
-    const runtime = getRuntime()
-    const app = getApp()
-
-    if (!runtime?.OpenDirectoryDialog || !app?.ListDirectory) {
-      return { success: false, error: 'Wails runtime not available' }
-    }
-
     try {
-      const path = await runtime.OpenDirectoryDialog({
-        Title: '打开文件夹'
-      })
+      const path = await OpenDirectoryDialog()
 
       if (!path) {
         return { success: false, error: '未选择文件夹' }
       }
 
-      const files = await app.ListDirectory(path)
+      const files = await ListDirectory(path) as FileInfo[]
       currentDirectory.value = path
       fileTree.value = files
       return { success: true, files }
@@ -217,14 +126,12 @@ export function useFileOperations() {
   }
 
   const refreshDirectory = async (): Promise<{ success: boolean; files?: FileInfo[]; error?: string }> => {
-    const app = getApp()
-
-    if (!currentDirectory.value || !app?.ListDirectory) {
+    if (!currentDirectory.value) {
       return { success: false, error: '未打开文件夹' }
     }
 
     try {
-      const files = await app.ListDirectory(currentDirectory.value)
+      const files = await ListDirectory(currentDirectory.value) as FileInfo[]
       fileTree.value = files
       return { success: true, files }
     } catch (error) {
@@ -245,26 +152,6 @@ export function useFileOperations() {
   }
 
   // Helper functions
-  const getFiltersForFormat = (format: ExportFormat) => {
-    switch (format) {
-      case 'html':
-        return [
-          { DisplayName: 'HTML 文件', Pattern: '*.html;*.htm' },
-          { DisplayName: '所有文件', Pattern: '*.*' }
-        ]
-      case 'pdf':
-        return [
-          { DisplayName: 'PDF 文件', Pattern: '*.pdf' },
-          { DisplayName: '所有文件', Pattern: '*.*' }
-        ]
-      default:
-        return [
-          { DisplayName: 'Markdown 文件', Pattern: '*.md' },
-          { DisplayName: '所有文件', Pattern: '*.*' }
-        ]
-    }
-  }
-
   const getDefaultNameForFormat = (format: ExportFormat) => {
     const baseName = getFileNameWithoutExtension(currentFile.value) || 'untitled'
     switch (format) {
@@ -274,17 +161,6 @@ export function useFileOperations() {
         return `${baseName}.pdf`
       default:
         return `${baseName}.md`
-    }
-  }
-
-  const getTitleForFormat = (format: ExportFormat) => {
-    switch (format) {
-      case 'html':
-        return '导出为 HTML'
-      case 'pdf':
-        return '导出为 PDF'
-      default:
-        return '保存 Markdown 文件'
     }
   }
 
