@@ -2,7 +2,42 @@
 import { ref, computed, watch, onMounted } from 'vue'
 import { marked, type Tokens } from 'marked'
 import hljs from 'highlight.js'
-import 'highlight.js/styles/atom-one-dark.css'
+
+// 动态加载主题
+const loadTheme = (theme: 'dark' | 'light') => {
+  // 移除旧主题
+  const oldTheme = document.getElementById('hljs-theme')
+  if (oldTheme) {
+    oldTheme.remove()
+  }
+
+  // 添加新主题
+  const link = document.createElement('link')
+  link.id = 'hljs-theme'
+  link.rel = 'stylesheet'
+  link.href = theme === 'dark'
+    ? 'https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/atom-one-dark.min.css'
+    : 'https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/atom-one-light.min.css'
+  document.head.appendChild(link)
+}
+
+// 监听主题变化
+const observer = new MutationObserver(() => {
+  const theme = document.documentElement.getAttribute('data-theme') || 'dark'
+  loadTheme(theme as 'dark' | 'light')
+})
+
+onMounted(() => {
+  // 初始加载主题
+  const theme = document.documentElement.getAttribute('data-theme') || 'dark'
+  loadTheme(theme as 'dark' | 'light')
+
+  // 监听 data-theme 属性变化
+  observer.observe(document.documentElement, {
+    attributes: true,
+    attributeFilter: ['data-theme']
+  })
+})
 
 interface Props {
   content: string
@@ -162,7 +197,7 @@ defineExpose({
 }
 
 .markdown-body :deep(pre) {
-  background-color: #282c34;
+  background-color: var(--bg-secondary);
   padding: 1rem;
   border-radius: 6px;
   overflow-x: auto;

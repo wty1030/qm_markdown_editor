@@ -30,6 +30,7 @@ function greet() {
   height: 20px;
   line-height: 20px;
   margin: 1.5rem auto;
+  color: var(--text-primary);
 }
 
 .input-box .btn {
@@ -41,31 +42,31 @@ function greet() {
   margin: 0 0 0 20px;
   padding: 0 8px;
   cursor: pointer;
+  background-color: var(--btn-bg);
+  color: var(--btn-text);
 }
 
 .input-box .btn:hover {
-  background-image: linear-gradient(to top, #cfd9df 0%, #e2ebf0 100%);
-  color: #333333;
+  background-color: var(--btn-bg-hover);
 }
 
 .input-box .input {
-  border: none;
+  border: 1px solid var(--border-color);
   border-radius: 3px;
   outline: none;
   height: 30px;
   line-height: 30px;
   padding: 0 10px;
-  background-color: rgba(240, 240, 240, 1);
+  background-color: var(--bg-secondary);
+  color: var(--text-primary);
   -webkit-font-smoothing: antialiased;
 }
 
 .input-box .input:hover {
-  border: none;
-  background-color: rgba(255, 255, 255, 1);
+  border-color: var(--accent-color);
 }
 
 .input-box .input:focus {
-  border: none;
-  background-color: rgba(255, 255, 255, 1);
+  border-color: var(--accent-color);
 }
 </style>

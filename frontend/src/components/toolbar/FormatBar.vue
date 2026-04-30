@@ -216,7 +216,7 @@ const closeMenu = () => {
 .format-btn:active,
 .format-btn.active {
   background-color: var(--accent-color);
-  color: #ffffff;
+  color: var(--btn-active-text);
 }
 
 .icon {

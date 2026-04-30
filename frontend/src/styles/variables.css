@@ -31,6 +31,7 @@
   --btn-bg: #0e639c;
   --btn-bg-hover: #1177bb;
   --btn-text: #ffffff;
+  --btn-active-text: #ffffff;
 
   /* Status colors */
   --success-color: #4ec9b0;
@@ -66,6 +67,7 @@
   --btn-bg: #0078d4;
   --btn-bg-hover: #1c97ea;
   --btn-text: #ffffff;
+  --btn-active-text: #ffffff;
 
   --success-color: #16825d;
   --warning-color: #b89500;

@@ -117,7 +117,7 @@ const isActive = (file: FileInfo): boolean => {
 
 .file-item.active {
   background-color: var(--accent-color);
-  color: #ffffff;
+  color: var(--btn-active-text);
 }
 
 .file-icon {
