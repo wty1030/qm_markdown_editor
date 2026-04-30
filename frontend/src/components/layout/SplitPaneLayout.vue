@@ -38,6 +38,7 @@ const { leftSize, updateFromResize } = useLayoutState()
   background-color: var(--pane-separator);
   border: none;
   position: relative;
+  width: 1px;
 }
 
 .split-pane-layout .splitpanes__splitter::before {
@@ -46,12 +47,16 @@ const { leftSize, updateFromResize } = useLayoutState()
   top: 50%;
   left: 50%;
   transform: translate(-50%, -50%);
-  width: 4px;
-  height: 40px;
+  width: 6px;
+  height: 50px;
   background-color: var(--border-color);
-  border-radius: 2px;
-  opacity: 0.5;
-  transition: opacity 0.15s ease;
+  border-radius: 3px;
+  opacity: 0.6;
+  transition: opacity 0.15s ease, background-color 0.15s ease;
+}
+
+.split-pane-layout .splitpanes__splitter:hover {
+  background-color: var(--accent-color);
 }
 
 .split-pane-layout .splitpanes__splitter:hover::before {

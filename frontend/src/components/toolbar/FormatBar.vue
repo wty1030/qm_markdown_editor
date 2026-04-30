@@ -47,6 +47,7 @@ const closeMenu = () => {
         <path d="M6 4h8a4 4 0 0 1 4 4 4 4 0 0 1-4 4H6z"/>
         <path d="M6 12h9a4 4 0 0 1 4 4 4 4 0 0 1-4 4H6z"/>
       </svg>
+      <span class="btn-label">Bold</span>
     </button>
 
     <button
@@ -59,10 +60,11 @@ const closeMenu = () => {
         <line x1="14" y1="20" x2="5" y2="20"/>
         <line x1="15" y1="4" x2="9" y2="20"/>
       </svg>
+      <span class="btn-label">Italic</span>
     </button>
 
     <button
-      class="format-btn"
+      class="format-btn code-btn"
       title="Code Block (Ctrl+`)"
       @click="handleFormat('code')"
     >
@@ -70,6 +72,7 @@ const closeMenu = () => {
         <polyline points="16,18 22,12 16,6"/>
         <polyline points="8,6 2,12 8,18"/>
       </svg>
+      <span class="btn-label">Code</span>
     </button>
 
     <button
@@ -81,6 +84,7 @@ const closeMenu = () => {
         <path d="M3 21c3 0 7-1 7-8V5c0-1.25-.756-2.017-2-2H4c-1.25 0-2 .75-2 1.972V11c0 1.25.75 2 2 2 1 0 1 0 1 1v1c0 1-1 2-2 2s-1 .008-1 1.031V21z"/>
         <path d="M15 21c3 0 7-1 7-8V5c0-1.25-.757-2.017-2-2h-4c-1.25 0-2 .75-2 1.972V11c0 1.25.75 2 2 2h.75c0 0 .25 0 .25 1v1c0 1-1 2-2 2s-1 .008-1 1.031V21z"/>
       </svg>
+      <span class="btn-label">Quote</span>
     </button>
 
     <div class="heading-dropdown">
@@ -96,6 +100,7 @@ const closeMenu = () => {
           <path d="M12 18V6"/>
           <path d="M17 12l3-2v8"/>
         </svg>
+        <span class="btn-label">Heading</span>
         <svg class="chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
           <polyline points="6,9 12,15 18,9"/>
         </svg>
@@ -129,6 +134,7 @@ const closeMenu = () => {
         <circle cx="4" cy="12" r="1.5" fill="currentColor"/>
         <circle cx="4" cy="18" r="1.5" fill="currentColor"/>
       </svg>
+      <span class="btn-label">List</span>
     </button>
 
     <button
@@ -144,6 +150,7 @@ const closeMenu = () => {
         <text x="3" y="14" font-size="8" fill="currentColor" stroke="none">2</text>
         <text x="3" y="20" font-size="8" fill="currentColor" stroke="none">3</text>
       </svg>
+      <span class="btn-label">Number</span>
     </button>
   </div>
 </template>
@@ -164,7 +171,7 @@ const closeMenu = () => {
   align-items: center;
   justify-content: center;
   gap: 0.25rem;
-  padding: 0.375rem;
+  padding: 0.375rem 0.5rem;
   background: transparent;
   border: 1px solid transparent;
   border-radius: 4px;
@@ -185,9 +192,14 @@ const closeMenu = () => {
 }
 
 .icon {
-  width: 18px;
-  height: 18px;
+  width: 16px;
+  height: 16px;
   flex-shrink: 0;
+}
+
+.btn-label {
+  font-size: 0.75rem;
+  white-space: nowrap;
 }
 
 .chevron {
@@ -236,5 +248,22 @@ const closeMenu = () => {
 
 .heading-option:hover {
   background-color: var(--bg-hover);
+}
+
+/* Code button - more visible */
+.code-btn {
+  background-color: rgba(255, 255, 255, 0.05);
+  border: 1px solid var(--border-color);
+}
+
+.code-btn:hover {
+  background-color: rgba(255, 255, 255, 0.1);
+  border-color: var(--accent-color);
+}
+
+@media (max-width: 768px) {
+  .btn-label {
+    display: none;
+  }
 }
 </style>

@@ -2,6 +2,7 @@
 import { ref, computed, watch, onMounted } from 'vue'
 import { marked, type Tokens } from 'marked'
 import hljs from 'highlight.js'
+import 'highlight.js/styles/atom-one-dark.css'
 
 interface Props {
   content: string
@@ -157,20 +158,23 @@ defineExpose({
   border-radius: 3px;
   font-family: 'Consolas', 'Monaco', 'Courier New', monospace;
   font-size: 0.9em;
+  border: 1px solid var(--border-color);
 }
 
 .markdown-body :deep(pre) {
-  background-color: var(--bg-secondary);
+  background-color: #282c34;
   padding: 1rem;
   border-radius: 6px;
   overflow-x: auto;
   margin: 0 0 1rem;
+  border: 1px solid var(--border-color);
 }
 
 .markdown-body :deep(pre code) {
   background: none;
   padding: 0;
   font-size: 0.875em;
+  border: none;
 }
 
 /* Blockquote */
