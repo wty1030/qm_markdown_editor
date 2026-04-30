@@ -17,7 +17,7 @@ const { theme, toggleTheme } = useTheme()
     <div class="toolbar-left">
       <button
         class="toolbar-btn"
-        title="New File (Ctrl+N)"
+        title="新建文件 (Ctrl+N)"
         @click="emit('newFile')"
       >
         <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
@@ -26,23 +26,23 @@ const { theme, toggleTheme } = useTheme()
           <line x1="12" y1="18" x2="12" y2="12"/>
           <line x1="9" y1="15" x2="15" y2="15"/>
         </svg>
-        <span class="btn-text">New</span>
+        <span class="btn-text">新建</span>
       </button>
 
       <button
         class="toolbar-btn"
-        title="Open File (Ctrl+O)"
+        title="打开文件 (Ctrl+O)"
         @click="emit('openFile')"
       >
         <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
           <path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/>
         </svg>
-        <span class="btn-text">Open</span>
+        <span class="btn-text">打开</span>
       </button>
 
       <button
         class="toolbar-btn"
-        title="Open Folder"
+        title="打开文件夹"
         @click="emit('openFolder')"
       >
         <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
@@ -50,12 +50,12 @@ const { theme, toggleTheme } = useTheme()
           <line x1="12" y1="11" x2="12" y2="17"/>
           <line x1="9" y1="14" x2="15" y2="14"/>
         </svg>
-        <span class="btn-text">Folder</span>
+        <span class="btn-text">文件夹</span>
       </button>
 
       <button
         class="toolbar-btn"
-        title="Save (Ctrl+S)"
+        title="保存 (Ctrl+S)"
         @click="emit('save')"
       >
         <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
@@ -63,12 +63,12 @@ const { theme, toggleTheme } = useTheme()
           <polyline points="17,21 17,13 7,13 7,21"/>
           <polyline points="7,3 7,8 15,8"/>
         </svg>
-        <span class="btn-text">Save</span>
+        <span class="btn-text">保存</span>
       </button>
 
       <button
         class="toolbar-btn"
-        title="Save As (Ctrl+Shift+S)"
+        title="另存为 (Ctrl+Shift+S)"
         @click="emit('saveAs')"
       >
         <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
@@ -76,14 +76,14 @@ const { theme, toggleTheme } = useTheme()
           <path d="M21 15v4a2 2 0 0 1-2 2h-2"/>
           <path d="M14 3l5 5h-4a1 1 0 0 1-1-1V3z"/>
         </svg>
-        <span class="btn-text">Save As</span>
+        <span class="btn-text">另存为</span>
       </button>
     </div>
 
     <div class="toolbar-right">
       <button
         class="toolbar-btn theme-toggle"
-        :title="theme === 'dark' ? 'Switch to Light Theme' : 'Switch to Dark Theme'"
+        :title="theme === 'dark' ? '切换到浅色主题' : '切换到深色主题'"
         @click="toggleTheme"
       >
         <svg v-if="theme === 'dark'" class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
