@@ -1,4 +1,5 @@
 import { ref } from 'vue'
+import { marked } from 'marked'
 import {
   ReadFile,
   WriteFile,
@@ -90,10 +91,14 @@ export function useFileOperations() {
 
       if (format === 'html') {
         const title = getFileNameWithoutExtension(currentFile.value) || '未命名'
-        result = await ExportToHTML(path, content, title) as FileResult
+        // Convert Markdown to HTML before exporting
+        const htmlContent = await marked.parse(content) as string
+        result = await ExportToHTML(path, htmlContent, title) as FileResult
       } else if (format === 'pdf') {
         const title = getFileNameWithoutExtension(currentFile.value) || '未命名'
-        result = await ExportToPDF(path, content, title) as FileResult
+        // Convert Markdown to HTML before exporting
+        const htmlContent = await marked.parse(content) as string
+        result = await ExportToPDF(path, htmlContent, title) as FileResult
       } else {
         result = await WriteFile(path, content) as FileResult
       }
