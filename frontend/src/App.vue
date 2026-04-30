@@ -1,16 +1,33 @@
 <script setup lang="ts">
-import { ref } from 'vue'
+import { ref, watch, onMounted } from 'vue'
 import Toolbar from './components/toolbar/Toolbar.vue'
 import FormatBar from './components/toolbar/FormatBar.vue'
 import SplitPaneLayout from './components/layout/SplitPaneLayout.vue'
 import Editor from './components/editor/Editor.vue'
 import Preview from './components/preview/Preview.vue'
+import Sidebar from './components/sidebar/Sidebar.vue'
 import { useScrollSync } from './composables/useScrollSync'
+import { useFileOperations } from './composables/useFileOperations'
 
-const markdownContent = ref('# 欢迎使用 QMMD 编辑器\n\n开始编写你的 Markdown 文档...\n\n## 功能特性\n\n- 实时预览\n- 同步滚动\n- 多种格式支持\n\n```javascript\nconsole.log("Hello, QMMD!")\n```\n\n### 代码高亮\n\n支持多种语言的代码高亮显示。\n\n> 引用块示例\n\n| 功能 | 状态 |\n|------|------|\n| 编辑 | ✅ |\n| 预览 | ✅ |\n| 同步滚动 | ✅ |')
+const markdownContent = ref('')
+const showSidebar = ref(false)
 
 const editorRef = ref<InstanceType<typeof Editor> | null>(null)
 const previewRef = ref<InstanceType<typeof Preview> | null>(null)
+
+const {
+  currentFile,
+  isModified,
+  fileTree,
+  currentDirectory,
+  newFile,
+  openFile,
+  openFileByPath,
+  saveFile,
+  saveFileAs,
+  openDirectory,
+  markModified
+} = useFileOperations()
 
 const { handleEditorScroll, handlePreviewScroll } = useScrollSync()
 
@@ -26,25 +43,52 @@ const handlePreviewScrollEvent = (scrollTop: number, scrollHeight: number, clien
   }
 }
 
-const handleNewFile = () => {
+const handleNewFile = async () => {
+  if (isModified.value) {
+    // TODO: Show confirmation dialog
+  }
+  await newFile()
   markdownContent.value = ''
 }
 
-const handleOpenFile = () => {
-  // TODO: Implement file open dialog via Wails
+const handleOpenFile = async () => {
+  const result = await openFile()
+  if (result.success && result.content !== undefined) {
+    markdownContent.value = result.content
+  }
 }
 
-const handleSave = () => {
-  // TODO: Implement file save via Wails
+const handleSave = async () => {
+  await saveFile(markdownContent.value)
 }
 
-const handleSaveAs = () => {
-  // TODO: Implement save as dialog via Wails
+const handleSaveAs = async () => {
+  await saveFileAs(markdownContent.value)
+}
+
+const handleOpenFolder = async () => {
+  const result = await openDirectory()
+  if (result.success) {
+    showSidebar.value = true
+  }
+}
+
+const handleSelectFile = async (path: string) => {
+  const result = await openFileByPath(path)
+  if (result.success && result.content !== undefined) {
+    markdownContent.value = result.content
+  }
 }
 
 const handleFormat = (type: string) => {
   // TODO: Implement format actions
+  console.log('Format:', type)
 }
+
+// Track modifications
+watch(markdownContent, () => {
+  markModified()
+})
 </script>
 
 <template>
@@ -57,23 +101,33 @@ const handleFormat = (type: string) => {
     />
     <FormatBar @format="handleFormat" />
     <main class="main-content">
-      <SplitPaneLayout>
-        <template #left>
-          <Editor
-            ref="editorRef"
-            :content="markdownContent"
-            @update="markdownContent = $event"
-            @scroll="handleEditorScrollEvent"
-          />
-        </template>
-        <template #right>
-          <Preview
-            ref="previewRef"
-            :content="markdownContent"
-            @scroll="handlePreviewScrollEvent"
-          />
-        </template>
-      </SplitPaneLayout>
+      <div class="content-wrapper">
+        <Sidebar
+          v-if="showSidebar"
+          :files="fileTree"
+          :current-directory="currentDirectory"
+          :current-file="currentFile"
+          @select-file="handleSelectFile"
+          @close="showSidebar = false"
+        />
+        <SplitPaneLayout>
+          <template #left>
+            <Editor
+              ref="editorRef"
+              :content="markdownContent"
+              @update="markdownContent = $event"
+              @scroll="handleEditorScrollEvent"
+            />
+          </template>
+          <template #right>
+            <Preview
+              ref="previewRef"
+              :content="markdownContent"
+              @scroll="handlePreviewScrollEvent"
+            />
+          </template>
+        </SplitPaneLayout>
+      </div>
     </main>
   </div>
 </template>
@@ -101,5 +155,10 @@ html, body, #app {
 .main-content {
   flex: 1;
   overflow: hidden;
+}
+
+.content-wrapper {
+  display: flex;
+  height: 100%;
 }
 </style>
