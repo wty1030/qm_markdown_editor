@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { ref } from 'vue'
+import Modal from '../common/Modal.vue'
 
 export type FormatType =
   | 'bold'
@@ -14,14 +15,26 @@ export type FormatType =
   | 'h6'
   | 'ul'
   | 'ol'
-  | 'link'
-  | 'image'
+
+export interface LinkData {
+  text: string
+  url: string
+}
+
+export interface ImageData {
+  alt: string
+  url: string
+}
 
 const emit = defineEmits<{
   format: [type: FormatType]
+  insertLink: [data: LinkData]
+  insertImage: [data: ImageData]
 }>()
 
 const showHeadingMenu = ref(false)
+const showLinkModal = ref(false)
+const showImageModal = ref(false)
 
 const handleFormat = (type: FormatType) => {
   emit('format', type)
@@ -34,6 +47,22 @@ const toggleHeadingMenu = () => {
 
 const closeMenu = () => {
   showHeadingMenu.value = false
+}
+
+const openLinkModal = () => {
+  showLinkModal.value = true
+}
+
+const openImageModal = () => {
+  showImageModal.value = true
+}
+
+const handleLinkConfirm = (values: Record<string, string>) => {
+  emit('insertLink', { text: values.text, url: values.url })
+}
+
+const handleImageConfirm = (values: Record<string, string>) => {
+  emit('insertImage', { alt: values.alt, url: values.url })
 }
 </script>
 
@@ -159,7 +188,7 @@ const closeMenu = () => {
     <button
       class="format-btn"
       title="插入链接"
-      @click="handleFormat('link')"
+      @click="openLinkModal"
     >
       <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
         <path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/>
@@ -171,7 +200,7 @@ const closeMenu = () => {
     <button
       class="format-btn"
       title="插入图片"
-      @click="handleFormat('image')"
+      @click="openImageModal"
     >
       <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
         <rect x="3" y="3" width="18" height="18" rx="2" ry="2"/>
@@ -180,6 +209,32 @@ const closeMenu = () => {
       </svg>
       <span class="btn-label">图片</span>
     </button>
+
+    <!-- 链接弹窗 -->
+    <Modal
+      :visible="showLinkModal"
+      title="插入链接"
+      :fields="[
+        { key: 'text', label: '链接文本', type: 'text', placeholder: '请输入链接显示的文字' },
+        { key: 'url', label: '链接地址', type: 'url', placeholder: 'https://example.com' }
+      ]"
+      confirm-text="插入"
+      @close="showLinkModal = false"
+      @confirm="handleLinkConfirm"
+    />
+
+    <!-- 图片弹窗 -->
+    <Modal
+      :visible="showImageModal"
+      title="插入图片"
+      :fields="[
+        { key: 'alt', label: '图片描述', type: 'text', placeholder: '请输入图片描述文字' },
+        { key: 'url', label: '图片地址', type: 'url', placeholder: 'https://example.com/image.png' }
+      ]"
+      confirm-text="插入"
+      @close="showImageModal = false"
+      @confirm="handleImageConfirm"
+    />
   </div>
 </template>
 

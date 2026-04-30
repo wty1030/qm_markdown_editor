@@ -13,8 +13,16 @@ export type FormatType =
   | 'h6'
   | 'ul'
   | 'ol'
-  | 'link'
-  | 'image'
+
+export interface LinkData {
+  text: string
+  url: string
+}
+
+export interface ImageData {
+  alt: string
+  url: string
+}
 
 export function useFormat(editorRef: Ref<HTMLTextAreaElement | null>) {
   const wrapSelection = (before: string, after: string) => {
@@ -129,21 +137,29 @@ export function useFormat(editorRef: Ref<HTMLTextAreaElement | null>) {
       case 'ol':
         return insertLineBefore('1. ')
 
-      case 'link':
-        return wrapSelection('[', '](url)')
-
-      case 'image':
-        return insertAtCursor('![图片描述](图片路径)')
-
       default:
         return undefined
     }
+  }
+
+  const insertLink = (data: LinkData, content: Ref<string>): string | undefined => {
+    const text = data.text || '链接'
+    const url = data.url || 'https://example.com'
+    return insertAtCursor(`[${text}](${url})`)
+  }
+
+  const insertImage = (data: ImageData, content: Ref<string>): string | undefined => {
+    const alt = data.alt || '图片'
+    const url = data.url || 'https://example.com/image.png'
+    return insertAtCursor(`![${alt}](${url})`)
   }
 
   return {
     format,
     wrapSelection,
     insertAtCursor,
-    insertLineBefore
+    insertLineBefore,
+    insertLink,
+    insertImage
   }
 }

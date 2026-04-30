@@ -34,12 +34,21 @@ const { leftSize, updateFromResize } = useLayoutState()
   background-color: var(--bg-primary);
 }
 
+.left-pane,
+.right-pane {
+  background-color: var(--bg-primary);
+  overflow: hidden;
+}
+</style>
+
+<style>
+/* 分割线样式 - 非 scoped 以穿透 splitpanes 内部 */
 .split-pane-layout .splitpanes__splitter {
-  background-color: var(--border-color);
-  border: none;
+  background-color: var(--border-color) !important;
+  border: none !important;
   position: relative;
-  width: 4px;
-  min-width: 4px;
+  width: 6px !important;
+  min-width: 6px !important;
 }
 
 .split-pane-layout .splitpanes__splitter::before {
@@ -52,22 +61,14 @@ const { leftSize, updateFromResize } = useLayoutState()
   height: 40px;
   background-color: var(--text-secondary);
   border-radius: 2px;
-  opacity: 0.5;
-  transition: opacity 0.15s ease, background-color 0.15s ease;
+  transition: background-color 0.15s ease;
 }
 
 .split-pane-layout .splitpanes__splitter:hover {
-  background-color: var(--accent-color);
+  background-color: var(--accent-color) !important;
 }
 
 .split-pane-layout .splitpanes__splitter:hover::before {
-  opacity: 1;
-  background-color: var(--accent-color);
-}
-
-.left-pane,
-.right-pane {
-  background-color: var(--bg-primary);
-  overflow: hidden;
+  background-color: #ffffff;
 }
 </style>
