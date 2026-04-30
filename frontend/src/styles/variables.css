@@ -15,6 +15,11 @@
   --pane-separator: #454545;
   --pane-separator-hover: #0078d4;
 
+  /* Scrollbar colors */
+  --scrollbar-bg: #1e1e1e;
+  --scrollbar-thumb: #424242;
+  --scrollbar-thumb-hover: #4a4a4a;
+
   /* Editor specific */
   --editor-bg: #1e1e1e;
   --editor-line-number: #858585;
@@ -54,6 +59,10 @@
   --pane-separator: #d4d4d4;
   --pane-separator-hover: #0078d4;
 
+  --scrollbar-bg: #f3f3f3;
+  --scrollbar-thumb: #c1c1c1;
+  --scrollbar-thumb-hover: #a8a8a8;
+
   --editor-bg: #ffffff;
   --editor-line-number: #999999;
   --editor-line-number-active: #333333;
@@ -72,4 +81,34 @@
   --success-color: #16825d;
   --warning-color: #b89500;
   --error-color: #d32f2f;
+}
+
+/* Global scrollbar styles */
+::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+}
+
+::-webkit-scrollbar-track {
+  background: var(--scrollbar-bg);
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--scrollbar-thumb);
+  border-radius: 5px;
+  border: 2px solid var(--scrollbar-bg);
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: var(--scrollbar-thumb-hover);
+}
+
+::-webkit-scrollbar-corner {
+  background: var(--scrollbar-bg);
+}
+
+/* Firefox scrollbar */
+* {
+  scrollbar-width: thin;
+  scrollbar-color: var(--scrollbar-thumb) var(--scrollbar-bg);
 }

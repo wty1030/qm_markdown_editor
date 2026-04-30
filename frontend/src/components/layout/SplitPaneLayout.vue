@@ -35,10 +35,11 @@ const { leftSize, updateFromResize } = useLayoutState()
 }
 
 .split-pane-layout .splitpanes__splitter {
-  background-color: var(--pane-separator);
+  background-color: var(--border-color);
   border: none;
   position: relative;
-  width: 1px;
+  width: 4px;
+  min-width: 4px;
 }
 
 .split-pane-layout .splitpanes__splitter::before {
@@ -47,11 +48,11 @@ const { leftSize, updateFromResize } = useLayoutState()
   top: 50%;
   left: 50%;
   transform: translate(-50%, -50%);
-  width: 6px;
-  height: 50px;
-  background-color: var(--border-color);
-  border-radius: 3px;
-  opacity: 0.6;
+  width: 4px;
+  height: 40px;
+  background-color: var(--text-secondary);
+  border-radius: 2px;
+  opacity: 0.5;
   transition: opacity 0.15s ease, background-color 0.15s ease;
 }
 
