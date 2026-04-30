@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, watch, onMounted } from 'vue'
+import { ref, watch, onMounted, computed } from 'vue'
 import Toolbar from './components/toolbar/Toolbar.vue'
 import FormatBar from './components/toolbar/FormatBar.vue'
 import SplitPaneLayout from './components/layout/SplitPaneLayout.vue'
@@ -8,12 +8,15 @@ import Preview from './components/preview/Preview.vue'
 import Sidebar from './components/sidebar/Sidebar.vue'
 import { useScrollSync } from './composables/useScrollSync'
 import { useFileOperations } from './composables/useFileOperations'
+import { useFormat, type FormatType } from './composables/useFormat'
 
 const markdownContent = ref('')
 const showSidebar = ref(false)
 
 const editorRef = ref<InstanceType<typeof Editor> | null>(null)
 const previewRef = ref<InstanceType<typeof Preview> | null>(null)
+
+const textareaRef = computed(() => editorRef.value?.textareaRef || null)
 
 const {
   currentFile,
@@ -30,6 +33,7 @@ const {
 } = useFileOperations()
 
 const { handleEditorScroll, handlePreviewScroll } = useScrollSync()
+const { format } = useFormat(textareaRef)
 
 const handleEditorScrollEvent = (scrollTop: number, scrollHeight: number, clientHeight: number) => {
   if (previewRef.value?.previewRef) {
@@ -80,9 +84,11 @@ const handleSelectFile = async (path: string) => {
   }
 }
 
-const handleFormat = (type: string) => {
-  // TODO: Implement format actions
-  console.log('Format:', type)
+const handleFormat = (type: FormatType) => {
+  const newText = format(type, markdownContent)
+  if (newText !== undefined) {
+    markdownContent.value = newText
+  }
 }
 
 // Track modifications
@@ -96,6 +102,7 @@ watch(markdownContent, () => {
     <Toolbar
       @new-file="handleNewFile"
       @open-file="handleOpenFile"
+      @open-folder="handleOpenFolder"
       @save="handleSave"
       @save-as="handleSaveAs"
     />
