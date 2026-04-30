@@ -147,6 +147,10 @@ defineExpose({
   line-height: 1.6;
 }
 
+.markdown-body ::selection {
+  background-color: var(--editor-selection);
+}
+
 /* Headings */
 .markdown-body :deep(h1) {
   font-size: 2em;

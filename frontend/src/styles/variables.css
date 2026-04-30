@@ -143,7 +143,7 @@
   --editor-bg: #282c34;
   --editor-line-number: #5c6370;
   --editor-line-number-active: #abb2bf;
-  --editor-selection: #3e4451;
+  --editor-selection: #4a5260;
   --editor-cursor: #528bff;
 
   --syntax-keyword: #c678dd;
@@ -200,7 +200,7 @@
   --editor-bg: #fafafa;
   --editor-line-number: #a0a1a7;
   --editor-line-number-active: #383a42;
-  --editor-selection: #e5e5e5;
+  --editor-selection: #c8c8c8;
   --editor-cursor: #4078f2;
 
   --syntax-keyword: #a626a4;
@@ -428,7 +428,7 @@
   --editor-bg: #002b36;
   --editor-line-number: #586e75;
   --editor-line-number-active: #839496;
-  --editor-selection: #094452;
+  --editor-selection: #0a5872;
   --editor-cursor: #839496;
 
   --syntax-keyword: #859900;

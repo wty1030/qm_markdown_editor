@@ -210,6 +210,7 @@ defineExpose({
 
 .editor-textarea::selection {
   background-color: var(--editor-selection);
+  color: var(--text-primary);
 }
 
 /* Markdown 语法高亮样式 */

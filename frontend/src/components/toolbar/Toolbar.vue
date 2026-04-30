@@ -224,14 +224,12 @@ onUnmounted(() => {
 }
 
 .toolbar-btn.primary {
-  background-color: var(--btn-bg);
-  color: var(--btn-text);
-  border-color: var(--btn-bg);
+  border-color: var(--accent-color);
 }
 
 .toolbar-btn.primary:hover {
-  background-color: var(--btn-bg-hover);
-  border-color: var(--btn-bg-hover);
+  background-color: var(--bg-hover);
+  border-color: var(--accent-hover);
 }
 
 .icon {
