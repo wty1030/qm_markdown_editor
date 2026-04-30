@@ -4,6 +4,10 @@ import {main} from '../models';
 
 export function CreateFile(arg1:string):Promise<main.FileResult>;
 
+export function ExportToHTML(arg1:string,arg2:string,arg3:string):Promise<main.FileResult>;
+
+export function ExportToPDF(arg1:string,arg2:string,arg3:string):Promise<main.FileResult>;
+
 export function FileExists(arg1:string):Promise<boolean>;
 
 export function GetCurrentFile():Promise<string>;
@@ -14,14 +18,10 @@ export function ListDirectory(arg1:string):Promise<Array<main.FileInfo>>;
 
 export function NewFile():Promise<void>;
 
-export function OpenDirectoryDialog():Promise<string>;
-
-export function OpenFileDialog():Promise<string>;
+export function OpenNewWindow():Promise<void>;
 
 export function ReadFile(arg1:string):Promise<main.FileResult>;
 
 export function SaveFile(arg1:string):Promise<main.FileResult>;
-
-export function SaveFileDialog():Promise<string>;
 
 export function WriteFile(arg1:string,arg2:string):Promise<main.FileResult>;

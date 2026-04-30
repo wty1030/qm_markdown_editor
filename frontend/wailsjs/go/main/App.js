@@ -6,6 +6,14 @@ export function CreateFile(arg1) {
   return window['go']['main']['App']['CreateFile'](arg1);
 }
 
+export function ExportToHTML(arg1, arg2, arg3) {
+  return window['go']['main']['App']['ExportToHTML'](arg1, arg2, arg3);
+}
+
+export function ExportToPDF(arg1, arg2, arg3) {
+  return window['go']['main']['App']['ExportToPDF'](arg1, arg2, arg3);
+}
+
 export function FileExists(arg1) {
   return window['go']['main']['App']['FileExists'](arg1);
 }
@@ -26,12 +34,8 @@ export function NewFile() {
   return window['go']['main']['App']['NewFile']();
 }
 
-export function OpenDirectoryDialog() {
-  return window['go']['main']['App']['OpenDirectoryDialog']();
-}
-
-export function OpenFileDialog() {
-  return window['go']['main']['App']['OpenFileDialog']();
+export function OpenNewWindow() {
+  return window['go']['main']['App']['OpenNewWindow']();
 }
 
 export function ReadFile(arg1) {
@@ -40,10 +44,6 @@ export function ReadFile(arg1) {
 
 export function SaveFile(arg1) {
   return window['go']['main']['App']['SaveFile'](arg1);
-}
-
-export function SaveFileDialog() {
-  return window['go']['main']['App']['SaveFileDialog']();
 }
 
 export function WriteFile(arg1, arg2) {
