@@ -31,6 +31,8 @@
   --preview-bg: #1e1e1e;
   --preview-text: #d4d4d4;
   --preview-link: #3794ff;
+  --preview-quote-border: #6a9955;
+  --preview-quote-bg: rgba(106, 153, 85, 0.1);
 
   /* Button styles */
   --btn-bg: #0e639c;
@@ -72,6 +74,8 @@
   --preview-bg: #ffffff;
   --preview-text: #333333;
   --preview-link: #0078d4;
+  --preview-quote-border: #5a8a4a;
+  --preview-quote-bg: rgba(90, 138, 74, 0.1);
 
   --btn-bg: #0078d4;
   --btn-bg-hover: #1c97ea;

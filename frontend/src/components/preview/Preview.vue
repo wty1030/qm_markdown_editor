@@ -214,10 +214,12 @@ defineExpose({
 
 /* Blockquote */
 .markdown-body :deep(blockquote) {
-  border-left: 4px solid var(--accent-color);
-  padding-left: 1rem;
+  border-left: 4px solid var(--preview-quote-border);
+  background-color: var(--preview-quote-bg);
+  padding: 0.5rem 1rem;
   margin: 0 0 1rem;
   color: var(--text-secondary);
+  border-radius: 0 4px 4px 0;
 }
 
 /* Lists */
