@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, watch, onMounted, computed } from 'vue'
+import { ref, computed, watch, onMounted, onUnmounted } from 'vue'
 import Toolbar from './components/toolbar/Toolbar.vue'
 import FormatBar from './components/toolbar/FormatBar.vue'
 import SplitPaneLayout from './components/layout/SplitPaneLayout.vue'
@@ -7,8 +7,8 @@ import Editor from './components/editor/Editor.vue'
 import Preview from './components/preview/Preview.vue'
 import Sidebar from './components/sidebar/Sidebar.vue'
 import { useScrollSync } from './composables/useScrollSync'
-import { useFileOperations } from './composables/useFileOperations'
-import { useFormat, type FormatType, type LinkData, type ImageData, type CodeBlockData } from './composables/useFormat'
+import { useFileOperations, type ExportFormat } from './composables/useFileOperations'
+import { useFormat, type FormatType, type LinkData, type ImageData, type CodeBlockData, type ColorData } from './composables/useFormat'
 
 const markdownContent = ref('')
 const showSidebar = ref(false)
@@ -23,7 +23,7 @@ const {
   isModified,
   fileTree,
   currentDirectory,
-  newFile,
+  openNewWindow,
   openFile,
   openFileByPath,
   saveFile,
@@ -33,7 +33,7 @@ const {
 } = useFileOperations()
 
 const { handleEditorScroll, handlePreviewScroll } = useScrollSync()
-const { format, insertLink, insertImage, insertCodeBlock } = useFormat(textareaRef)
+const { format, insertLink, insertImage, insertCodeBlock, insertColor } = useFormat(textareaRef)
 
 const handleEditorScrollEvent = (scrollTop: number, scrollHeight: number, clientHeight: number) => {
   if (previewRef.value?.previewRef) {
@@ -47,12 +47,8 @@ const handlePreviewScrollEvent = (scrollTop: number, scrollHeight: number, clien
   }
 }
 
-const handleNewFile = async () => {
-  if (isModified.value) {
-    // TODO: Show confirmation dialog
-  }
-  await newFile()
-  markdownContent.value = ''
+const handleNewWindow = async () => {
+  await openNewWindow()
 }
 
 const handleOpenFile = async () => {
@@ -66,8 +62,8 @@ const handleSave = async () => {
   await saveFile(markdownContent.value)
 }
 
-const handleSaveAs = async () => {
-  await saveFileAs(markdownContent.value)
+const handleExportAs = async (format: ExportFormat) => {
+  await saveFileAs(markdownContent.value, format)
 }
 
 const handleOpenFolder = async () => {
@@ -112,6 +108,45 @@ const handleInsertCodeBlock = (data: CodeBlockData) => {
   }
 }
 
+const handleInsertColor = (data: ColorData) => {
+  const newText = insertColor(data, markdownContent)
+  if (newText !== undefined) {
+    markdownContent.value = newText
+  }
+}
+
+// Keyboard shortcuts
+const handleKeydown = (e: KeyboardEvent) => {
+  if (e.ctrlKey || e.metaKey) {
+    switch (e.key.toLowerCase()) {
+      case 'n':
+        e.preventDefault()
+        handleNewWindow()
+        break
+      case 'o':
+        e.preventDefault()
+        handleOpenFile()
+        break
+      case 's':
+        e.preventDefault()
+        if (e.shiftKey) {
+          handleExportAs('md')
+        } else {
+          handleSave()
+        }
+        break
+    }
+  }
+}
+
+onMounted(() => {
+  document.addEventListener('keydown', handleKeydown)
+})
+
+onUnmounted(() => {
+  document.removeEventListener('keydown', handleKeydown)
+})
+
 // Track modifications
 watch(markdownContent, () => {
   markModified()
@@ -121,17 +156,18 @@ watch(markdownContent, () => {
 <template>
   <div class="app-container">
     <Toolbar
-      @new-file="handleNewFile"
+      @new-window="handleNewWindow"
       @open-file="handleOpenFile"
       @open-folder="handleOpenFolder"
       @save="handleSave"
-      @save-as="handleSaveAs"
+      @export-as="handleExportAs"
     />
     <FormatBar
       @format="handleFormat"
       @insert-link="handleInsertLink"
       @insert-image="handleInsertImage"
       @insert-code-block="handleInsertCodeBlock"
+      @insert-color="handleInsertColor"
     />
     <main class="main-content">
       <div class="content-wrapper">

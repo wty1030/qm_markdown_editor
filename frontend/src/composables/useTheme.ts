@@ -1,31 +1,41 @@
 import { ref, watchEffect, computed } from 'vue'
-import { useLocalStorage, usePreferredDark } from '@vueuse/core'
+import { useLocalStorage } from '@vueuse/core'
 
-export type Theme = 'dark' | 'light'
+export type ThemeName = 'vscode-dark' | 'vscode-light' | 'one-dark' | 'one-light' | 'monokai' | 'dracula' | 'github-dark' | 'solarized-dark' | 'nord' | 'gruvbox-dark'
 
-const storedTheme = useLocalStorage<Theme>('qmmd-theme', 'dark')
+export interface ThemeOption {
+  name: ThemeName
+  label: string
+  icon: string
+}
 
-// Initialize theme - follow system preference if no stored value
-const prefersDark = usePreferredDark()
-const theme = ref<Theme>(storedTheme.value || (prefersDark.value ? 'dark' : 'light'))
+export const themeOptions: ThemeOption[] = [
+  { name: 'vscode-dark', label: 'VS Code Dark', icon: '🌙' },
+  { name: 'vscode-light', label: 'VS Code Light', icon: '☀️' },
+  { name: 'one-dark', label: 'One Dark', icon: '🌑' },
+  { name: 'one-light', label: 'One Light', icon: '🌤️' },
+  { name: 'monokai', label: 'Monokai', icon: '🎨' },
+  { name: 'dracula', label: 'Dracula', icon: '🧛' },
+  { name: 'github-dark', label: 'GitHub Dark', icon: '🐙' },
+  { name: 'solarized-dark', label: 'Solarized Dark', icon: '🌅' },
+  { name: 'nord', label: 'Nord', icon: '❄️' },
+  { name: 'gruvbox-dark', label: 'Gruvbox Dark', icon: '🍂' },
+]
+
+const storedTheme = useLocalStorage<ThemeName>('qmmd-theme', 'vscode-dark')
+
+// Initialize theme
+const theme = ref<ThemeName>(storedTheme.value || 'vscode-dark')
 
 /**
- * Theme management composable for VS Code dark/light theme switching.
+ * Theme management composable for multiple theme switching.
  * Persists user preference to localStorage and applies to document root.
  */
 export function useTheme() {
   /**
-   * Toggle between dark and light themes
-   */
-  const toggleTheme = () => {
-    theme.value = theme.value === 'dark' ? 'light' : 'dark'
-    storedTheme.value = theme.value
-  }
-
-  /**
    * Set theme explicitly
    */
-  const setTheme = (newTheme: Theme) => {
+  const setTheme = (newTheme: ThemeName) => {
     theme.value = newTheme
     storedTheme.value = newTheme
   }
@@ -33,7 +43,17 @@ export function useTheme() {
   /**
    * Check if current theme is dark
    */
-  const isDark = computed(() => theme.value === 'dark')
+  const isDark = computed(() => {
+    const darkThemes = ['vscode-dark', 'one-dark', 'monokai', 'dracula', 'github-dark', 'solarized-dark', 'nord', 'gruvbox-dark']
+    return darkThemes.includes(theme.value)
+  })
+
+  /**
+   * Get current theme option
+   */
+  const currentThemeOption = computed(() => {
+    return themeOptions.find(t => t.name === theme.value) || themeOptions[0]
+  })
 
   // Apply theme to document root element
   watchEffect(() => {
@@ -43,7 +63,8 @@ export function useTheme() {
   return {
     theme,
     isDark,
-    toggleTheme,
-    setTheme
+    setTheme,
+    currentThemeOption,
+    themeOptions
   }
 }

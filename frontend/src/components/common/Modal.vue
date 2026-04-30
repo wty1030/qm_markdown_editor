@@ -103,7 +103,7 @@ const handleKeydown = (e: KeyboardEvent) => {
   left: 0;
   right: 0;
   bottom: 0;
-  background-color: rgba(0, 0, 0, 0.5);
+  background-color: var(--dropdown-shadow);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -116,7 +116,7 @@ const handleKeydown = (e: KeyboardEvent) => {
   border-radius: 8px;
   min-width: 360px;
   max-width: 480px;
-  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
+  box-shadow: 0 8px 32px var(--dropdown-shadow);
 }
 
 .modal-header {
@@ -227,7 +227,7 @@ const handleKeydown = (e: KeyboardEvent) => {
 
 .btn-confirm {
   background-color: var(--accent-color);
-  color: #ffffff;
+  color: var(--btn-text);
 }
 
 .btn-confirm:hover {

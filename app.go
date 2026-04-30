@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"os"
+	"os/exec"
 	"path/filepath"
 	"strings"
 )
@@ -25,7 +26,7 @@ type FileResult struct {
 
 // App struct
 type App struct {
-	ctx       context.Context
+	ctx         context.Context
 	currentFile string
 }
 
@@ -146,25 +147,6 @@ func (a *App) CreateFile(path string) FileResult {
 	}
 }
 
-// OpenFileDialog opens a file dialog and returns the selected path
-func (a *App) OpenFileDialog() (string, error) {
-	// This will be handled by Wails runtime
-	// For now, return empty - frontend will use Wails runtime directly
-	return "", nil
-}
-
-// SaveFileDialog opens a save file dialog and returns the selected path
-func (a *App) SaveFileDialog() (string, error) {
-	// This will be handled by Wails runtime
-	return "", nil
-}
-
-// OpenDirectoryDialog opens a directory dialog and returns the selected path
-func (a *App) OpenDirectoryDialog() (string, error) {
-	// This will be handled by Wails runtime
-	return "", nil
-}
-
 // IsMarkdownFile checks if a file is a markdown file
 func (a *App) IsMarkdownFile(path string) bool {
 	ext := strings.ToLower(filepath.Ext(path))
@@ -174,4 +156,249 @@ func (a *App) IsMarkdownFile(path string) bool {
 // NewFile clears the current file
 func (a *App) NewFile() {
 	a.currentFile = ""
+}
+
+// ExportToHTML exports markdown content to an HTML file with embedded styles
+func (a *App) ExportToHTML(path, content, title string) FileResult {
+	// Generate HTML with embedded CSS
+	htmlContent := generateHTMLDocument(content, title)
+
+	err := os.WriteFile(path, []byte(htmlContent), 0644)
+	if err != nil {
+		return FileResult{
+			Success: false,
+			Error:   fmt.Sprintf("无法导出 HTML: %v", err),
+		}
+	}
+
+	return FileResult{
+		Success: true,
+	}
+}
+
+// ExportToPDF exports markdown content to PDF using system browser print
+// This creates an HTML file and opens it in the browser for PDF printing
+func (a *App) ExportToPDF(path, content, title string) FileResult {
+	// First generate HTML
+	htmlPath := strings.TrimSuffix(path, ".pdf") + "_print.html"
+	htmlContent := generateHTMLDocumentForPDF(content, title)
+
+	err := os.WriteFile(htmlPath, []byte(htmlContent), 0644)
+	if err != nil {
+		return FileResult{
+			Success: false,
+			Error:   fmt.Sprintf("无法生成打印文件: %v", err),
+		}
+	}
+
+	// Open in default browser for printing
+	err = openInBrowser(htmlPath)
+	if err != nil {
+		return FileResult{
+			Success: false,
+			Error:   fmt.Sprintf("无法打开浏览器: %v", err),
+		}
+	}
+
+	return FileResult{
+		Success: true,
+	}
+}
+
+// OpenNewWindow opens a new instance of the application
+func (a *App) OpenNewWindow() error {
+	// Get the executable path
+	exePath, err := os.Executable()
+	if err != nil {
+		return fmt.Errorf("无法获取程序路径: %v", err)
+	}
+
+	// Start a new instance
+	cmd := exec.Command(exePath)
+	cmd.Start()
+
+	return nil
+}
+
+// generateHTMLDocument creates a complete HTML document with embedded styles
+func generateHTMLDocument(content, title string) string {
+	return fmt.Sprintf(`<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>%s</title>
+    <style>
+        :root {
+            --bg-primary: #ffffff;
+            --text-primary: #333333;
+            --text-secondary: #666666;
+            --border-color: #d4d4d4;
+            --accent-color: #0078d4;
+            --preview-quote-border: #5a8a4a;
+            --preview-quote-bg: rgba(90, 138, 74, 0.1);
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            line-height: 1.6;
+            color: var(--text-primary);
+            background-color: var(--bg-primary);
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 2rem;
+        }
+
+        h1 { font-size: 2em; font-weight: 600; border-bottom: 1px solid var(--border-color); padding-bottom: 0.3em; margin: 1rem 0 0.5rem; }
+        h2 { font-size: 1.5em; font-weight: 600; border-bottom: 1px solid var(--border-color); padding-bottom: 0.3em; margin: 1rem 0 0.5rem; }
+        h3 { font-size: 1.25em; font-weight: 600; margin: 1rem 0 0.5rem; }
+        h4 { font-size: 1em; font-weight: 600; margin: 1rem 0 0.5rem; }
+        h5 { font-size: 0.875em; font-weight: 600; margin: 1rem 0 0.5rem; }
+        h6 { font-size: 0.85em; font-weight: 600; color: var(--text-secondary); margin: 1rem 0 0.5rem; }
+
+        p { margin: 0 0 1rem; }
+
+        a { color: var(--accent-color); text-decoration: none; }
+        a:hover { text-decoration: underline; }
+
+        code { background-color: #f3f3f3; padding: 0.2em 0.4em; border-radius: 3px; font-family: 'Consolas', 'Monaco', monospace; font-size: 0.9em; }
+        pre { background-color: #f3f3f3; padding: 1rem; border-radius: 6px; overflow-x: auto; margin: 0 0 1rem; }
+        pre code { background: none; padding: 0; font-size: 0.875em; }
+
+        blockquote { border-left: 4px solid var(--preview-quote-border); background-color: var(--preview-quote-bg); padding: 0.5rem 1rem; margin: 0 0 1rem; color: var(--text-secondary); }
+
+        ul, ol { padding-left: 2rem; margin: 0 0 1rem; }
+        li { margin: 0.25rem 0; }
+
+        table { border-collapse: collapse; width: 100%; margin: 0 0 1rem; }
+        th, td { border: 1px solid var(--border-color); padding: 0.5rem 0.75rem; }
+        th { background-color: #f3f3f3; font-weight: 600; }
+
+        hr { border: none; border-top: 1px solid var(--border-color); margin: 1rem 0; }
+
+        img { max-width: 100%; height: auto; }
+
+        /* Syntax highlighting */
+        .hljs { background: #f3f3f3; }
+        .hljs-keyword { color: #0000ff; }
+        .hljs-string { color: #a31515; }
+        .hljs-number { color: #098658; }
+        .hljs-comment { color: #008000; }
+        .hljs-function { color: #795e26; }
+        .hljs-variable { color: #001080; }
+    </style>
+</head>
+<body>
+%s
+</body>
+</html>`, title, content)
+}
+
+// generateHTMLDocumentForPDF creates HTML optimized for PDF printing
+func generateHTMLDocumentForPDF(content, title string) string {
+	return fmt.Sprintf(`<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>%s</title>
+    <style>
+        @media print {
+            body { padding: 0; margin: 0; }
+            .print-button { display: none; }
+        }
+
+        :root {
+            --bg-primary: #ffffff;
+            --text-primary: #333333;
+            --text-secondary: #666666;
+            --border-color: #d4d4d4;
+            --accent-color: #0078d4;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            line-height: 1.6;
+            color: var(--text-primary);
+            background-color: var(--bg-primary);
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 2rem;
+        }
+
+        .print-button {
+            position: fixed;
+            top: 1rem;
+            right: 1rem;
+            padding: 0.75rem 1.5rem;
+            background-color: var(--accent-color);
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 1rem;
+        }
+
+        .print-button:hover {
+            background-color: #1c97ea;
+        }
+
+        h1 { font-size: 2em; font-weight: 600; border-bottom: 1px solid var(--border-color); padding-bottom: 0.3em; margin: 1rem 0 0.5rem; }
+        h2 { font-size: 1.5em; font-weight: 600; border-bottom: 1px solid var(--border-color); padding-bottom: 0.3em; margin: 1rem 0 0.5rem; }
+        h3 { font-size: 1.25em; font-weight: 600; margin: 1rem 0 0.5rem; }
+        h4 { font-size: 1em; font-weight: 600; margin: 1rem 0 0.5rem; }
+        h5 { font-size: 0.875em; font-weight: 600; margin: 1rem 0 0.5rem; }
+        h6 { font-size: 0.85em; font-weight: 600; color: var(--text-secondary); margin: 1rem 0 0.5rem; }
+
+        p { margin: 0 0 1rem; }
+        a { color: var(--accent-color); text-decoration: none; }
+        code { background-color: #f3f3f3; padding: 0.2em 0.4em; border-radius: 3px; font-family: 'Consolas', 'Monaco', monospace; font-size: 0.9em; }
+        pre { background-color: #f3f3f3; padding: 1rem; border-radius: 6px; overflow-x: auto; margin: 0 0 1rem; }
+        pre code { background: none; padding: 0; }
+        blockquote { border-left: 4px solid #5a8a4a; background-color: rgba(90, 138, 74, 0.1); padding: 0.5rem 1rem; margin: 0 0 1rem; color: var(--text-secondary); }
+        ul, ol { padding-left: 2rem; margin: 0 0 1rem; }
+        table { border-collapse: collapse; width: 100%; margin: 0 0 1rem; }
+        th, td { border: 1px solid var(--border-color); padding: 0.5rem 0.75rem; }
+        th { background-color: #f3f3f3; font-weight: 600; }
+        hr { border: none; border-top: 1px solid var(--border-color); margin: 1rem 0; }
+        img { max-width: 100%; height: auto; }
+    </style>
+</head>
+<body>
+    <button class="print-button" onclick="window.print()">打印/保存为 PDF</button>
+%s
+    <script>
+        // Auto-trigger print dialog after page loads
+        window.onload = function() {
+            // Small delay to ensure content is rendered
+            setTimeout(function() {
+                window.print();
+            }, 500);
+        };
+    </script>
+</body>
+</html>`, title, content)
+}
+
+// openInBrowser opens a file in the default system browser
+func openInBrowser(path string) error {
+	var cmd *exec.Cmd
+
+	// Convert to absolute path
+	absPath, err := filepath.Abs(path)
+	if err != nil {
+		return err
+	}
+
+	// Different commands for different OS
+	switch {
+	case strings.Contains(strings.ToLower(os.Getenv("OS")), "windows"):
+		cmd = exec.Command("rundll32", "url.dll,FileProtocolHandler", absPath)
+	case filepath.IsAbs("/usr/bin/open"):
+		cmd = exec.Command("open", absPath)
+	default:
+		cmd = exec.Command("xdg-open", absPath)
+	}
+
+	return cmd.Start()
 }

@@ -5,10 +5,14 @@ import Toolbar from '../Toolbar.vue'
 // Mock the useTheme composable
 vi.mock('../../../composables/useTheme', () => ({
   useTheme: () => ({
-    theme: { value: 'dark' },
+    theme: { value: 'vscode-dark' },
     isDark: { value: true },
-    toggleTheme: vi.fn(),
-    setTheme: vi.fn()
+    setTheme: vi.fn(),
+    currentThemeOption: { value: { name: 'vscode-dark', label: 'VS Code Dark', icon: '🌙' } },
+    themeOptions: [
+      { name: 'vscode-dark', label: 'VS Code Dark', icon: '🌙' },
+      { name: 'vscode-light', label: 'VS Code Light', icon: '☀️' },
+    ]
   })
 }))
 
@@ -17,7 +21,7 @@ describe('Toolbar', () => {
     const wrapper = mount(Toolbar)
 
     const buttons = wrapper.findAll('.toolbar-btn')
-    // 4 file buttons + 1 theme toggle = 5 buttons
+    // 新建、打开、文件夹、保存、导出 = 5 buttons
     expect(buttons.length).toBeGreaterThanOrEqual(4)
   })
 
@@ -28,20 +32,20 @@ describe('Toolbar', () => {
     expect(themeToggle.exists()).toBe(true)
   })
 
-  it('emits newFile event when New button is clicked', async () => {
+  it('emits newWindow event when New button is clicked', async () => {
     const wrapper = mount(Toolbar)
 
     const newButton = wrapper.findAll('.toolbar-btn')[0]
     await newButton.trigger('click')
 
-    expect(wrapper.emitted('newFile')).toBeTruthy()
+    expect(wrapper.emitted('newWindow')).toBeTruthy()
   })
 
   it('emits openFile event when Open button is clicked', async () => {
     const wrapper = mount(Toolbar)
 
     const buttons = wrapper.findAll('.toolbar-btn')
-    const openButton = buttons.find(btn => btn.text().includes('Open'))
+    const openButton = buttons.find(btn => btn.text().includes('打开'))
     await openButton?.trigger('click')
 
     expect(wrapper.emitted('openFile')).toBeTruthy()
@@ -51,7 +55,7 @@ describe('Toolbar', () => {
     const wrapper = mount(Toolbar)
 
     const buttons = wrapper.findAll('.toolbar-btn')
-    const saveButton = buttons.find(btn => btn.text().includes('Save') && !btn.text().includes('As'))
+    const saveButton = buttons.find(btn => btn.text().includes('保存') && !btn.text().includes('导出'))
     await saveButton?.trigger('click')
 
     expect(wrapper.emitted('save')).toBeTruthy()
@@ -61,7 +65,6 @@ describe('Toolbar', () => {
     const wrapper = mount(Toolbar)
     const toolbar = wrapper.find('.toolbar')
 
-    // Check that scoped styles are applied
     expect(toolbar.exists()).toBe(true)
   })
 })

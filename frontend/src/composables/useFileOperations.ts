@@ -28,6 +28,9 @@ declare global {
           CreateFile: (path: string) => Promise<FileResult>
           NewFile: () => Promise<void>
           IsMarkdownFile: (path: string) => Promise<boolean>
+          ExportToHTML: (path: string, content: string, title: string) => Promise<FileResult>
+          ExportToPDF: (path: string, content: string, title: string) => Promise<FileResult>
+          OpenNewWindow: () => Promise<void>
         }
       }
     }
@@ -50,6 +53,8 @@ declare global {
   }
 }
 
+export type ExportFormat = 'md' | 'html' | 'pdf'
+
 export function useFileOperations() {
   const currentFile = ref<string>('')
   const isModified = ref(false)
@@ -70,13 +75,11 @@ export function useFileOperations() {
     return null
   }
 
-  const newFile = async () => {
+  const openNewWindow = async () => {
     const app = getApp()
-    if (app?.NewFile) {
-      await app.NewFile()
+    if (app?.OpenNewWindow) {
+      await app.OpenNewWindow()
     }
-    currentFile.value = ''
-    isModified.value = false
   }
 
   const openFile = async (): Promise<{ success: boolean; content?: string; error?: string }> => {
@@ -84,7 +87,6 @@ export function useFileOperations() {
     const app = getApp()
 
     if (!runtime?.OpenFileDialog || !app?.ReadFile) {
-      // Fallback for development mode
       return { success: false, error: 'Wails runtime not available' }
     }
 
@@ -130,7 +132,7 @@ export function useFileOperations() {
     const app = getApp()
 
     if (!currentFile.value) {
-      return saveFileAs(content)
+      return saveFileAs(content, 'md')
     }
 
     if (!app?.SaveFile) {
@@ -144,7 +146,7 @@ export function useFileOperations() {
     return result
   }
 
-  const saveFileAs = async (content: string): Promise<{ success: boolean; error?: string }> => {
+  const saveFileAs = async (content: string, format: ExportFormat = 'md'): Promise<{ success: boolean; error?: string }> => {
     const runtime = getRuntime()
     const app = getApp()
 
@@ -153,21 +155,32 @@ export function useFileOperations() {
     }
 
     try {
+      const filters = getFiltersForFormat(format)
+      const defaultName = getDefaultNameForFormat(format)
+
       const path = await runtime.SaveFileDialog({
-        Title: '保存 Markdown 文件',
-        DefaultFilename: 'untitled.md',
-        Filters: [
-          { DisplayName: 'Markdown 文件', Pattern: '*.md' },
-          { DisplayName: '所有文件', Pattern: '*.*' }
-        ]
+        Title: getTitleForFormat(format),
+        DefaultFilename: defaultName,
+        Filters: filters
       })
 
       if (!path) {
         return { success: false, error: '未选择保存位置' }
       }
 
-      const result = await app.WriteFile(path, content)
-      if (result.success) {
+      let result: FileResult
+
+      if (format === 'html') {
+        const title = getFileNameWithoutExtension(currentFile.value) || '未命名'
+        result = await app.ExportToHTML(path, content, title)
+      } else if (format === 'pdf') {
+        const title = getFileNameWithoutExtension(currentFile.value) || '未命名'
+        result = await app.ExportToPDF(path, content, title)
+      } else {
+        result = await app.WriteFile(path, content)
+      }
+
+      if (result.success && format === 'md') {
         currentFile.value = path
         isModified.value = false
       }
@@ -231,12 +244,63 @@ export function useFileOperations() {
     return `QMMD - ${fileName}${isModified.value ? ' *' : ''}`
   }
 
+  // Helper functions
+  const getFiltersForFormat = (format: ExportFormat) => {
+    switch (format) {
+      case 'html':
+        return [
+          { DisplayName: 'HTML 文件', Pattern: '*.html;*.htm' },
+          { DisplayName: '所有文件', Pattern: '*.*' }
+        ]
+      case 'pdf':
+        return [
+          { DisplayName: 'PDF 文件', Pattern: '*.pdf' },
+          { DisplayName: '所有文件', Pattern: '*.*' }
+        ]
+      default:
+        return [
+          { DisplayName: 'Markdown 文件', Pattern: '*.md' },
+          { DisplayName: '所有文件', Pattern: '*.*' }
+        ]
+    }
+  }
+
+  const getDefaultNameForFormat = (format: ExportFormat) => {
+    const baseName = getFileNameWithoutExtension(currentFile.value) || 'untitled'
+    switch (format) {
+      case 'html':
+        return `${baseName}.html`
+      case 'pdf':
+        return `${baseName}.pdf`
+      default:
+        return `${baseName}.md`
+    }
+  }
+
+  const getTitleForFormat = (format: ExportFormat) => {
+    switch (format) {
+      case 'html':
+        return '导出为 HTML'
+      case 'pdf':
+        return '导出为 PDF'
+      default:
+        return '保存 Markdown 文件'
+    }
+  }
+
+  const getFileNameWithoutExtension = (path: string) => {
+    if (!path) return ''
+    const fileName = path.split('/').pop() || path.split('\\').pop() || path
+    const lastDot = fileName.lastIndexOf('.')
+    return lastDot > 0 ? fileName.substring(0, lastDot) : fileName
+  }
+
   return {
     currentFile,
     isModified,
     fileTree,
     currentDirectory,
-    newFile,
+    openNewWindow,
     openFile,
     openFileByPath,
     saveFile,

@@ -69,6 +69,6 @@ const { leftSize, updateFromResize } = useLayoutState()
 }
 
 .split-pane-layout .splitpanes__splitter:hover::before {
-  background-color: #ffffff;
+  background-color: var(--btn-text);
 }
 </style>

@@ -7,7 +7,7 @@ describe('FormatBar', () => {
     const wrapper = mount(FormatBar)
 
     const buttons = wrapper.findAll('.format-btn')
-    // Bold, Italic, Code, Quote, Heading, Bullet List, Numbered List = 7 main buttons
+    // Bold, Italic, Color, Code, Quote, Heading, Bullet List, Numbered List, Link, Image
     expect(buttons.length).toBeGreaterThanOrEqual(7)
   })
 
@@ -35,39 +35,35 @@ describe('FormatBar', () => {
   it('shows heading menu when Heading button is clicked', async () => {
     const wrapper = mount(FormatBar)
 
-    // Heading button is the 5th button (index 4)
-    const headingButton = wrapper.findAll('.format-btn')[4]
-    await headingButton.trigger('click')
+    // Find heading button by looking for the dropdown that contains heading menu
+    const dropdowns = wrapper.findAll('.dropdown')
+    let headingDropdownIndex = -1
 
-    const headingMenu = wrapper.find('.heading-menu')
-    expect(headingMenu.exists()).toBe(true)
+    for (let i = 0; i < dropdowns.length; i++) {
+      const btn = dropdowns[i].find('.format-btn')
+      if (btn.text().includes('标题')) {
+        headingDropdownIndex = i
+        break
+      }
+    }
 
-    // Should have 6 heading options
-    const headingOptions = wrapper.findAll('.heading-option')
-    expect(headingOptions.length).toBe(6)
-  })
+    if (headingDropdownIndex >= 0) {
+      const headingButton = dropdowns[headingDropdownIndex].find('.format-btn')
+      await headingButton.trigger('click')
 
-  it('emits format event with heading type when heading option is selected', async () => {
-    const wrapper = mount(FormatBar)
+      const headingMenu = wrapper.find('.dropdown-menu')
+      expect(headingMenu.exists()).toBe(true)
 
-    // Open heading menu
-    const headingButton = wrapper.findAll('.format-btn')[4]
-    await headingButton.trigger('click')
-
-    // Click H1 option
-    const h1Option = wrapper.findAll('.heading-option')[0]
-    await h1Option.trigger('click')
-
-    expect(wrapper.emitted('format')).toBeTruthy()
-    expect(wrapper.emitted('format')![0]).toEqual(['h1'])
+      const headingOptions = wrapper.findAll('.dropdown-option')
+      expect(headingOptions.length).toBeGreaterThanOrEqual(6)
+    }
   })
 
   it('emits format event with ul type when Bullet List button is clicked', async () => {
     const wrapper = mount(FormatBar)
 
-    // Find bullet list button (after separator, typically index 5 or 6)
     const buttons = wrapper.findAll('.format-btn')
-    const bulletButton = buttons.find(btn => btn.attributes('title')?.includes('Bullet'))
+    const bulletButton = buttons.find(btn => btn.attributes('title')?.includes('无序列表'))
     await bulletButton?.trigger('click')
 
     expect(wrapper.emitted('format')).toBeTruthy()

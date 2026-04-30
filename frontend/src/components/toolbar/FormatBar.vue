@@ -1,33 +1,79 @@
 <script setup lang="ts">
 import { ref } from 'vue'
 import Modal from '../common/Modal.vue'
+import { colorPresets, type FormatType, type LinkData, type ImageData, type CodeBlockData, type ColorData } from '../../composables/useFormat'
 
-export type FormatType =
-  | 'bold'
-  | 'italic'
-  | 'code'
-  | 'quote'
-  | 'h1'
-  | 'h2'
-  | 'h3'
-  | 'h4'
-  | 'h5'
-  | 'h6'
-  | 'ul'
-  | 'ol'
+export type { FormatType, LinkData, ImageData, CodeBlockData, ColorData }
 
-export interface LinkData {
-  text: string
-  url: string
+const emit = defineEmits<{
+  format: [type: FormatType]
+  insertLink: [data: LinkData]
+  insertImage: [data: ImageData]
+  insertCodeBlock: [data: CodeBlockData]
+  insertColor: [data: ColorData]
+}>()
+
+const showHeadingMenu = ref(false)
+const showCodeMenu = ref(false)
+const showColorMenu = ref(false)
+const showLinkModal = ref(false)
+const showImageModal = ref(false)
+
+const handleFormat = (type: FormatType) => {
+  emit('format', type)
+  showHeadingMenu.value = false
+  showCodeMenu.value = false
+  showColorMenu.value = false
 }
 
-export interface ImageData {
-  alt: string
-  url: string
+const toggleHeadingMenu = () => {
+  showHeadingMenu.value = !showHeadingMenu.value
+  showCodeMenu.value = false
+  showColorMenu.value = false
 }
 
-export interface CodeBlockData {
-  language: string
+const toggleCodeMenu = () => {
+  showCodeMenu.value = !showCodeMenu.value
+  showHeadingMenu.value = false
+  showColorMenu.value = false
+}
+
+const toggleColorMenu = () => {
+  showColorMenu.value = !showColorMenu.value
+  showHeadingMenu.value = false
+  showCodeMenu.value = false
+}
+
+const closeMenu = () => {
+  showHeadingMenu.value = false
+  showCodeMenu.value = false
+  showColorMenu.value = false
+}
+
+const handleCodeSelect = (language: string) => {
+  emit('insertCodeBlock', { language })
+  showCodeMenu.value = false
+}
+
+const handleColorSelect = (color: string) => {
+  emit('insertColor', { color })
+  showColorMenu.value = false
+}
+
+const openLinkModal = () => {
+  showLinkModal.value = true
+}
+
+const openImageModal = () => {
+  showImageModal.value = true
+}
+
+const handleLinkConfirm = (values: Record<string, string>) => {
+  emit('insertLink', { text: values.text, url: values.url })
+}
+
+const handleImageConfirm = (values: Record<string, string>) => {
+  emit('insertImage', { alt: values.alt, url: values.url })
 }
 
 // 常用编程语言列表
@@ -55,60 +101,6 @@ const codeLanguages = [
   { key: 'bash', label: 'Bash' },
   { key: 'shell', label: 'Shell' },
 ]
-
-const emit = defineEmits<{
-  format: [type: FormatType]
-  insertLink: [data: LinkData]
-  insertImage: [data: ImageData]
-  insertCodeBlock: [data: CodeBlockData]
-}>()
-
-const showHeadingMenu = ref(false)
-const showCodeMenu = ref(false)
-const showLinkModal = ref(false)
-const showImageModal = ref(false)
-
-const handleFormat = (type: FormatType) => {
-  emit('format', type)
-  showHeadingMenu.value = false
-  showCodeMenu.value = false
-}
-
-const toggleHeadingMenu = () => {
-  showHeadingMenu.value = !showHeadingMenu.value
-  showCodeMenu.value = false
-}
-
-const toggleCodeMenu = () => {
-  showCodeMenu.value = !showCodeMenu.value
-  showHeadingMenu.value = false
-}
-
-const closeMenu = () => {
-  showHeadingMenu.value = false
-  showCodeMenu.value = false
-}
-
-const handleCodeSelect = (language: string) => {
-  emit('insertCodeBlock', { language })
-  showCodeMenu.value = false
-}
-
-const openLinkModal = () => {
-  showLinkModal.value = true
-}
-
-const openImageModal = () => {
-  showImageModal.value = true
-}
-
-const handleLinkConfirm = (values: Record<string, string>) => {
-  emit('insertLink', { text: values.text, url: values.url })
-}
-
-const handleImageConfirm = (values: Record<string, string>) => {
-  emit('insertImage', { alt: values.alt, url: values.url })
-}
 </script>
 
 <template>
@@ -137,6 +129,40 @@ const handleImageConfirm = (values: Record<string, string>) => {
       </svg>
       <span class="btn-label">斜体</span>
     </button>
+
+    <div class="dropdown color-dropdown">
+      <button
+        class="format-btn"
+        :class="{ active: showColorMenu }"
+        title="文字颜色"
+        @click="toggleColorMenu"
+      >
+        <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M12 2C6.5 2 2 6.5 2 12s4.5 10 10 10 10-4.5 10-10S17.5 2 12 2z"/>
+          <path d="M12 2v10l8.5 5"/>
+          <circle cx="12" cy="12" r="3" fill="currentColor"/>
+        </svg>
+        <span class="btn-label">颜色</span>
+        <svg class="chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <polyline points="6,9 12,15 18,9"/>
+        </svg>
+      </button>
+
+      <div v-if="showColorMenu" class="dropdown-menu color-menu">
+        <button
+          v-for="preset in colorPresets"
+          :key="preset.value"
+          class="dropdown-option color-option"
+          @click="handleColorSelect(preset.value)"
+        >
+          <span
+            class="color-preview"
+            :style="{ backgroundColor: preset.value || 'transparent', border: preset.value ? 'none' : '1px dashed var(--border-color)' }"
+          ></span>
+          <span class="color-name">{{ preset.name }}</span>
+        </button>
+      </div>
+    </div>
 
     <div class="dropdown code-dropdown">
       <button
@@ -384,15 +410,21 @@ const handleImageConfirm = (values: Record<string, string>) => {
   background-color: var(--bg-toolbar);
   border: 1px solid var(--border-color);
   border-radius: 4px;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+  box-shadow: 0 4px 12px var(--dropdown-shadow);
 }
 
 .code-menu {
   min-width: 180px;
 }
 
+.color-menu {
+  min-width: 120px;
+}
+
 .dropdown-option {
-  display: block;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
   width: 100%;
   padding: 0.5rem 0.75rem;
   background: transparent;
@@ -417,6 +449,21 @@ const handleImageConfirm = (values: Record<string, string>) => {
   height: 1px;
   background-color: var(--border-color);
   margin: 0.25rem 0;
+}
+
+.color-option {
+  gap: 0.75rem;
+}
+
+.color-preview {
+  width: 16px;
+  height: 16px;
+  border-radius: 3px;
+  flex-shrink: 0;
+}
+
+.color-name {
+  flex: 1;
 }
 
 @media (max-width: 768px) {
