@@ -1,4 +1,4 @@
-import { ref, computed } from 'vue'
+import { ref, computed, watchEffect } from 'vue'
 import { useLocalStorage } from '@vueuse/core'
 
 export type TabMode = 'tab' | 'spaces-2' | 'spaces-4' | 'spaces-8'
@@ -30,11 +30,88 @@ export const viewModeOptions: ViewModeOption[] = [
   { value: 'split', label: '分栏', icon: 'split' },
 ]
 
+// 壁纸相关类型
+export interface WallpaperArea {
+  editor: boolean
+  preview: boolean
+  toolbar: boolean
+  sidebar: boolean
+}
+
+export interface PresetWallpaper {
+  id: string
+  name: string
+  thumbnail: string
+  full: string
+}
+
+// 预设壁纸（使用渐变和纹理作为内置壁纸）
+export const presetWallpapers: PresetWallpaper[] = [
+  {
+    id: 'gradient-blue',
+    name: '蓝色渐变',
+    thumbnail: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+    full: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)'
+  },
+  {
+    id: 'gradient-sunset',
+    name: '日落渐变',
+    thumbnail: 'linear-gradient(135deg, #f093fb 0%, #f5576c 100%)',
+    full: 'linear-gradient(135deg, #f093fb 0%, #f5576c 100%)'
+  },
+  {
+    id: 'gradient-ocean',
+    name: '海洋渐变',
+    thumbnail: 'linear-gradient(135deg, #4facfe 0%, #00f2fe 100%)',
+    full: 'linear-gradient(135deg, #4facfe 0%, #00f2fe 100%)'
+  },
+  {
+    id: 'gradient-forest',
+    name: '森林渐变',
+    thumbnail: 'linear-gradient(135deg, #134e5e 0%, #71b280 100%)',
+    full: 'linear-gradient(135deg, #134e5e 0%, #71b280 100%)'
+  },
+  {
+    id: 'gradient-night',
+    name: '夜空渐变',
+    thumbnail: 'linear-gradient(135deg, #0c0c0c 0%, #1a1a2e 50%, #16213e 100%)',
+    full: 'linear-gradient(135deg, #0c0c0c 0%, #1a1a2e 50%, #16213e 100%)'
+  },
+  {
+    id: 'gradient-aurora',
+    name: '极光渐变',
+    thumbnail: 'linear-gradient(135deg, #a8edea 0%, #fed6e3 100%)',
+    full: 'linear-gradient(135deg, #a8edea 0%, #fed6e3 100%)'
+  },
+  {
+    id: 'none',
+    name: '无壁纸',
+    thumbnail: '',
+    full: ''
+  },
+]
+
 const storedTabMode = useLocalStorage<TabMode>('qmmd-tab-mode', 'tab')
 const storedViewMode = useLocalStorage<ViewMode>('qmmd-view-mode', 'split')
+const storedWallpaper = useLocalStorage<string>('qmmd-wallpaper', '')
+const storedWallpaperAreas = useLocalStorage<WallpaperArea>('qmmd-wallpaper-areas', {
+  editor: true,
+  preview: true,
+  toolbar: true,
+  sidebar: true
+})
+const storedOverlayOpacity = useLocalStorage<number>('qmmd-overlay-opacity', 85)
 
 const tabMode = ref<TabMode>(storedTabMode.value || 'tab')
 const viewMode = ref<ViewMode>(storedViewMode.value || 'split')
+const wallpaper = ref<string>(storedWallpaper.value || '')
+const wallpaperAreas = ref<WallpaperArea>(storedWallpaperAreas.value || {
+  editor: true,
+  preview: true,
+  toolbar: true,
+  sidebar: true
+})
+const overlayOpacity = ref<number>(storedOverlayOpacity.value || 85)
 
 /**
  * Settings management composable.
@@ -49,6 +126,21 @@ export function useSettings() {
   const setViewMode = (mode: ViewMode) => {
     viewMode.value = mode
     storedViewMode.value = mode
+  }
+
+  const setWallpaper = (wp: string) => {
+    wallpaper.value = wp
+    storedWallpaper.value = wp
+  }
+
+  const setWallpaperAreas = (areas: WallpaperArea) => {
+    wallpaperAreas.value = areas
+    storedWallpaperAreas.value = areas
+  }
+
+  const setOverlayOpacity = (opacity: number) => {
+    overlayOpacity.value = opacity
+    storedOverlayOpacity.value = opacity
   }
 
   const getTabString = (): string => {
@@ -74,15 +166,44 @@ export function useSettings() {
     return viewModeOptions.find(v => v.value === viewMode.value) || viewModeOptions[2]
   })
 
+  const hasWallpaper = computed(() => {
+    return wallpaper.value !== ''
+  })
+
+  // 应用壁纸到 DOM
+  watchEffect(() => {
+    const root = document.documentElement
+    if (wallpaper.value) {
+      root.style.setProperty('--wallpaper-bg', wallpaper.value)
+    } else {
+      root.style.setProperty('--wallpaper-bg', 'none')
+    }
+    root.style.setProperty('--wallpaper-overlay-opacity', `${overlayOpacity.value / 100}`)
+
+    // 设置各区域的壁纸启用状态
+    root.setAttribute('data-wallpaper-editor', wallpaperAreas.value.editor && wallpaper.value ? 'true' : 'false')
+    root.setAttribute('data-wallpaper-preview', wallpaperAreas.value.preview && wallpaper.value ? 'true' : 'false')
+    root.setAttribute('data-wallpaper-toolbar', wallpaperAreas.value.toolbar && wallpaper.value ? 'true' : 'false')
+    root.setAttribute('data-wallpaper-sidebar', wallpaperAreas.value.sidebar && wallpaper.value ? 'true' : 'false')
+  })
+
   return {
     tabMode,
     viewMode,
+    wallpaper,
+    wallpaperAreas,
+    overlayOpacity,
     setTabMode,
     setViewMode,
+    setWallpaper,
+    setWallpaperAreas,
+    setOverlayOpacity,
     getTabString,
     currentTabOption,
     currentViewModeOption,
+    hasWallpaper,
     tabOptions,
-    viewModeOptions
+    viewModeOptions,
+    presetWallpapers
   }
 }

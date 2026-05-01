@@ -39,7 +39,7 @@ const {
 const { handleEditorScroll, handlePreviewScroll } = useScrollSync()
 const { format, insertLink, insertImage, insertCodeBlock, insertColor, insertTable } = useFormat(textareaRef)
 const { canUndo, canRedo, pushHistory, pushHistoryImmediate, undo, redo, reset } = useUndoRedo(markdownContent)
-const { viewMode } = useSettings()
+const { viewMode, hasWallpaper } = useSettings()
 
 const handleEditorScrollEvent = (scrollTop: number, scrollHeight: number, clientHeight: number) => {
   if (previewRef.value?.previewRef) {
@@ -195,6 +195,10 @@ watch(markdownContent, (newContent) => {
 
 <template>
   <div class="app-container">
+    <!-- 壁纸背景层 -->
+    <div v-if="hasWallpaper" class="wallpaper-bg"></div>
+    <div v-if="hasWallpaper" class="wallpaper-overlay"></div>
+
     <Toolbar
       @new-window="handleNewWindow"
       @open-file="handleOpenFile"

@@ -1,9 +1,10 @@
 <script setup lang="ts">
-import { useSettings, type TabMode, type ViewMode } from '../../composables/useSettings'
+import { ref, computed } from 'vue'
+import { useSettings, type TabMode, type WallpaperArea } from '../../composables/useSettings'
 import { useTheme, type ThemeName } from '../../composables/useTheme'
 
-const { tabMode, setTabMode, tabOptions } = useSettings()
-const { theme, setTheme, themeOptions, currentThemeOption } = useTheme()
+const { tabMode, setTabMode, tabOptions, wallpaper, setWallpaper, wallpaperAreas, setWallpaperAreas, overlayOpacity, setOverlayOpacity, presetWallpapers } = useSettings()
+const { theme, setTheme, themeOptions } = useTheme()
 
 const props = defineProps<{
   visible: boolean
@@ -20,6 +21,57 @@ const handleTabSelect = (mode: TabMode) => {
 const handleThemeSelect = (themeName: ThemeName) => {
   setTheme(themeName)
 }
+
+const handlePresetWallpaperSelect = (preset: typeof presetWallpapers[0]) => {
+  setWallpaper(preset.full)
+}
+
+const handleCustomWallpaperUpload = (event: Event) => {
+  const input = event.target as HTMLInputElement
+  const file = input.files?.[0]
+  if (!file) return
+
+  // 检查文件大小（限制 2MB）
+  if (file.size > 2 * 1024 * 1024) {
+    alert('图片大小不能超过 2MB')
+    return
+  }
+
+  const reader = new FileReader()
+  reader.onload = (e) => {
+    const result = e.target?.result as string
+    setWallpaper(`url(${result})`)
+  }
+  reader.readAsDataURL(file)
+}
+
+const handleClearWallpaper = () => {
+  setWallpaper('')
+}
+
+const handleAreaToggle = (area: keyof WallpaperArea) => {
+  setWallpaperAreas({
+    ...wallpaperAreas.value,
+    [area]: !wallpaperAreas.value[area]
+  })
+}
+
+const handleOpacityChange = (event: Event) => {
+  const input = event.target as HTMLInputElement
+  setOpacity(Number(input.value))
+}
+
+const setOpacity = (value: number) => {
+  setOverlayOpacity(value)
+}
+
+const isPresetSelected = (preset: typeof presetWallpapers[0]) => {
+  return wallpaper.value === preset.full
+}
+
+const isCustomWallpaper = computed(() => {
+  return wallpaper.value && wallpaper.value.startsWith('url(')
+})
 </script>
 
 <template>
@@ -37,6 +89,103 @@ const handleThemeSelect = (themeName: ThemeName) => {
         </div>
 
         <div class="modal-body">
+          <!-- 壁纸设置 -->
+          <div class="settings-section">
+            <h4 class="section-title">壁纸</h4>
+
+            <!-- 预设壁纸 -->
+            <div class="wallpaper-grid">
+              <button
+                v-for="preset in presetWallpapers"
+                :key="preset.id"
+                class="wallpaper-option"
+                :class="{ active: isPresetSelected(preset) }"
+                @click="handlePresetWallpaperSelect(preset)"
+              >
+                <div
+                  class="wallpaper-preview"
+                  :style="preset.thumbnail ? { background: preset.thumbnail } : { backgroundColor: 'var(--bg-secondary)' }"
+                >
+                  <svg v-if="!preset.thumbnail" class="no-wallpaper-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <circle cx="12" cy="12" r="10"/>
+                    <line x1="4.93" y1="4.93" x2="19.07" y2="19.07"/>
+                  </svg>
+                </div>
+                <span class="wallpaper-name">{{ preset.name }}</span>
+              </button>
+
+              <!-- 自定义上传 -->
+              <label class="wallpaper-option custom-upload">
+                <div class="wallpaper-preview upload-preview" :class="{ 'has-custom': isCustomWallpaper }">
+                  <img v-if="isCustomWallpaper" :src="wallpaper.replace('url(', '').replace(')', '')" alt="自定义壁纸" />
+                  <svg v-else class="upload-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+                    <polyline points="17,8 12,3 7,8"/>
+                    <line x1="12" y1="3" x2="12" y2="15"/>
+                  </svg>
+                </div>
+                <span class="wallpaper-name">{{ isCustomWallpaper ? '已上传' : '自定义' }}</span>
+                <input type="file" accept="image/*" @change="handleCustomWallpaperUpload" hidden />
+              </label>
+            </div>
+
+            <!-- 清除按钮 -->
+            <button v-if="wallpaper" class="clear-wallpaper-btn" @click="handleClearWallpaper">
+              清除壁纸
+            </button>
+
+            <!-- 蒙层透明度 -->
+            <div class="opacity-control">
+              <label class="opacity-label">蒙层透明度</label>
+              <div class="opacity-slider-wrapper">
+                <input
+                  type="range"
+                  min="50"
+                  max="95"
+                  :value="overlayOpacity"
+                  @input="handleOpacityChange"
+                  class="opacity-slider"
+                />
+                <span class="opacity-value">{{ overlayOpacity }}%</span>
+              </div>
+            </div>
+
+            <!-- 应用区域 -->
+            <div class="area-control">
+              <label class="area-label">应用区域</label>
+              <div class="area-toggles">
+                <button
+                  class="area-toggle"
+                  :class="{ active: wallpaperAreas.editor }"
+                  @click="handleAreaToggle('editor')"
+                >
+                  编辑器
+                </button>
+                <button
+                  class="area-toggle"
+                  :class="{ active: wallpaperAreas.preview }"
+                  @click="handleAreaToggle('preview')"
+                >
+                  预览区
+                </button>
+                <button
+                  class="area-toggle"
+                  :class="{ active: wallpaperAreas.toolbar }"
+                  @click="handleAreaToggle('toolbar')"
+                >
+                  工具栏
+                </button>
+                <button
+                  class="area-toggle"
+                  :class="{ active: wallpaperAreas.sidebar }"
+                  @click="handleAreaToggle('sidebar')"
+                >
+                  侧边栏
+                </button>
+              </div>
+            </div>
+          </div>
+
           <!-- Tab 缩进设置 -->
           <div class="settings-section">
             <h4 class="section-title">Tab 缩进</h4>
@@ -97,9 +246,9 @@ const handleThemeSelect = (themeName: ThemeName) => {
   background-color: var(--bg-toolbar);
   border: 1px solid var(--border-color);
   border-radius: 8px;
-  min-width: 400px;
-  max-width: 500px;
-  max-height: 80vh;
+  min-width: 520px;
+  max-width: 600px;
+  max-height: 85vh;
   overflow-y: auto;
   box-shadow: 0 8px 32px var(--dropdown-shadow);
 }
@@ -110,6 +259,10 @@ const handleThemeSelect = (themeName: ThemeName) => {
   justify-content: space-between;
   padding: 1rem 1.25rem;
   border-bottom: 1px solid var(--border-color);
+  position: sticky;
+  top: 0;
+  background-color: var(--bg-toolbar);
+  z-index: 1;
 }
 
 .modal-title {
@@ -149,7 +302,7 @@ const handleThemeSelect = (themeName: ThemeName) => {
 }
 
 .settings-section {
-  margin-bottom: 1.5rem;
+  margin-bottom: 1.75rem;
 }
 
 .settings-section:last-child {
@@ -157,7 +310,7 @@ const handleThemeSelect = (themeName: ThemeName) => {
 }
 
 .section-title {
-  margin: 0 0 0.75rem 0;
+  margin: 0 0 0.875rem 0;
   font-size: 0.875rem;
   font-weight: 600;
   color: var(--text-secondary);
@@ -165,6 +318,196 @@ const handleThemeSelect = (themeName: ThemeName) => {
   letter-spacing: 0.05em;
 }
 
+/* 壁纸网格 */
+.wallpaper-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 0.75rem;
+  margin-bottom: 1rem;
+}
+
+.wallpaper-option {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.375rem;
+  padding: 0.5rem;
+  background: var(--bg-secondary);
+  border: 2px solid var(--border-color);
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.wallpaper-option:hover {
+  border-color: var(--accent-color);
+}
+
+.wallpaper-option.active {
+  border-color: var(--accent-color);
+  background-color: var(--accent-color);
+}
+
+.wallpaper-option.active .wallpaper-name {
+  color: var(--btn-active-text);
+}
+
+.wallpaper-preview {
+  width: 100%;
+  aspect-ratio: 16/9;
+  border-radius: 4px;
+  background-size: cover;
+  background-position: center;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+}
+
+.wallpaper-preview img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.upload-preview {
+  background-color: var(--bg-primary);
+}
+
+.upload-preview.has-custom {
+  padding: 0;
+}
+
+.upload-icon,
+.no-wallpaper-icon {
+  width: 24px;
+  height: 24px;
+  color: var(--text-secondary);
+}
+
+.wallpaper-name {
+  font-size: 0.6875rem;
+  color: var(--text-primary);
+  text-align: center;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 100%;
+}
+
+.custom-upload {
+  cursor: pointer;
+}
+
+/* 清除壁纸按钮 */
+.clear-wallpaper-btn {
+  width: 100%;
+  padding: 0.5rem;
+  background: transparent;
+  border: 1px solid var(--border-color);
+  border-radius: 4px;
+  color: var(--text-secondary);
+  font-size: 0.8125rem;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  margin-bottom: 1rem;
+}
+
+.clear-wallpaper-btn:hover {
+  border-color: var(--error-color);
+  color: var(--error-color);
+}
+
+/* 蒙层透明度 */
+.opacity-control {
+  margin-bottom: 1rem;
+}
+
+.opacity-label,
+.area-label {
+  display: block;
+  font-size: 0.8125rem;
+  color: var(--text-primary);
+  margin-bottom: 0.5rem;
+}
+
+.opacity-slider-wrapper {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.opacity-slider {
+  flex: 1;
+  height: 6px;
+  -webkit-appearance: none;
+  appearance: none;
+  background: var(--bg-secondary);
+  border-radius: 3px;
+  outline: none;
+}
+
+.opacity-slider::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 16px;
+  height: 16px;
+  background: var(--accent-color);
+  border-radius: 50%;
+  cursor: pointer;
+  transition: transform 0.15s ease;
+}
+
+.opacity-slider::-webkit-slider-thumb:hover {
+  transform: scale(1.1);
+}
+
+.opacity-slider::-moz-range-thumb {
+  width: 16px;
+  height: 16px;
+  background: var(--accent-color);
+  border-radius: 50%;
+  cursor: pointer;
+  border: none;
+}
+
+.opacity-value {
+  min-width: 40px;
+  font-size: 0.8125rem;
+  color: var(--text-secondary);
+  text-align: right;
+}
+
+/* 应用区域 */
+.area-toggles {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.area-toggle {
+  padding: 0.375rem 0.75rem;
+  background: var(--bg-secondary);
+  border: 1px solid var(--border-color);
+  border-radius: 4px;
+  color: var(--text-secondary);
+  font-size: 0.8125rem;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.area-toggle:hover {
+  border-color: var(--accent-color);
+  color: var(--text-primary);
+}
+
+.area-toggle.active {
+  background-color: var(--accent-color);
+  border-color: var(--accent-color);
+  color: var(--btn-active-text);
+}
+
+/* Tab 选项 */
 .tab-options {
   display: grid;
   grid-template-columns: repeat(2, 1fr);
@@ -210,6 +553,7 @@ const handleThemeSelect = (themeName: ThemeName) => {
   margin-top: 0.125rem;
 }
 
+/* 主题网格 */
 .theme-grid {
   display: grid;
   grid-template-columns: repeat(2, 1fr);
@@ -258,5 +602,17 @@ const handleThemeSelect = (themeName: ThemeName) => {
   width: 14px;
   height: 14px;
   color: var(--btn-active-text);
+}
+
+/* 响应式 */
+@media (max-width: 600px) {
+  .modal-content {
+    min-width: 90vw;
+    max-width: 95vw;
+  }
+
+  .wallpaper-grid {
+    grid-template-columns: repeat(3, 1fr);
+  }
 }
 </style>
