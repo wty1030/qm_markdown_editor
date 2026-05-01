@@ -35,6 +35,7 @@ export interface WallpaperArea {
   editor: boolean
   preview: boolean
   toolbar: boolean
+  formatBar: boolean
   sidebar: boolean
 }
 
@@ -98,6 +99,7 @@ const storedWallpaperAreas = useLocalStorage<WallpaperArea>('qmmd-wallpaper-area
   editor: true,
   preview: true,
   toolbar: true,
+  formatBar: true,
   sidebar: true
 })
 const storedOverlayOpacity = useLocalStorage<number>('qmmd-overlay-opacity', 85)
@@ -109,6 +111,7 @@ const wallpaperAreas = ref<WallpaperArea>(storedWallpaperAreas.value || {
   editor: true,
   preview: true,
   toolbar: true,
+  formatBar: true,
   sidebar: true
 })
 const overlayOpacity = ref<number>(storedOverlayOpacity.value || 85)
@@ -175,8 +178,10 @@ export function useSettings() {
     const root = document.documentElement
     if (wallpaper.value) {
       root.style.setProperty('--wallpaper-bg', wallpaper.value)
+      root.setAttribute('data-has-wallpaper', 'true')
     } else {
       root.style.setProperty('--wallpaper-bg', 'none')
+      root.removeAttribute('data-has-wallpaper')
     }
     root.style.setProperty('--wallpaper-overlay-opacity', `${overlayOpacity.value / 100}`)
 
@@ -184,6 +189,7 @@ export function useSettings() {
     root.setAttribute('data-wallpaper-editor', wallpaperAreas.value.editor && wallpaper.value ? 'true' : 'false')
     root.setAttribute('data-wallpaper-preview', wallpaperAreas.value.preview && wallpaper.value ? 'true' : 'false')
     root.setAttribute('data-wallpaper-toolbar', wallpaperAreas.value.toolbar && wallpaper.value ? 'true' : 'false')
+    root.setAttribute('data-wallpaper-formatbar', wallpaperAreas.value.formatBar && wallpaper.value ? 'true' : 'false')
     root.setAttribute('data-wallpaper-sidebar', wallpaperAreas.value.sidebar && wallpaper.value ? 'true' : 'false')
   })
 

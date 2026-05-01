@@ -287,6 +287,7 @@ watch(markdownContent, (newContent) => {
 html, body, #app {
   height: 100%;
   overflow: hidden;
+  background-color: var(--bg-primary);
 }
 
 .app-container {

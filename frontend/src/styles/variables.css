@@ -611,44 +611,24 @@
   scrollbar-color: var(--scrollbar-thumb) var(--scrollbar-bg);
 }
 
-/* Wallpaper background styles */
-.wallpaper-bg {
-  position: fixed;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  background: var(--wallpaper-bg);
-  background-size: cover;
-  background-position: center;
-  background-repeat: no-repeat;
-  z-index: -2;
-  pointer-events: none;
+/* 壁纸显示控制逻辑 */
+/* 当壁纸开启且该区域启用时，使用透明背景让壁纸透出 */
+[data-has-wallpaper="true"][data-wallpaper-editor="true"] .editor-container,
+[data-has-wallpaper="true"][data-wallpaper-preview="true"] .preview-container,
+[data-has-wallpaper="true"][data-wallpaper-toolbar="true"] .toolbar,
+[data-has-wallpaper="true"][data-wallpaper-formatbar="true"] .format-bar,
+[data-has-wallpaper="true"][data-wallpaper-sidebar="true"] .sidebar,
+[data-has-wallpaper="true"][data-wallpaper-sidebar="true"] .sidebar-header {
+  background-color: transparent !important;
 }
 
-.wallpaper-overlay {
-  position: fixed;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  background-color: var(--bg-primary);
-  opacity: var(--wallpaper-overlay-opacity);
-  z-index: -1;
-  pointer-events: none;
+/* 分栏布局也需要透明 */
+[data-has-wallpaper="true"] .split-pane-layout,
+[data-has-wallpaper="true"] .splitpanes__pane {
+  background-color: transparent !important;
 }
 
-/* 壁纸区域控制 */
-[data-wallpaper-editor="false"] .editor-container,
-[data-wallpaper-preview="false"] .preview-container,
-[data-wallpaper-toolbar="false"] .toolbar,
-[data-wallpaper-sidebar="false"] .sidebar {
-  background-color: var(--bg-primary) !important;
-}
-
-[data-wallpaper-editor="false"] .editor-container::before,
-[data-wallpaper-preview="false"] .preview-container::before,
-[data-wallpaper-toolbar="false"] .toolbar::before,
-[data-wallpaper-sidebar="false"] .sidebar::before {
-  display: none;
+/* 行号区域在壁纸模式下使用半透明背景 */
+[data-has-wallpaper="true"][data-wallpaper-editor="true"] .line-numbers {
+  background-color: rgba(0, 0, 0, 0.2) !important;
 }

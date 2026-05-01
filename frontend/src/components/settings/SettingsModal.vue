@@ -173,7 +173,14 @@ const isCustomWallpaper = computed(() => {
                   :class="{ active: wallpaperAreas.toolbar }"
                   @click="handleAreaToggle('toolbar')"
                 >
-                  工具栏
+                  顶部栏
+                </button>
+                <button
+                  class="area-toggle"
+                  :class="{ active: wallpaperAreas.formatBar }"
+                  @click="handleAreaToggle('formatBar')"
+                >
+                  格式栏
                 </button>
                 <button
                   class="area-toggle"
@@ -337,6 +344,7 @@ const isCustomWallpaper = computed(() => {
   border-radius: 8px;
   cursor: pointer;
   transition: all 0.15s ease;
+  min-width: 0;
 }
 
 .wallpaper-option:hover {
@@ -362,6 +370,7 @@ const isCustomWallpaper = computed(() => {
   align-items: center;
   justify-content: center;
   overflow: hidden;
+  flex-shrink: 0;
 }
 
 .wallpaper-preview img {

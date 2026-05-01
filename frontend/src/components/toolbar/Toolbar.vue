@@ -115,7 +115,7 @@ const handleViewModeChange = (mode: ViewMode) => {
   justify-content: space-between;
   align-items: center;
   padding: 0.5rem 1rem;
-  background-color: transparent;
+  background-color: var(--bg-toolbar);
   border-bottom: 1px solid var(--border-color);
   min-height: 48px;
 }
@@ -148,7 +148,7 @@ const handleViewModeChange = (mode: ViewMode) => {
 }
 
 .toolbar-btn:hover {
-  background-color: rgba(255, 255, 255, 0.1);
+  background-color: var(--bg-hover);
   border-color: var(--border-color);
 }
 
@@ -171,7 +171,7 @@ const handleViewModeChange = (mode: ViewMode) => {
 .view-mode-group {
   display: flex;
   align-items: center;
-  background-color: rgba(0, 0, 0, 0.3);
+  background-color: var(--bg-secondary);
   border: 1px solid var(--border-color);
   border-radius: 6px;
   padding: 0.25rem;
@@ -193,7 +193,7 @@ const handleViewModeChange = (mode: ViewMode) => {
 
 .view-mode-btn:hover {
   color: var(--text-primary);
-  background-color: rgba(255, 255, 255, 0.1);
+  background-color: var(--bg-hover);
 }
 
 .view-mode-btn.active {

@@ -166,13 +166,13 @@ defineExpose({
 .editor-container {
   display: flex;
   height: 100%;
-  background-color: transparent;
+  background-color: var(--bg-primary);
 }
 
 .line-numbers {
   width: 40px;
   padding: 1rem 0.5rem;
-  background-color: rgba(0, 0, 0, 0.2);
+  background-color: var(--bg-secondary);
   color: var(--text-secondary);
   font-family: 'Consolas', 'Monaco', 'Courier New', monospace;
   font-size: 14px;
@@ -279,7 +279,7 @@ defineExpose({
 
 .editor-highlight :deep(.md-inline-code) {
   color: var(--syntax-string);
-  background-color: rgba(0, 0, 0, 0.3);
+  background-color: var(--bg-secondary);
   border-radius: 3px;
 }
 
