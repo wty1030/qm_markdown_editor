@@ -61,7 +61,7 @@ const toggleCollapse = () => {
   flex-direction: column;
   width: 220px;
   min-width: 40px;
-  background-color: var(--bg-secondary);
+  background-color: transparent;
   border-right: 1px solid var(--border-color);
   transition: width 0.2s ease;
 }
@@ -77,6 +77,7 @@ const toggleCollapse = () => {
   padding: 0.5rem;
   border-bottom: 1px solid var(--border-color);
   min-height: 40px;
+  background-color: rgba(0, 0, 0, 0.2);
 }
 
 .directory-name {
@@ -104,7 +105,7 @@ const toggleCollapse = () => {
 }
 
 .collapse-btn:hover {
-  background-color: var(--bg-hover);
+  background-color: rgba(255, 255, 255, 0.1);
   color: var(--text-primary);
 }
 

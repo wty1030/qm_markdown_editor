@@ -137,7 +137,7 @@ defineExpose({
 .preview-container {
   height: 100%;
   overflow-y: auto;
-  background-color: var(--bg-primary);
+  background-color: transparent;
 }
 
 .markdown-body {
@@ -210,7 +210,7 @@ defineExpose({
 
 /* Code */
 .markdown-body :deep(code) {
-  background-color: var(--bg-secondary);
+  background-color: rgba(0, 0, 0, 0.3);
   padding: 0.2em 0.4em;
   border-radius: 3px;
   font-family: 'Consolas', 'Monaco', 'Courier New', monospace;
@@ -219,7 +219,7 @@ defineExpose({
 }
 
 .markdown-body :deep(pre) {
-  background-color: var(--bg-secondary);
+  background-color: rgba(0, 0, 0, 0.3);
   padding: 1rem;
   border-radius: 6px;
   overflow-x: auto;
@@ -237,7 +237,7 @@ defineExpose({
 /* Blockquote */
 .markdown-body :deep(blockquote) {
   border-left: 4px solid var(--preview-quote-border);
-  background-color: var(--preview-quote-bg);
+  background-color: rgba(0, 0, 0, 0.2);
   padding: 0.5rem 1rem;
   margin: 0 0 1rem;
   color: var(--text-secondary);
@@ -273,17 +273,17 @@ defineExpose({
 }
 
 .markdown-body :deep(th) {
-  background-color: var(--bg-secondary);
+  background-color: rgba(0, 0, 0, 0.3);
   font-weight: 600;
   color: var(--text-primary);
 }
 
 .markdown-body :deep(tr:nth-child(even) td) {
-  background-color: var(--bg-secondary);
+  background-color: rgba(0, 0, 0, 0.2);
 }
 
 .markdown-body :deep(tr:hover td) {
-  background-color: var(--bg-hover);
+  background-color: rgba(0, 0, 0, 0.3);
 }
 
 /* Horizontal rule */

@@ -293,23 +293,53 @@ html, body, #app {
   display: flex;
   flex-direction: column;
   height: 100%;
-  background-color: var(--bg-primary);
+  background-color: transparent;
   color: var(--text-primary);
+  position: relative;
 }
 
 .main-content {
   flex: 1;
   overflow: hidden;
+  background-color: transparent;
 }
 
 .content-wrapper {
   display: flex;
   height: 100%;
+  background-color: transparent;
 }
 
 .full-pane {
   flex: 1;
   width: 100%;
   height: 100%;
+}
+
+/* 壁纸背景层 */
+.wallpaper-bg {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: var(--wallpaper-bg);
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+  z-index: -2;
+  pointer-events: none;
+}
+
+.wallpaper-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: var(--bg-primary);
+  opacity: var(--wallpaper-overlay-opacity);
+  z-index: -1;
+  pointer-events: none;
 }
 </style>
