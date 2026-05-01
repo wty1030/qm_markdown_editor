@@ -9,6 +9,7 @@ import Sidebar from './components/sidebar/Sidebar.vue'
 import { useScrollSync } from './composables/useScrollSync'
 import { useFileOperations, type ExportFormat } from './composables/useFileOperations'
 import { useFormat, type FormatType, type LinkData, type ImageData, type CodeBlockData, type ColorData, type TableData } from './composables/useFormat'
+import { useUndoRedo } from './composables/useUndoRedo'
 
 const markdownContent = ref('')
 const showSidebar = ref(false)
@@ -34,6 +35,7 @@ const {
 
 const { handleEditorScroll, handlePreviewScroll } = useScrollSync()
 const { format, insertLink, insertImage, insertCodeBlock, insertColor, insertTable } = useFormat(textareaRef)
+const { canUndo, canRedo, pushHistory, pushHistoryImmediate, undo, redo, reset } = useUndoRedo(markdownContent)
 
 const handleEditorScrollEvent = (scrollTop: number, scrollHeight: number, clientHeight: number) => {
   if (previewRef.value?.previewRef) {
@@ -55,6 +57,7 @@ const handleOpenFile = async () => {
   const result = await openFile()
   if (result.success && result.content !== undefined) {
     markdownContent.value = result.content
+    reset(result.content)
   }
 }
 
@@ -77,6 +80,7 @@ const handleSelectFile = async (path: string) => {
   const result = await openFileByPath(path)
   if (result.success && result.content !== undefined) {
     markdownContent.value = result.content
+    reset(result.content)
   }
 }
 
@@ -84,6 +88,7 @@ const handleFormat = (type: FormatType) => {
   const newText = format(type, markdownContent)
   if (newText !== undefined) {
     markdownContent.value = newText
+    pushHistoryImmediate(newText)
   }
 }
 
@@ -91,6 +96,7 @@ const handleInsertLink = (data: LinkData) => {
   const newText = insertLink(data, markdownContent)
   if (newText !== undefined) {
     markdownContent.value = newText
+    pushHistoryImmediate(newText)
   }
 }
 
@@ -98,6 +104,7 @@ const handleInsertImage = (data: ImageData) => {
   const newText = insertImage(data, markdownContent)
   if (newText !== undefined) {
     markdownContent.value = newText
+    pushHistoryImmediate(newText)
   }
 }
 
@@ -105,6 +112,7 @@ const handleInsertCodeBlock = (data: CodeBlockData) => {
   const newText = insertCodeBlock(data, markdownContent)
   if (newText !== undefined) {
     markdownContent.value = newText
+    pushHistoryImmediate(newText)
   }
 }
 
@@ -112,6 +120,7 @@ const handleInsertColor = (data: ColorData) => {
   const newText = insertColor(data, markdownContent)
   if (newText !== undefined) {
     markdownContent.value = newText
+    pushHistoryImmediate(newText)
   }
 }
 
@@ -119,6 +128,7 @@ const handleInsertTable = (data: TableData) => {
   const newText = insertTable(data, markdownContent)
   if (newText !== undefined) {
     markdownContent.value = newText
+    pushHistoryImmediate(newText)
   }
 }
 
@@ -142,6 +152,24 @@ const handleKeydown = (e: KeyboardEvent) => {
           handleSave()
         }
         break
+      case 'z':
+        e.preventDefault()
+        if (e.shiftKey) {
+          // Ctrl+Shift+Z = Redo
+          const next = redo()
+          if (next !== null) markdownContent.value = next
+        } else {
+          // Ctrl+Z = Undo
+          const prev = undo()
+          if (prev !== null) markdownContent.value = prev
+        }
+        break
+      case 'y':
+        e.preventDefault()
+        // Ctrl+Y = Redo
+        const next = redo()
+        if (next !== null) markdownContent.value = next
+        break
     }
   }
 }
@@ -154,9 +182,10 @@ onUnmounted(() => {
   document.removeEventListener('keydown', handleKeydown)
 })
 
-// Track modifications
-watch(markdownContent, () => {
+// Track modifications and history
+watch(markdownContent, (newContent) => {
   markModified()
+  pushHistory(newContent)
 })
 </script>
 
