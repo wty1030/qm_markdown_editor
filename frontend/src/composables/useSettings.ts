@@ -25,9 +25,9 @@ export interface ViewModeOption {
 }
 
 export const viewModeOptions: ViewModeOption[] = [
-  { value: 'editor', label: '编辑', icon: '✏️' },
-  { value: 'preview', label: '预览', icon: '👁️' },
-  { value: 'split', label: '分栏', icon: '⬛⬛' },
+  { value: 'editor', label: '编辑', icon: 'edit' },
+  { value: 'preview', label: '预览', icon: 'preview' },
+  { value: 'split', label: '分栏', icon: 'split' },
 ]
 
 const storedTabMode = useLocalStorage<TabMode>('qmmd-tab-mode', 'tab')

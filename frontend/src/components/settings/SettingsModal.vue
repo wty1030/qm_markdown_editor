@@ -86,7 +86,7 @@ const handleThemeSelect = (themeName: ThemeName) => {
   left: 0;
   right: 0;
   bottom: 0;
-  background-color: rgba(0, 0, 0, 0.5);
+  background-color: var(--dropdown-shadow);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -101,7 +101,7 @@ const handleThemeSelect = (themeName: ThemeName) => {
   max-width: 500px;
   max-height: 80vh;
   overflow-y: auto;
-  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+  box-shadow: 0 8px 32px var(--dropdown-shadow);
 }
 
 .modal-header {

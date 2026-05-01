@@ -73,7 +73,21 @@ const handleViewModeChange = (mode: ViewMode) => {
           :title="option.label"
           @click="handleViewModeChange(option.value)"
         >
-          <span class="mode-icon">{{ option.icon }}</span>
+          <!-- 编辑图标 -->
+          <svg v-if="option.icon === 'edit'" class="mode-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/>
+            <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/>
+          </svg>
+          <!-- 预览图标 -->
+          <svg v-else-if="option.icon === 'preview'" class="mode-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/>
+            <circle cx="12" cy="12" r="3"/>
+          </svg>
+          <!-- 分栏图标 -->
+          <svg v-else-if="option.icon === 'split'" class="mode-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <rect x="3" y="3" width="18" height="18" rx="2" ry="2"/>
+            <line x1="12" y1="3" x2="12" y2="21"/>
+          </svg>
           <span class="mode-label">{{ option.label }}</span>
         </button>
       </div>
@@ -188,8 +202,9 @@ const handleViewModeChange = (mode: ViewMode) => {
 }
 
 .mode-icon {
-  font-size: 0.875rem;
-  line-height: 1;
+  width: 14px;
+  height: 14px;
+  flex-shrink: 0;
 }
 
 .mode-label {
