@@ -229,6 +229,27 @@ const isCustomWallpaper = computed(() => {
               </button>
             </div>
           </div>
+
+          <!-- 关于信息 -->
+          <div class="settings-section about-section">
+            <div class="about-content">
+              <div class="app-logo">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+                  <polyline points="14,2 14,8 20,8"/>
+                  <line x1="16" y1="13" x2="8" y2="13"/>
+                  <line x1="16" y1="17" x2="8" y2="17"/>
+                  <polyline points="10,9 9,9 8,9"/>
+                </svg>
+              </div>
+              <div class="app-info">
+                <span class="app-name">QMMD</span>
+                <span class="app-version">v1.0.0</span>
+              </div>
+            </div>
+            <p class="about-desc">轻量级 Markdown 编辑器</p>
+            <p class="about-author">作者: Sisyphus</p>
+          </div>
         </div>
       </div>
     </div>
@@ -611,6 +632,71 @@ const isCustomWallpaper = computed(() => {
   width: 14px;
   height: 14px;
   color: var(--btn-active-text);
+}
+
+/* 关于信息 */
+.about-section {
+  margin-top: 1.5rem;
+  padding-top: 1.25rem;
+  border-top: 1px solid var(--border-color);
+  text-align: center;
+}
+
+.about-content {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.75rem;
+  margin-bottom: 0.5rem;
+}
+
+.app-logo {
+  width: 40px;
+  height: 40px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--accent-color);
+  border-radius: 8px;
+}
+
+.app-logo svg {
+  width: 24px;
+  height: 24px;
+  color: var(--btn-active-text);
+}
+
+.app-info {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 0.125rem;
+}
+
+.app-name {
+  font-size: 1.125rem;
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+.app-version {
+  font-size: 0.75rem;
+  color: var(--text-secondary);
+  background: var(--bg-secondary);
+  padding: 0.125rem 0.5rem;
+  border-radius: 4px;
+}
+
+.about-desc {
+  font-size: 0.8125rem;
+  color: var(--text-secondary);
+  margin: 0;
+}
+
+.about-author {
+  font-size: 0.75rem;
+  color: var(--text-muted);
+  margin: 0.25rem 0 0 0;
 }
 
 /* 响应式 */
