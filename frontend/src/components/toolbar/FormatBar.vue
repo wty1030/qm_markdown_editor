@@ -1,9 +1,9 @@
 <script setup lang="ts">
 import { ref } from 'vue'
 import Modal from '../common/Modal.vue'
-import { colorPresets, type FormatType, type LinkData, type ImageData, type CodeBlockData, type ColorData } from '../../composables/useFormat'
+import { colorPresets, type FormatType, type LinkData, type ImageData, type CodeBlockData, type ColorData, type TableData } from '../../composables/useFormat'
 
-export type { FormatType, LinkData, ImageData, CodeBlockData, ColorData }
+export type { FormatType, LinkData, ImageData, CodeBlockData, ColorData, TableData }
 
 const emit = defineEmits<{
   format: [type: FormatType]
@@ -11,6 +11,7 @@ const emit = defineEmits<{
   insertImage: [data: ImageData]
   insertCodeBlock: [data: CodeBlockData]
   insertColor: [data: ColorData]
+  insertTable: [data: TableData]
 }>()
 
 const showHeadingMenu = ref(false)
@@ -18,6 +19,9 @@ const showCodeMenu = ref(false)
 const showColorMenu = ref(false)
 const showLinkModal = ref(false)
 const showImageModal = ref(false)
+const showTableModal = ref(false)
+const tableRows = ref(3)
+const tableCols = ref(3)
 
 const handleFormat = (type: FormatType) => {
   emit('format', type)
@@ -74,6 +78,17 @@ const handleLinkConfirm = (values: Record<string, string>) => {
 
 const handleImageConfirm = (values: Record<string, string>) => {
   emit('insertImage', { alt: values.alt, url: values.url })
+}
+
+const openTableModal = () => {
+  tableRows.value = 3
+  tableCols.value = 3
+  showTableModal.value = true
+}
+
+const handleTableConfirm = () => {
+  emit('insertTable', { rows: tableRows.value, cols: tableCols.value })
+  showTableModal.value = false
 }
 
 // 常用编程语言列表
@@ -305,6 +320,21 @@ const codeLanguages = [
       <span class="btn-label">图片</span>
     </button>
 
+    <button
+      class="format-btn"
+      title="插入表格"
+      @click="openTableModal"
+    >
+      <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <rect x="3" y="3" width="18" height="18" rx="2" ry="2"/>
+        <line x1="3" y1="9" x2="21" y2="9"/>
+        <line x1="3" y1="15" x2="21" y2="15"/>
+        <line x1="9" y1="3" x2="9" y2="21"/>
+        <line x1="15" y1="3" x2="15" y2="21"/>
+      </svg>
+      <span class="btn-label">表格</span>
+    </button>
+
     <!-- 链接弹窗 -->
     <Modal
       :visible="showLinkModal"
@@ -330,6 +360,50 @@ const codeLanguages = [
       @close="showImageModal = false"
       @confirm="handleImageConfirm"
     />
+
+    <!-- 表格弹窗 -->
+    <Teleport to="body">
+      <div
+        v-if="showTableModal"
+        class="modal-overlay"
+        @click.self="showTableModal = false"
+      >
+        <div class="modal-content table-modal">
+          <div class="modal-header">
+            <h3 class="modal-title">插入表格</h3>
+            <button class="modal-close" @click="showTableModal = false" aria-label="关闭">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <line x1="18" y1="6" x2="6" y2="18"/>
+                <line x1="6" y1="6" x2="18" y2="18"/>
+              </svg>
+            </button>
+          </div>
+
+          <div class="modal-body">
+            <div class="table-selector">
+              <div class="selector-label">选择表格大小</div>
+              <div class="selector-grid">
+                <div
+                  v-for="r in 5"
+                  :key="'row-' + r"
+                  class="selector-row"
+                >
+                  <div
+                    v-for="c in 5"
+                    :key="'col-' + c"
+                    class="selector-cell"
+                    :class="{ active: r <= tableRows && c <= tableCols }"
+                    @mouseenter="tableRows = r; tableCols = c"
+                    @click="handleTableConfirm"
+                  />
+                </div>
+              </div>
+              <div class="selector-info">{{ tableRows }} 行 × {{ tableCols }} 列</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </Teleport>
   </div>
 </template>
 
@@ -470,5 +544,125 @@ const codeLanguages = [
   .btn-label {
     display: none;
   }
+}
+
+/* 表格弹窗样式 */
+.table-modal {
+  min-width: 280px;
+}
+
+.table-selector {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.selector-label {
+  font-size: 0.875rem;
+  color: var(--text-secondary);
+}
+
+.selector-grid {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.selector-row {
+  display: flex;
+  gap: 4px;
+}
+
+.selector-cell {
+  width: 24px;
+  height: 24px;
+  background-color: var(--bg-secondary);
+  border: 1px solid var(--border-color);
+  border-radius: 3px;
+  cursor: pointer;
+  transition: background-color 0.1s ease, border-color 0.1s ease;
+}
+
+.selector-cell:hover {
+  border-color: var(--accent-color);
+}
+
+.selector-cell.active {
+  background-color: var(--accent-color);
+  border-color: var(--accent-color);
+}
+
+.selector-info {
+  font-size: 0.875rem;
+  color: var(--text-primary);
+  font-weight: 500;
+}
+
+/* 复用 Modal 的样式 */
+.modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: var(--dropdown-shadow);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+}
+
+.modal-content {
+  background-color: var(--bg-toolbar);
+  border: 1px solid var(--border-color);
+  border-radius: 8px;
+  min-width: 360px;
+  max-width: 480px;
+  box-shadow: 0 8px 32px var(--dropdown-shadow);
+}
+
+.modal-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 1rem 1.25rem;
+  border-bottom: 1px solid var(--border-color);
+}
+
+.modal-title {
+  margin: 0;
+  font-size: 1rem;
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+.modal-close {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  padding: 0;
+  background: transparent;
+  border: none;
+  border-radius: 4px;
+  color: var(--text-secondary);
+  cursor: pointer;
+  transition: background-color 0.15s ease, color 0.15s ease;
+}
+
+.modal-close:hover {
+  background-color: var(--bg-hover);
+  color: var(--text-primary);
+}
+
+.modal-close svg {
+  width: 18px;
+  height: 18px;
+}
+
+.modal-body {
+  padding: 1.25rem;
 }
 </style>

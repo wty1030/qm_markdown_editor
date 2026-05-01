@@ -8,7 +8,7 @@ import Preview from './components/preview/Preview.vue'
 import Sidebar from './components/sidebar/Sidebar.vue'
 import { useScrollSync } from './composables/useScrollSync'
 import { useFileOperations, type ExportFormat } from './composables/useFileOperations'
-import { useFormat, type FormatType, type LinkData, type ImageData, type CodeBlockData, type ColorData } from './composables/useFormat'
+import { useFormat, type FormatType, type LinkData, type ImageData, type CodeBlockData, type ColorData, type TableData } from './composables/useFormat'
 
 const markdownContent = ref('')
 const showSidebar = ref(false)
@@ -33,7 +33,7 @@ const {
 } = useFileOperations()
 
 const { handleEditorScroll, handlePreviewScroll } = useScrollSync()
-const { format, insertLink, insertImage, insertCodeBlock, insertColor } = useFormat(textareaRef)
+const { format, insertLink, insertImage, insertCodeBlock, insertColor, insertTable } = useFormat(textareaRef)
 
 const handleEditorScrollEvent = (scrollTop: number, scrollHeight: number, clientHeight: number) => {
   if (previewRef.value?.previewRef) {
@@ -115,6 +115,13 @@ const handleInsertColor = (data: ColorData) => {
   }
 }
 
+const handleInsertTable = (data: TableData) => {
+  const newText = insertTable(data, markdownContent)
+  if (newText !== undefined) {
+    markdownContent.value = newText
+  }
+}
+
 // Keyboard shortcuts
 const handleKeydown = (e: KeyboardEvent) => {
   if (e.ctrlKey || e.metaKey) {
@@ -168,6 +175,7 @@ watch(markdownContent, () => {
       @insert-image="handleInsertImage"
       @insert-code-block="handleInsertCodeBlock"
       @insert-color="handleInsertColor"
+      @insert-table="handleInsertTable"
     />
     <main class="main-content">
       <div class="content-wrapper">

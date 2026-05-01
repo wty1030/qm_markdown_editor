@@ -260,17 +260,30 @@ defineExpose({
   border-collapse: collapse;
   width: 100%;
   margin: 0 0 1rem;
+  border: 1px solid var(--border-color);
+  border-radius: 6px;
+  overflow: hidden;
 }
 
 .markdown-body :deep(th),
 .markdown-body :deep(td) {
   border: 1px solid var(--border-color);
   padding: 0.5rem 0.75rem;
+  text-align: left;
 }
 
 .markdown-body :deep(th) {
   background-color: var(--bg-secondary);
   font-weight: 600;
+  color: var(--text-primary);
+}
+
+.markdown-body :deep(tr:nth-child(even) td) {
+  background-color: var(--bg-secondary);
+}
+
+.markdown-body :deep(tr:hover td) {
+  background-color: var(--bg-hover);
 }
 
 /* Horizontal rule */

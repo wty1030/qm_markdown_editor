@@ -32,6 +32,11 @@ export interface ColorData {
   color: string
 }
 
+export interface TableData {
+  rows: number
+  cols: number
+}
+
 // 预定义颜色列表
 export const colorPresets = [
   { name: '默认', value: '' },
@@ -209,6 +214,39 @@ export function useFormat(editorRef: Ref<HTMLTextAreaElement | null>) {
     return newText
   }
 
+  const insertTable = (data: TableData, content: Ref<string>): string | undefined => {
+    const rows = Math.max(1, data.rows || 3)
+    const cols = Math.max(1, data.cols || 3)
+
+    // 构建表格 Markdown
+    let table = ''
+
+    // 表头行
+    table += '|'
+    for (let c = 0; c < cols; c++) {
+      table += ` 标题${c + 1} |`
+    }
+    table += '\n'
+
+    // 分隔行
+    table += '|'
+    for (let c = 0; c < cols; c++) {
+      table += ' --- |'
+    }
+    table += '\n'
+
+    // 数据行
+    for (let r = 1; r < rows; r++) {
+      table += '|'
+      for (let c = 0; c < cols; c++) {
+        table += ' 内容 |'
+      }
+      table += '\n'
+    }
+
+    return insertAtCursor(table)
+  }
+
   return {
     format,
     wrapSelection,
@@ -217,6 +255,7 @@ export function useFormat(editorRef: Ref<HTMLTextAreaElement | null>) {
     insertLink,
     insertImage,
     insertCodeBlock,
-    insertColor
+    insertColor,
+    insertTable
   }
 }
