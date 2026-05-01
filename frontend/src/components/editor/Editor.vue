@@ -85,6 +85,28 @@ const handleInput = (event: Event) => {
   emit('update', target.value)
 }
 
+// 处理 Tab 键：插入制表符而非切换焦点
+const handleKeyDown = (event: KeyboardEvent) => {
+  if (event.key === 'Tab') {
+    event.preventDefault()
+    const textarea = textareaRef.value
+    if (!textarea) return
+
+    const start = textarea.selectionStart
+    const end = textarea.selectionEnd
+    const value = textarea.value
+
+    // 插入制表符
+    const newValue = value.substring(0, start) + '\t' + value.substring(end)
+    emit('update', newValue)
+
+    // 恢复光标位置
+    requestAnimationFrame(() => {
+      textarea.selectionStart = textarea.selectionEnd = start + 1
+    })
+  }
+}
+
 const handleScroll = () => {
   if (!textareaRef.value || !lineNumbersRef.value || !highlightRef.value) return
 
@@ -128,6 +150,7 @@ defineExpose({
         :value="content"
         @input="handleInput"
         @scroll="handleScroll"
+        @keydown="handleKeyDown"
         placeholder="在此输入 Markdown..."
         spellcheck="false"
       />
