@@ -146,7 +146,11 @@ const handleKeydown = (e: KeyboardEvent) => {
         break
       case 'o':
         e.preventDefault()
-        handleOpenFile()
+        if (e.shiftKey) {
+          handleOpenFolder()
+        } else {
+          handleOpenFile()
+        }
         break
       case 's':
         e.preventDefault()
