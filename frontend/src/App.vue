@@ -194,11 +194,11 @@ watch(markdownContent, (newContent) => {
 </script>
 
 <template>
-  <div class="app-container">
-    <!-- 壁纸背景层 -->
-    <div v-if="hasWallpaper" class="wallpaper-bg"></div>
-    <div v-if="hasWallpaper" class="wallpaper-overlay"></div>
+  <!-- 壁纸背景层 - 放在最外层 -->
+  <div v-if="hasWallpaper" class="wallpaper-bg"></div>
+  <div v-if="hasWallpaper" class="wallpaper-overlay"></div>
 
+  <div class="app-container">
     <Toolbar
       @new-window="handleNewWindow"
       @open-file="handleOpenFile"
@@ -296,6 +296,7 @@ html, body, #app {
   background-color: transparent;
   color: var(--text-primary);
   position: relative;
+  z-index: 1;
 }
 
 .main-content {
@@ -327,7 +328,7 @@ html, body, #app {
   background-size: cover;
   background-position: center;
   background-repeat: no-repeat;
-  z-index: -2;
+  z-index: 0;
   pointer-events: none;
 }
 
@@ -339,7 +340,7 @@ html, body, #app {
   bottom: 0;
   background-color: var(--bg-primary);
   opacity: var(--wallpaper-overlay-opacity);
-  z-index: -1;
+  z-index: 1;
   pointer-events: none;
 }
 </style>
