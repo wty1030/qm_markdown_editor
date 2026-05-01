@@ -99,6 +99,7 @@ onUnmounted(() => {
         <span class="btn-text">保存</span>
       </button>
 
+      <!-- 导出功能暂时屏蔽
       <div class="dropdown" ref="exportDropdownRef">
         <button
           class="toolbar-btn"
@@ -144,6 +145,7 @@ onUnmounted(() => {
           </button>
         </div>
       </div>
+      -->
     </div>
 
     <div class="toolbar-right">

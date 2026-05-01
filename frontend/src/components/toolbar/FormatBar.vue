@@ -179,6 +179,18 @@ const codeLanguages = [
       </div>
     </div>
 
+    <button
+      class="format-btn"
+      title="行内代码"
+      @click="handleFormat('code')"
+    >
+      <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <polyline points="16,18 22,12 16,6"/>
+        <polyline points="8,6 2,12 8,18"/>
+      </svg>
+      <span class="btn-label">代码</span>
+    </button>
+
     <div class="dropdown code-dropdown">
       <button
         class="format-btn"
@@ -187,10 +199,11 @@ const codeLanguages = [
         @click="toggleCodeMenu"
       >
         <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-          <polyline points="16,18 22,12 16,6"/>
-          <polyline points="8,6 2,12 8,18"/>
+          <rect x="3" y="3" width="18" height="18" rx="2" ry="2"/>
+          <line x1="9" y1="3" x2="9" y2="21"/>
+          <line x1="15" y1="3" x2="15" y2="21"/>
         </svg>
-        <span class="btn-label">代码</span>
+        <span class="btn-label">代码块</span>
         <svg class="chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
           <polyline points="6,9 12,15 18,9"/>
         </svg>
