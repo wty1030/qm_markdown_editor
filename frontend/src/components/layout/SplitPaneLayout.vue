@@ -31,18 +31,22 @@ const { leftSize, updateFromResize } = useLayoutState()
 <style scoped>
 .split-pane-layout {
   height: 100%;
-  background-color: var(--bg-primary);
+  background-color: transparent;
 }
 
 .left-pane,
 .right-pane {
-  background-color: var(--bg-primary);
+  background-color: transparent;
   overflow: hidden;
 }
 </style>
 
 <style>
 /* 分割线样式 - 非 scoped 以穿透 splitpanes 内部 */
+.split-pane-layout {
+  background-color: transparent;
+}
+
 .split-pane-layout .splitpanes__splitter {
   background-color: var(--border-color) !important;
   border: none !important;
@@ -70,5 +74,10 @@ const { leftSize, updateFromResize } = useLayoutState()
 
 .split-pane-layout .splitpanes__splitter:hover::before {
   background-color: var(--btn-text);
+}
+
+/* 确保 splitpanes 内部面板透明 */
+.split-pane-layout .splitpanes__pane {
+  background-color: transparent !important;
 }
 </style>
