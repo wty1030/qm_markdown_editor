@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { ref, computed, watch, onMounted, onUnmounted } from 'vue'
+import { useSettings } from '../../composables/useSettings'
 
 interface Props {
   content: string
@@ -11,6 +12,8 @@ const emit = defineEmits<{
   update: [content: string]
   scroll: [scrollTop: number, scrollHeight: number, clientHeight: number]
 }>()
+
+const { getTabString } = useSettings()
 
 const textareaRef = ref<HTMLTextAreaElement | null>(null)
 const lineNumbersRef = ref<HTMLDivElement | null>(null)
@@ -85,7 +88,7 @@ const handleInput = (event: Event) => {
   emit('update', target.value)
 }
 
-// 处理 Tab 键：插入制表符而非切换焦点
+// 处理 Tab 键：根据设置插入制表符或空格
 const handleKeyDown = (event: KeyboardEvent) => {
   if (event.key === 'Tab') {
     event.preventDefault()
@@ -95,14 +98,15 @@ const handleKeyDown = (event: KeyboardEvent) => {
     const start = textarea.selectionStart
     const end = textarea.selectionEnd
     const value = textarea.value
+    const tabStr = getTabString()
 
-    // 插入制表符
-    const newValue = value.substring(0, start) + '\t' + value.substring(end)
+    // 插入缩进字符
+    const newValue = value.substring(0, start) + tabStr + value.substring(end)
     emit('update', newValue)
 
     // 恢复光标位置
     requestAnimationFrame(() => {
-      textarea.selectionStart = textarea.selectionEnd = start + 1
+      textarea.selectionStart = textarea.selectionEnd = start + tabStr.length
     })
   }
 }

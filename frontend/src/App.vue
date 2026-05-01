@@ -6,13 +6,16 @@ import SplitPaneLayout from './components/layout/SplitPaneLayout.vue'
 import Editor from './components/editor/Editor.vue'
 import Preview from './components/preview/Preview.vue'
 import Sidebar from './components/sidebar/Sidebar.vue'
+import SettingsModal from './components/settings/SettingsModal.vue'
 import { useScrollSync } from './composables/useScrollSync'
 import { useFileOperations, type ExportFormat } from './composables/useFileOperations'
 import { useFormat, type FormatType, type LinkData, type ImageData, type CodeBlockData, type ColorData, type TableData } from './composables/useFormat'
 import { useUndoRedo } from './composables/useUndoRedo'
+import { useSettings, type ViewMode } from './composables/useSettings'
 
 const markdownContent = ref('')
 const showSidebar = ref(false)
+const showSettings = ref(false)
 
 const editorRef = ref<InstanceType<typeof Editor> | null>(null)
 const previewRef = ref<InstanceType<typeof Preview> | null>(null)
@@ -36,6 +39,7 @@ const {
 const { handleEditorScroll, handlePreviewScroll } = useScrollSync()
 const { format, insertLink, insertImage, insertCodeBlock, insertColor, insertTable } = useFormat(textareaRef)
 const { canUndo, canRedo, pushHistory, pushHistoryImmediate, undo, redo, reset } = useUndoRedo(markdownContent)
+const { viewMode } = useSettings()
 
 const handleEditorScrollEvent = (scrollTop: number, scrollHeight: number, clientHeight: number) => {
   if (previewRef.value?.previewRef) {
@@ -197,6 +201,7 @@ watch(markdownContent, (newContent) => {
       @open-folder="handleOpenFolder"
       @save="handleSave"
       @export-as="handleExportAs"
+      @open-settings="showSettings = true"
     />
     <FormatBar
       @format="handleFormat"
@@ -216,25 +221,55 @@ watch(markdownContent, (newContent) => {
           @select-file="handleSelectFile"
           @close="showSidebar = false"
         />
-        <SplitPaneLayout>
-          <template #left>
-            <Editor
-              ref="editorRef"
-              :content="markdownContent"
-              @update="markdownContent = $event"
-              @scroll="handleEditorScrollEvent"
-            />
-          </template>
-          <template #right>
-            <Preview
-              ref="previewRef"
-              :content="markdownContent"
-              @scroll="handlePreviewScrollEvent"
-            />
-          </template>
-        </SplitPaneLayout>
+
+        <!-- 编辑模式 -->
+        <template v-if="viewMode === 'editor'">
+          <Editor
+            ref="editorRef"
+            :content="markdownContent"
+            @update="markdownContent = $event"
+            @scroll="handleEditorScrollEvent"
+            class="full-pane"
+          />
+        </template>
+
+        <!-- 预览模式 -->
+        <template v-else-if="viewMode === 'preview'">
+          <Preview
+            ref="previewRef"
+            :content="markdownContent"
+            @scroll="handlePreviewScrollEvent"
+            class="full-pane"
+          />
+        </template>
+
+        <!-- 分栏模式 -->
+        <template v-else>
+          <SplitPaneLayout>
+            <template #left>
+              <Editor
+                ref="editorRef"
+                :content="markdownContent"
+                @update="markdownContent = $event"
+                @scroll="handleEditorScrollEvent"
+              />
+            </template>
+            <template #right>
+              <Preview
+                ref="previewRef"
+                :content="markdownContent"
+                @scroll="handlePreviewScrollEvent"
+              />
+            </template>
+          </SplitPaneLayout>
+        </template>
       </div>
     </main>
+
+    <SettingsModal
+      :visible="showSettings"
+      @close="showSettings = false"
+    />
   </div>
 </template>
 
@@ -265,6 +300,12 @@ html, body, #app {
 
 .content-wrapper {
   display: flex;
+  height: 100%;
+}
+
+.full-pane {
+  flex: 1;
+  width: 100%;
   height: 100%;
 }
 </style>
