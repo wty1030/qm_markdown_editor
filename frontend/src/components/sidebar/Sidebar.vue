@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, computed } from 'vue'
+import { ref, computed, watch } from 'vue'
 import FileTree from './FileTree.vue'
 import Outline from '../outline/Outline.vue'
 
@@ -27,7 +27,11 @@ const emit = defineEmits<{
 }>()
 
 const isCollapsed = ref(false)
-const activeTab = ref<'files' | 'outline'>('files')
+const activeTab = ref<'files' | 'outline'>(props.currentDirectory ? 'files' : 'outline')
+
+watch(() => props.currentDirectory, (newDir) => {
+  if (newDir) activeTab.value = 'files'
+})
 
 const directoryName = computed(() => {
   if (!props.currentDirectory) return ''

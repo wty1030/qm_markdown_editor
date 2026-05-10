@@ -14,7 +14,7 @@ import { useUndoRedo } from './composables/useUndoRedo'
 import { useSettings, type ViewMode } from './composables/useSettings'
 
 const markdownContent = ref('')
-const showSidebar = ref(false)
+const showSidebar = ref(true)
 const showSettings = ref(false)
 
 const editorRef = ref<InstanceType<typeof Editor> | null>(null)
