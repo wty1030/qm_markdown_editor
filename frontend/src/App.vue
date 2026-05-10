@@ -88,6 +88,11 @@ const handleSelectFile = async (path: string) => {
   }
 }
 
+// 大纲跳转：滚动编辑器到指定行
+const handleScrollToLine = (lineNumber: number) => {
+  editorRef.value?.scrollToLine(lineNumber)
+}
+
 const handleFormat = (type: FormatType) => {
   const newText = format(type, markdownContent)
   if (newText !== undefined) {
@@ -226,7 +231,9 @@ watch(markdownContent, (newContent) => {
           :files="fileTree"
           :current-directory="currentDirectory"
           :current-file="currentFile"
+          :content="markdownContent"
           @select-file="handleSelectFile"
+          @scroll-to-line="handleScrollToLine"
           @close="showSidebar = false"
         />
 

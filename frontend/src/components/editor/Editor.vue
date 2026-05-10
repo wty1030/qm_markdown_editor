@@ -137,8 +137,30 @@ const syncHighlightScroll = () => {
 
 defineExpose({
   syncScrollFromPreview,
-  textareaRef
+  textareaRef,
+  scrollToLine
 })
+
+// 滚动到指定行号（1-indexed）
+const scrollToLine = (lineNumber: number) => {
+  const textarea = textareaRef.value
+  if (!textarea) return
+
+  // 计算目标滚动位置
+  // 使用实际渲染的行高
+  const computedStyle = window.getComputedStyle(textarea)
+  const fontSize = parseFloat(computedStyle.fontSize)
+  const lineHeightRatio = parseFloat(computedStyle.lineHeight) || 1.6
+  const lineHeight = fontSize * lineHeightRatio
+
+  // 编辑器内边距
+  const paddingTop = parseFloat(computedStyle.paddingTop) || 16
+
+  // 目标滚动位置：让目标行显示在视口顶部附近
+  const targetScrollTop = Math.max(0, (lineNumber - 1) * lineHeight - paddingTop)
+
+  textarea.scrollTop = targetScrollTop
+}
 </script>
 
 <template>
