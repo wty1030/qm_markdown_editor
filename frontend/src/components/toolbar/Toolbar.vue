@@ -321,16 +321,19 @@ const handleViewModeChange = (mode: ViewMode) => {
   align-items: center;
   gap: 0.375rem;
   margin-left: 0.5rem;
-  padding-left: 0.5rem;
-  border-left: 1px solid var(--border-color);
+  padding: 0.1875rem 0.5rem;
+  background-color: var(--bg-secondary);
+  border: 1px solid var(--border-color);
+  border-radius: 4px;
 }
 
 .autosave-track {
-  width: 48px;
-  height: 3px;
-  background-color: var(--border-color);
+  width: 40px;
+  height: 4px;
+  background-color: var(--text-muted);
   border-radius: 2px;
   overflow: hidden;
+  opacity: 0.5;
 }
 
 .autosave-fill {
@@ -343,10 +346,7 @@ const handleViewModeChange = (mode: ViewMode) => {
 .autosave-label {
   font-size: 10px;
   font-weight: 600;
-  color: var(--btn-active-text);
-  background-color: var(--accent-color);
-  padding: 0.0625rem 0.375rem;
-  border-radius: 3px;
+  color: var(--text-primary);
   font-variant-numeric: tabular-nums;
   line-height: 1.4;
   white-space: nowrap;
