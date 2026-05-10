@@ -42,7 +42,51 @@ const {
 const { handleEditorScroll, handlePreviewScroll } = useScrollSync()
 const { format, insertLink, insertImage, insertCodeBlock, insertColor, insertTable } = useFormat(textareaRef)
 const { canUndo, canRedo, pushHistory, pushHistoryImmediate, undo, redo, reset } = useUndoRedo(markdownContent)
-const { viewMode, hasWallpaper } = useSettings()
+const { viewMode, hasWallpaper, autoSaveEnabled, autoSaveInterval } = useSettings()
+
+// 自动保存计时器
+const autoSaveRemaining = ref(0)
+let autoSaveTimerId: ReturnType<typeof setInterval> | null = null
+
+const resetAutoSaveTimer = () => {
+  autoSaveRemaining.value = autoSaveInterval.value
+}
+
+const startAutoSaveTimer = () => {
+  stopAutoSaveTimer()
+  if (!autoSaveEnabled.value) return
+  resetAutoSaveTimer()
+  autoSaveTimerId = setInterval(() => {
+    autoSaveRemaining.value--
+    if (autoSaveRemaining.value <= 0) {
+      doAutoSave()
+      resetAutoSaveTimer()
+    }
+  }, 1000)
+}
+
+const stopAutoSaveTimer = () => {
+  if (autoSaveTimerId) {
+    clearInterval(autoSaveTimerId)
+    autoSaveTimerId = null
+  }
+}
+
+const doAutoSave = async () => {
+  if (!isModified.value || !currentFile.value) return
+  const result = await saveFile(markdownContent.value)
+  if (result.success) {
+    showToast('已自动保存')
+  }
+}
+
+watch([autoSaveEnabled, autoSaveInterval], () => {
+  startAutoSaveTimer()
+})
+
+watch(isModified, (modified) => {
+  if (modified) resetAutoSaveTimer()
+})
 
 const handleEditorScrollEvent = (scrollTop: number, scrollHeight: number, clientHeight: number) => {
   if (previewRef.value?.previewRef) {
@@ -81,6 +125,7 @@ const handleSave = async () => {
   const result = await saveFile(markdownContent.value)
   if (result.success) {
     showToast('保存成功')
+    resetAutoSaveTimer()
   } else if (result.error) {
     showToast(result.error)
   }
@@ -206,10 +251,12 @@ const handleKeydown = (e: KeyboardEvent) => {
 
 onMounted(() => {
   document.addEventListener('keydown', handleKeydown)
+  startAutoSaveTimer()
 })
 
 onUnmounted(() => {
   document.removeEventListener('keydown', handleKeydown)
+  stopAutoSaveTimer()
 })
 
 // Track modifications and history
@@ -228,6 +275,9 @@ watch(markdownContent, (newContent) => {
     <Toolbar
       :is-modified="isModified"
       :current-file="currentFile"
+      :auto-save-enabled="autoSaveEnabled"
+      :auto-save-remaining="autoSaveRemaining"
+      :auto-save-interval="autoSaveInterval"
       @new-window="handleNewWindow"
       @open-file="handleOpenFile"
       @open-folder="handleOpenFolder"

@@ -3,7 +3,7 @@ import { ref, computed } from 'vue'
 import { useSettings, type TabMode, type WallpaperArea } from '../../composables/useSettings'
 import { useTheme, type ThemeName } from '../../composables/useTheme'
 
-const { tabMode, setTabMode, tabOptions, wallpaper, setWallpaper, wallpaperAreas, setWallpaperAreas, overlayOpacity, setOverlayOpacity, presetWallpapers } = useSettings()
+const { tabMode, setTabMode, tabOptions, wallpaper, setWallpaper, wallpaperAreas, setWallpaperAreas, overlayOpacity, setOverlayOpacity, presetWallpapers, autoSaveEnabled, autoSaveInterval, setAutoSaveEnabled, setAutoSaveInterval } = useSettings()
 const { theme, setTheme, themeOptions } = useTheme()
 
 const props = defineProps<{
@@ -207,6 +207,38 @@ const isCustomWallpaper = computed(() => {
                 <span class="option-label">{{ option.label }}</span>
                 <span class="option-desc">{{ option.description }}</span>
               </button>
+            </div>
+          </div>
+
+          <!-- 自动保存 -->
+          <div class="settings-section">
+            <h4 class="section-title">自动保存</h4>
+            <div class="autosave-row">
+              <button
+                class="area-toggle"
+                :class="{ active: autoSaveEnabled }"
+                @click="setAutoSaveEnabled(!autoSaveEnabled)"
+              >
+                {{ autoSaveEnabled ? '已开启' : '已关闭' }}
+              </button>
+              <div class="autosave-interval-group">
+                <button
+                  class="area-toggle"
+                  :class="{ active: autoSaveInterval === 10 }"
+                  :disabled="!autoSaveEnabled"
+                  @click="setAutoSaveInterval(10)"
+                >
+                  10 秒
+                </button>
+                <button
+                  class="area-toggle"
+                  :class="{ active: autoSaveInterval === 30 }"
+                  :disabled="!autoSaveEnabled"
+                  @click="setAutoSaveInterval(30)"
+                >
+                  30 秒
+                </button>
+              </div>
             </div>
           </div>
 
@@ -535,6 +567,24 @@ const isCustomWallpaper = computed(() => {
   background-color: var(--accent-color);
   border-color: var(--accent-color);
   color: var(--btn-active-text);
+}
+
+/* 自动保存 */
+.autosave-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+}
+
+.autosave-interval-group {
+  display: flex;
+  gap: 0.5rem;
+}
+
+.area-toggle:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
 }
 
 /* Tab 选项 */

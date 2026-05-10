@@ -6,9 +6,18 @@ import type { ExportFormat } from '../../composables/useFileOperations'
 interface Props {
   isModified?: boolean
   currentFile?: string
+  autoSaveEnabled?: boolean
+  autoSaveRemaining?: number
+  autoSaveInterval?: number
 }
 
-const props = defineProps<Props>()
+const props = withDefaults(defineProps<Props>(), {
+  isModified: false,
+  currentFile: '',
+  autoSaveEnabled: true,
+  autoSaveRemaining: 0,
+  autoSaveInterval: 10
+})
 
 const emit = defineEmits<{
   newWindow: []
@@ -25,6 +34,16 @@ const { viewMode, setViewMode, viewModeOptions, currentViewModeOption } = useSet
 const fileName = computed(() => {
   if (!props.currentFile) return '未命名'
   return props.currentFile.split('/').pop() || props.currentFile.split('\\').pop() || props.currentFile
+})
+
+const timerProgress = computed(() => {
+  if (!props.autoSaveEnabled || props.autoSaveInterval <= 0) return 0
+  return props.autoSaveRemaining / props.autoSaveInterval
+})
+
+const timerDashOffset = computed(() => {
+  const circumference = 2 * Math.PI * 8
+  return circumference * (1 - timerProgress.value)
 })
 
 const handleViewModeChange = (mode: ViewMode) => {
@@ -86,6 +105,19 @@ const handleViewModeChange = (mode: ViewMode) => {
         </svg>
         <span class="btn-text">保存</span>
       </button>
+
+      <div v-if="props.autoSaveEnabled" class="auto-save-timer" :title="`自动保存: ${props.autoSaveRemaining}s`">
+        <svg class="timer-ring" viewBox="0 0 20 20">
+          <circle class="timer-ring-bg" cx="10" cy="10" r="8" />
+          <circle
+            class="timer-ring-progress"
+            cx="10" cy="10" r="8"
+            :stroke-dasharray="2 * Math.PI * 8"
+            :stroke-dashoffset="timerDashOffset"
+          />
+        </svg>
+        <span class="timer-text">{{ props.autoSaveRemaining }}</span>
+      </div>
     </div>
 
     <div class="toolbar-center">
@@ -288,5 +320,46 @@ const handleViewModeChange = (mode: ViewMode) => {
 .file-name {
   overflow: hidden;
   text-overflow: ellipsis;
+}
+
+/* Auto-save timer */
+.auto-save-timer {
+  position: relative;
+  width: 22px;
+  height: 22px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.timer-ring {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  transform: rotate(-90deg);
+}
+
+.timer-ring-bg {
+  fill: none;
+  stroke: var(--border-color);
+  stroke-width: 2;
+}
+
+.timer-ring-progress {
+  fill: none;
+  stroke: var(--accent-color);
+  stroke-width: 2;
+  stroke-linecap: round;
+  transition: stroke-dashoffset 0.9s linear;
+}
+
+.timer-text {
+  font-size: 9px;
+  font-weight: 600;
+  color: var(--text-secondary);
+  z-index: 1;
+  line-height: 1;
 }
 </style>

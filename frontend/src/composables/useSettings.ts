@@ -103,6 +103,8 @@ const storedWallpaperAreas = useLocalStorage<WallpaperArea>('qmmd-wallpaper-area
   sidebar: true
 })
 const storedOverlayOpacity = useLocalStorage<number>('qmmd-overlay-opacity', 85)
+const storedAutoSaveEnabled = useLocalStorage<boolean>('qmmd-auto-save-enabled', true)
+const storedAutoSaveInterval = useLocalStorage<number>('qmmd-auto-save-interval', 10)
 
 const tabMode = ref<TabMode>(storedTabMode.value || 'tab')
 const viewMode = ref<ViewMode>(storedViewMode.value || 'split')
@@ -115,6 +117,8 @@ const wallpaperAreas = ref<WallpaperArea>(storedWallpaperAreas.value || {
   sidebar: true
 })
 const overlayOpacity = ref<number>(storedOverlayOpacity.value || 85)
+const autoSaveEnabled = ref<boolean>(storedAutoSaveEnabled.value !== false)
+const autoSaveInterval = ref<number>(storedAutoSaveInterval.value || 10)
 
 /**
  * Settings management composable.
@@ -144,6 +148,16 @@ export function useSettings() {
   const setOverlayOpacity = (opacity: number) => {
     overlayOpacity.value = opacity
     storedOverlayOpacity.value = opacity
+  }
+
+  const setAutoSaveEnabled = (enabled: boolean) => {
+    autoSaveEnabled.value = enabled
+    storedAutoSaveEnabled.value = enabled
+  }
+
+  const setAutoSaveInterval = (interval: number) => {
+    autoSaveInterval.value = interval
+    storedAutoSaveInterval.value = interval
   }
 
   const getTabString = (): string => {
@@ -210,6 +224,10 @@ export function useSettings() {
     hasWallpaper,
     tabOptions,
     viewModeOptions,
-    presetWallpapers
+    presetWallpapers,
+    autoSaveEnabled,
+    autoSaveInterval,
+    setAutoSaveEnabled,
+    setAutoSaveInterval
   }
 }
