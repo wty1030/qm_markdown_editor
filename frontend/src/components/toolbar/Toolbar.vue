@@ -1,7 +1,14 @@
 <script setup lang="ts">
-import { ref, onMounted, onUnmounted } from 'vue'
+import { ref, computed, onMounted, onUnmounted } from 'vue'
 import { useSettings, type ViewMode } from '../../composables/useSettings'
 import type { ExportFormat } from '../../composables/useFileOperations'
+
+interface Props {
+  isModified?: boolean
+  currentFile?: string
+}
+
+const props = defineProps<Props>()
 
 const emit = defineEmits<{
   newWindow: []
@@ -14,6 +21,11 @@ const emit = defineEmits<{
 }>()
 
 const { viewMode, setViewMode, viewModeOptions, currentViewModeOption } = useSettings()
+
+const fileName = computed(() => {
+  if (!props.currentFile) return '未命名'
+  return props.currentFile.split('/').pop() || props.currentFile.split('\\').pop() || props.currentFile
+})
 
 const handleViewModeChange = (mode: ViewMode) => {
   setViewMode(mode)
@@ -77,6 +89,13 @@ const handleViewModeChange = (mode: ViewMode) => {
     </div>
 
     <div class="toolbar-center">
+      <span class="file-indicator" :class="{ modified: props.isModified }">
+        {{ props.isModified ? '●' : '●' }}
+      </span>
+      <span class="file-name">{{ fileName }}</span>
+    </div>
+
+    <div class="toolbar-center view-mode-center">
       <div class="view-mode-group">
         <button
           v-for="option in viewModeOptions"
@@ -134,7 +153,6 @@ const handleViewModeChange = (mode: ViewMode) => {
 }
 
 .toolbar-left,
-.toolbar-center,
 .toolbar-right {
   display: flex;
   align-items: center;
@@ -142,6 +160,16 @@ const handleViewModeChange = (mode: ViewMode) => {
 }
 
 .toolbar-center {
+  display: flex;
+  align-items: center;
+  gap: 0.375rem;
+  color: var(--text-secondary);
+  font-size: 0.8125rem;
+  white-space: nowrap;
+  overflow: hidden;
+}
+
+.view-mode-center {
   flex: 1;
   justify-content: center;
 }
@@ -241,5 +269,24 @@ const handleViewModeChange = (mode: ViewMode) => {
   .view-mode-btn {
     padding: 0.5rem;
   }
+
+  .file-name {
+    display: none;
+  }
+}
+
+.file-indicator {
+  font-size: 10px;
+  color: var(--success-color);
+  flex-shrink: 0;
+}
+
+.file-indicator.modified {
+  color: var(--warning-color);
+}
+
+.file-name {
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 </style>

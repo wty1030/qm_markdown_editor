@@ -16,6 +16,9 @@ import { useSettings, type ViewMode } from './composables/useSettings'
 const markdownContent = ref('')
 const showSidebar = ref(true)
 const showSettings = ref(false)
+const toastMessage = ref('')
+const toastVisible = ref(false)
+let toastTimer: ReturnType<typeof setTimeout> | null = null
 
 const editorRef = ref<InstanceType<typeof Editor> | null>(null)
 const previewRef = ref<InstanceType<typeof Preview> | null>(null)
@@ -65,8 +68,22 @@ const handleOpenFile = async () => {
   }
 }
 
+const showToast = (message: string) => {
+  toastMessage.value = message
+  toastVisible.value = true
+  if (toastTimer) clearTimeout(toastTimer)
+  toastTimer = setTimeout(() => {
+    toastVisible.value = false
+  }, 2000)
+}
+
 const handleSave = async () => {
-  await saveFile(markdownContent.value)
+  const result = await saveFile(markdownContent.value)
+  if (result.success) {
+    showToast('保存成功')
+  } else if (result.error) {
+    showToast(result.error)
+  }
 }
 
 const handleExportAs = async (format: ExportFormat) => {
@@ -209,6 +226,8 @@ watch(markdownContent, (newContent) => {
 
   <div class="app-container">
     <Toolbar
+      :is-modified="isModified"
+      :current-file="currentFile"
       @new-window="handleNewWindow"
       @open-file="handleOpenFile"
       @open-folder="handleOpenFolder"
@@ -285,6 +304,12 @@ watch(markdownContent, (newContent) => {
       :visible="showSettings"
       @close="showSettings = false"
     />
+
+    <Teleport to="body">
+      <Transition name="toast">
+        <div v-if="toastVisible" class="toast">{{ toastMessage }}</div>
+      </Transition>
+    </Teleport>
   </div>
 </template>
 
@@ -354,5 +379,31 @@ html, body, #app {
   opacity: var(--wallpaper-overlay-opacity);
   z-index: 1;
   pointer-events: none;
+}
+
+.toast {
+  position: fixed;
+  bottom: 2rem;
+  left: 50%;
+  transform: translateX(-50%);
+  padding: 0.5rem 1.25rem;
+  background-color: var(--success-color);
+  color: #fff;
+  border-radius: 6px;
+  font-size: 13px;
+  z-index: 9999;
+  pointer-events: none;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+}
+
+.toast-enter-active,
+.toast-leave-active {
+  transition: opacity 0.3s ease, transform 0.3s ease;
+}
+
+.toast-enter-from,
+.toast-leave-to {
+  opacity: 0;
+  transform: translateX(-50%) translateY(10px);
 }
 </style>
