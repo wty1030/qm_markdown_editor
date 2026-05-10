@@ -4,9 +4,11 @@ import { marked, type Tokens } from 'marked'
 import hljs from 'highlight.js'
 import mermaid from 'mermaid'
 
-mermaid.initialize({ startOnLoad: false, theme: 'default' })
+mermaid.initialize({ startOnLoad: false, theme: 'dark' })
 
+const darkThemes = new Set(['vscode-dark', 'one-dark', 'monokai', 'dracula', 'github-dark', 'solarized-dark', 'nord', 'gruvbox-dark'])
 let mermaidCounter = 0
+let lastMermaidTheme = 'dark'
 
 // 主题到 highlight.js 主题的映射
 const themeToHljs: Record<string, { dark: boolean; theme: string }> = {
@@ -44,6 +46,7 @@ const loadTheme = (themeName: string) => {
 const observer = new MutationObserver(() => {
   const theme = document.documentElement.getAttribute('data-theme') || 'vscode-dark'
   loadTheme(theme)
+  syncMermaidTheme()
 })
 
 onMounted(() => {
@@ -127,9 +130,41 @@ const renderMermaidDiagrams = async () => {
       el.innerHTML = svg
       el.classList.remove('mermaid-placeholder')
       el.classList.add('mermaid-diagram')
+      ;(el as HTMLElement).dataset.mermaidSource = encodeURIComponent(source)
     } catch {
       el.innerHTML = '<p class="mermaid-error">Mermaid 语法错误</p>'
       el.classList.remove('mermaid-placeholder')
+      el.classList.add('mermaid-error-container')
+      ;(el as HTMLElement).dataset.mermaidSource = encodeURIComponent(source)
+    }
+  }
+}
+
+const syncMermaidTheme = () => {
+  const appTheme = document.documentElement.getAttribute('data-theme') || 'vscode-dark'
+  const mermaidTheme = darkThemes.has(appTheme) ? 'dark' : 'default'
+  if (mermaidTheme !== lastMermaidTheme) {
+    lastMermaidTheme = mermaidTheme
+    mermaid.initialize({ startOnLoad: false, theme: mermaidTheme })
+    reRenderExistingDiagrams()
+  }
+}
+
+const reRenderExistingDiagrams = async () => {
+  if (!previewRef.value) return
+  const diagrams = previewRef.value.querySelectorAll('.mermaid-diagram, .mermaid-error-container')
+  for (const el of diagrams) {
+    const source = decodeURIComponent((el as HTMLElement).dataset.mermaidSource || '')
+    if (!source) continue
+    const id = `rerender-${++mermaidCounter}`
+    try {
+      const { svg } = await mermaid.render(id, source)
+      el.innerHTML = svg
+      el.classList.remove('mermaid-error-container')
+      el.classList.add('mermaid-diagram')
+    } catch {
+      el.innerHTML = '<p class="mermaid-error">Mermaid 语法错误</p>'
+      el.classList.remove('mermaid-diagram')
       el.classList.add('mermaid-error-container')
     }
   }
