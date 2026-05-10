@@ -6,7 +6,7 @@ import type { ExportFormat } from '../../composables/useFileOperations'
 interface Props {
   isModified?: boolean
   currentFile?: string
-  autoSaveEnabled?: boolean
+  autoSaveActive?: boolean
   autoSaveRemaining?: number
   autoSaveInterval?: number
 }
@@ -14,7 +14,7 @@ interface Props {
 const props = withDefaults(defineProps<Props>(), {
   isModified: false,
   currentFile: '',
-  autoSaveEnabled: true,
+  autoSaveActive: false,
   autoSaveRemaining: 0,
   autoSaveInterval: 10
 })
@@ -37,13 +37,8 @@ const fileName = computed(() => {
 })
 
 const timerProgress = computed(() => {
-  if (!props.autoSaveEnabled || props.autoSaveInterval <= 0) return 0
+  if (!props.autoSaveActive || props.autoSaveInterval <= 0) return 0
   return props.autoSaveRemaining / props.autoSaveInterval
-})
-
-const timerDashOffset = computed(() => {
-  const circumference = 2 * Math.PI * 8
-  return circumference * (1 - timerProgress.value)
 })
 
 const handleViewModeChange = (mode: ViewMode) => {
@@ -105,26 +100,18 @@ const handleViewModeChange = (mode: ViewMode) => {
         </svg>
         <span class="btn-text">保存</span>
       </button>
-
-      <div v-if="props.autoSaveEnabled" class="auto-save-timer" :title="`自动保存: ${props.autoSaveRemaining}s`">
-        <svg class="timer-ring" viewBox="0 0 20 20">
-          <circle class="timer-ring-bg" cx="10" cy="10" r="8" />
-          <circle
-            class="timer-ring-progress"
-            cx="10" cy="10" r="8"
-            :stroke-dasharray="2 * Math.PI * 8"
-            :stroke-dashoffset="timerDashOffset"
-          />
-        </svg>
-        <span class="timer-text">{{ props.autoSaveRemaining }}</span>
-      </div>
     </div>
 
     <div class="toolbar-center">
-      <span class="file-indicator" :class="{ modified: props.isModified }">
-        {{ props.isModified ? '●' : '●' }}
-      </span>
+      <span class="file-status-dot" :class="props.isModified ? 'unsaved' : 'saved'" />
       <span class="file-name">{{ fileName }}</span>
+
+      <div v-if="props.autoSaveActive" class="autosave-bar">
+        <div class="autosave-track">
+          <div class="autosave-fill" :style="{ width: timerProgress * 100 + '%' }" />
+        </div>
+        <span class="autosave-label">{{ props.autoSaveRemaining }}s</span>
+      </div>
     </div>
 
     <div class="toolbar-center view-mode-center">
@@ -307,14 +294,20 @@ const handleViewModeChange = (mode: ViewMode) => {
   }
 }
 
-.file-indicator {
-  font-size: 10px;
-  color: var(--success-color);
+.file-status-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
   flex-shrink: 0;
+  transition: background-color 0.3s ease;
 }
 
-.file-indicator.modified {
-  color: var(--warning-color);
+.file-status-dot.saved {
+  background-color: var(--success-color);
+}
+
+.file-status-dot.unsaved {
+  background-color: var(--warning-color);
 }
 
 .file-name {
@@ -322,44 +315,36 @@ const handleViewModeChange = (mode: ViewMode) => {
   text-overflow: ellipsis;
 }
 
-/* Auto-save timer */
-.auto-save-timer {
-  position: relative;
-  width: 22px;
-  height: 22px;
+/* Auto-save progress bar */
+.autosave-bar {
   display: flex;
   align-items: center;
-  justify-content: center;
-  flex-shrink: 0;
+  gap: 0.375rem;
+  margin-left: 0.5rem;
+  padding-left: 0.5rem;
+  border-left: 1px solid var(--border-color);
 }
 
-.timer-ring {
-  position: absolute;
-  inset: 0;
-  width: 100%;
+.autosave-track {
+  width: 48px;
+  height: 3px;
+  background-color: var(--border-color);
+  border-radius: 2px;
+  overflow: hidden;
+}
+
+.autosave-fill {
   height: 100%;
-  transform: rotate(-90deg);
+  background-color: var(--accent-color);
+  border-radius: 2px;
+  transition: width 0.9s linear;
 }
 
-.timer-ring-bg {
-  fill: none;
-  stroke: var(--border-color);
-  stroke-width: 2;
-}
-
-.timer-ring-progress {
-  fill: none;
-  stroke: var(--accent-color);
-  stroke-width: 2;
-  stroke-linecap: round;
-  transition: stroke-dashoffset 0.9s linear;
-}
-
-.timer-text {
-  font-size: 9px;
-  font-weight: 600;
-  color: var(--text-secondary);
-  z-index: 1;
-  line-height: 1;
+.autosave-label {
+  font-size: 10px;
+  color: var(--text-muted);
+  font-variant-numeric: tabular-nums;
+  min-width: 1.5em;
+  text-align: right;
 }
 </style>

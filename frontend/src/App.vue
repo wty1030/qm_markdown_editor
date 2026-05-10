@@ -48,13 +48,15 @@ const { viewMode, hasWallpaper, autoSaveEnabled, autoSaveInterval } = useSetting
 const autoSaveRemaining = ref(0)
 let autoSaveTimerId: ReturnType<typeof setInterval> | null = null
 
+const canAutoSave = computed(() => autoSaveEnabled.value && !!currentFile.value)
+
 const resetAutoSaveTimer = () => {
   autoSaveRemaining.value = autoSaveInterval.value
 }
 
 const startAutoSaveTimer = () => {
   stopAutoSaveTimer()
-  if (!autoSaveEnabled.value) return
+  if (!canAutoSave.value) return
   resetAutoSaveTimer()
   autoSaveTimerId = setInterval(() => {
     autoSaveRemaining.value--
@@ -80,12 +82,12 @@ const doAutoSave = async () => {
   }
 }
 
-watch([autoSaveEnabled, autoSaveInterval], () => {
+watch([autoSaveEnabled, autoSaveInterval, currentFile], () => {
   startAutoSaveTimer()
 })
 
 watch(isModified, (modified) => {
-  if (modified) resetAutoSaveTimer()
+  if (modified && canAutoSave.value) resetAutoSaveTimer()
 })
 
 const handleEditorScrollEvent = (scrollTop: number, scrollHeight: number, clientHeight: number) => {
@@ -275,7 +277,7 @@ watch(markdownContent, (newContent) => {
     <Toolbar
       :is-modified="isModified"
       :current-file="currentFile"
-      :auto-save-enabled="autoSaveEnabled"
+      :auto-save-active="canAutoSave"
       :auto-save-remaining="autoSaveRemaining"
       :auto-save-interval="autoSaveInterval"
       @new-window="handleNewWindow"
