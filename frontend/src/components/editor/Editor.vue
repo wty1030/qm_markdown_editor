@@ -263,9 +263,10 @@ defineExpose({
 }
 
 /* Markdown 语法高亮样式 */
+/* 注意：只修改颜色，不修改 font-weight/font-style 等影响布局的属性 */
+/* 否则高亮层和 textarea 的字符宽度不一致，导致光标位置错位 */
 .editor-highlight :deep(.md-heading) {
   color: var(--syntax-keyword);
-  font-weight: 600;
 }
 
 .editor-highlight :deep(.md-heading-mark) {
@@ -274,12 +275,10 @@ defineExpose({
 
 .editor-highlight :deep(.md-bold) {
   color: var(--syntax-variable);
-  font-weight: 600;
 }
 
 .editor-highlight :deep(.md-italic) {
   color: var(--syntax-variable);
-  font-style: italic;
 }
 
 .editor-highlight :deep(.md-strikethrough) {
