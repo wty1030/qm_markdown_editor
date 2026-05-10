@@ -135,12 +135,6 @@ const syncHighlightScroll = () => {
   highlightRef.value.scrollLeft = textareaRef.value.scrollLeft
 }
 
-defineExpose({
-  syncScrollFromPreview,
-  textareaRef,
-  scrollToLine
-})
-
 // 滚动到指定行号（1-indexed）
 const scrollToLine = (lineNumber: number) => {
   const textarea = textareaRef.value
@@ -161,6 +155,12 @@ const scrollToLine = (lineNumber: number) => {
 
   textarea.scrollTop = targetScrollTop
 }
+
+defineExpose({
+  syncScrollFromPreview,
+  textareaRef,
+  scrollToLine
+})
 </script>
 
 <template>
