@@ -1,7 +1,12 @@
 <script setup lang="ts">
-import { ref, computed, watch, onMounted, onUnmounted } from 'vue'
+import { ref, computed, watch, onMounted, onUnmounted, nextTick } from 'vue'
 import { marked, type Tokens } from 'marked'
 import hljs from 'highlight.js'
+import mermaid from 'mermaid'
+
+mermaid.initialize({ startOnLoad: false, theme: 'default' })
+
+let mermaidCounter = 0
 
 // 主题到 highlight.js 主题的映射
 const themeToHljs: Record<string, { dark: boolean; theme: string }> = {
@@ -76,6 +81,11 @@ renderer.code = (token: Tokens.Code): string => {
   const lang = token.lang || ''
   const code = token.text
 
+  if (lang === 'mermaid') {
+    const id = `mermaid-${++mermaidCounter}`
+    return `<div class="mermaid-placeholder" data-mermaid-id="${id}" data-mermaid-source="${encodeURIComponent(code)}"></div>`
+  }
+
   let highlighted: string
   if (lang && hljs.getLanguage(lang)) {
     try {
@@ -98,10 +108,35 @@ marked.setOptions({
 
 const renderedContent = computed(() => {
   try {
+    mermaidCounter = 0
     return marked.parse(props.content) as string
   } catch {
     return '<p>渲染错误</p>'
   }
+})
+
+const renderMermaidDiagrams = async () => {
+  if (!previewRef.value) return
+  const placeholders = previewRef.value.querySelectorAll('.mermaid-placeholder')
+  for (const el of placeholders) {
+    const source = decodeURIComponent((el as HTMLElement).dataset.mermaidSource || '')
+    if (!source) continue
+    const id = (el as HTMLElement).dataset.mermaidId || 'mermaid'
+    try {
+      const { svg } = await mermaid.render(id, source)
+      el.innerHTML = svg
+      el.classList.remove('mermaid-placeholder')
+      el.classList.add('mermaid-diagram')
+    } catch {
+      el.innerHTML = '<p class="mermaid-error">Mermaid 语法错误</p>'
+      el.classList.remove('mermaid-placeholder')
+      el.classList.add('mermaid-error-container')
+    }
+  }
+}
+
+watch(renderedContent, () => {
+  nextTick(renderMermaidDiagrams)
 })
 
 const handleScroll = () => {
@@ -297,5 +332,29 @@ defineExpose({
 .markdown-body :deep(img) {
   max-width: 100%;
   height: auto;
+}
+
+/* Mermaid diagrams */
+.markdown-body :deep(.mermaid-diagram) {
+  text-align: center;
+  margin: 0 0 1rem;
+  padding: 1rem;
+  overflow-x: auto;
+}
+
+.markdown-body :deep(.mermaid-diagram svg) {
+  max-width: 100%;
+  height: auto;
+}
+
+.markdown-body :deep(.mermaid-error-container) {
+  text-align: center;
+  margin: 0 0 1rem;
+  padding: 1rem;
+}
+
+.markdown-body :deep(.mermaid-error) {
+  color: #e74c3c;
+  font-style: italic;
 }
 </style>
