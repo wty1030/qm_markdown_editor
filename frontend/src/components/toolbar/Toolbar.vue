@@ -16,7 +16,7 @@ const props = withDefaults(defineProps<Props>(), {
   currentFile: '',
   autoSaveActive: false,
   autoSaveRemaining: 0,
-  autoSaveInterval: 10
+  autoSaveInterval: 30
 })
 
 const emit = defineEmits<{
@@ -342,9 +342,13 @@ const handleViewModeChange = (mode: ViewMode) => {
 
 .autosave-label {
   font-size: 10px;
-  color: var(--text-muted);
+  font-weight: 600;
+  color: var(--btn-active-text);
+  background-color: var(--accent-color);
+  padding: 0.0625rem 0.375rem;
+  border-radius: 3px;
   font-variant-numeric: tabular-nums;
-  min-width: 1.5em;
-  text-align: right;
+  line-height: 1.4;
+  white-space: nowrap;
 }
 </style>

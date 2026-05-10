@@ -56,6 +56,15 @@ const handleAreaToggle = (area: keyof WallpaperArea) => {
   })
 }
 
+const handleIntervalChange = (event: Event) => {
+  const input = event.target as HTMLInputElement
+  let value = parseInt(input.value, 10)
+  if (isNaN(value) || value < 1) value = 1
+  if (value > 60) value = 60
+  input.value = String(value)
+  setAutoSaveInterval(value)
+}
+
 const handleOpacityChange = (event: Event) => {
   const input = event.target as HTMLInputElement
   setOpacity(Number(input.value))
@@ -221,23 +230,18 @@ const isCustomWallpaper = computed(() => {
               >
                 {{ autoSaveEnabled ? '已开启' : '已关闭' }}
               </button>
-              <div class="autosave-interval-group">
-                <button
-                  class="area-toggle"
-                  :class="{ active: autoSaveInterval === 10 }"
+              <div class="autosave-input-group">
+                <span class="autosave-input-label">间隔</span>
+                <input
+                  type="number"
+                  class="autosave-input"
                   :disabled="!autoSaveEnabled"
-                  @click="setAutoSaveInterval(10)"
-                >
-                  10 秒
-                </button>
-                <button
-                  class="area-toggle"
-                  :class="{ active: autoSaveInterval === 30 }"
-                  :disabled="!autoSaveEnabled"
-                  @click="setAutoSaveInterval(30)"
-                >
-                  30 秒
-                </button>
+                  :value="autoSaveInterval"
+                  min="1"
+                  max="60"
+                  @change="handleIntervalChange"
+                />
+                <span class="autosave-input-label">秒</span>
               </div>
             </div>
           </div>
@@ -577,9 +581,37 @@ const isCustomWallpaper = computed(() => {
   gap: 1rem;
 }
 
-.autosave-interval-group {
+.autosave-input-group {
   display: flex;
-  gap: 0.5rem;
+  align-items: center;
+  gap: 0.375rem;
+}
+
+.autosave-input-label {
+  font-size: 0.8125rem;
+  color: var(--text-primary);
+}
+
+.autosave-input {
+  width: 52px;
+  padding: 0.25rem 0.5rem;
+  background: var(--bg-primary);
+  border: 1px solid var(--border-color);
+  border-radius: 4px;
+  color: var(--text-primary);
+  font-size: 0.8125rem;
+  text-align: center;
+  outline: none;
+  transition: border-color 0.15s ease;
+}
+
+.autosave-input:focus {
+  border-color: var(--accent-color);
+}
+
+.autosave-input:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
 }
 
 .area-toggle:disabled {

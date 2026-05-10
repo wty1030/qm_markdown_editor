@@ -104,7 +104,7 @@ const storedWallpaperAreas = useLocalStorage<WallpaperArea>('qmmd-wallpaper-area
 })
 const storedOverlayOpacity = useLocalStorage<number>('qmmd-overlay-opacity', 85)
 const storedAutoSaveEnabled = useLocalStorage<boolean>('qmmd-auto-save-enabled', true)
-const storedAutoSaveInterval = useLocalStorage<number>('qmmd-auto-save-interval', 10)
+const storedAutoSaveInterval = useLocalStorage<number>('qmmd-auto-save-interval', 30)
 
 const tabMode = ref<TabMode>(storedTabMode.value || 'tab')
 const viewMode = ref<ViewMode>(storedViewMode.value || 'split')
@@ -118,7 +118,7 @@ const wallpaperAreas = ref<WallpaperArea>(storedWallpaperAreas.value || {
 })
 const overlayOpacity = ref<number>(storedOverlayOpacity.value || 85)
 const autoSaveEnabled = ref<boolean>(storedAutoSaveEnabled.value !== false)
-const autoSaveInterval = ref<number>(storedAutoSaveInterval.value || 10)
+const autoSaveInterval = ref<number>(storedAutoSaveInterval.value || 30)
 
 /**
  * Settings management composable.
