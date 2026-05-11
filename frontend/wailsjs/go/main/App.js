@@ -26,10 +26,6 @@ export function GetCurrentFile() {
   return window['go']['main']['App']['GetCurrentFile']();
 }
 
-export function GetWindowPos() {
-  return window['go']['main']['App']['GetWindowPos']();
-}
-
 export function IsMarkdownFile(arg1) {
   return window['go']['main']['App']['IsMarkdownFile'](arg1);
 }
@@ -44,10 +40,6 @@ export function ListDirectory(arg1) {
 
 export function MinimiseWindow() {
   return window['go']['main']['App']['MinimiseWindow']();
-}
-
-export function MoveWindow(arg1, arg2) {
-  return window['go']['main']['App']['MoveWindow'](arg1, arg2);
 }
 
 export function NewFile() {

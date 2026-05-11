@@ -5,9 +5,7 @@ import {
   MinimiseWindow,
   ToggleMaximiseWindow,
   CloseWindow,
-  IsWindowMaximised,
-  MoveWindow,
-  GetWindowPos
+  IsWindowMaximised
 } from '../../../wailsjs/go/main/App'
 import type { ExportFormat } from '../../composables/useFileOperations'
 
@@ -67,44 +65,6 @@ const handleToggleMaximise = async () => {
 }
 const handleClose = () => CloseWindow()
 
-// --- 拖拽：mousedown 时获取窗口位置，mousemove 移动窗口 ---
-const DRAG_THRESHOLD = 3
-let dragging = false
-let dragStartSX = 0
-let dragStartSY = 0
-let dragWinX = 0
-let dragWinY = 0
-
-const handleMouseDown = async (e: MouseEvent) => {
-  if (e.button !== 0) return
-  dragStartSX = e.screenX
-  dragStartSY = e.screenY
-  const [x, y] = await GetWindowPos()
-  dragWinX = x
-  dragWinY = y
-  dragging = false
-  document.addEventListener('mousemove', handleMouseMove)
-  document.addEventListener('mouseup', handleMouseUp)
-}
-
-const handleMouseMove = (e: MouseEvent) => {
-  const dx = e.screenX - dragStartSX
-  const dy = e.screenY - dragStartSY
-  if (!dragging && Math.abs(dx) + Math.abs(dy) <= DRAG_THRESHOLD) return
-  dragging = true
-  MoveWindow(dragWinX + dx, dragWinY + dy)
-}
-
-const handleMouseUp = () => {
-  dragging = false
-  document.removeEventListener('mousemove', handleMouseMove)
-  document.removeEventListener('mouseup', handleMouseUp)
-}
-
-const handleDblClick = () => {
-  handleToggleMaximise()
-}
-
 onMounted(() => {
   checkMaximised()
   window.addEventListener('resize', checkMaximised)
@@ -116,7 +76,7 @@ onUnmounted(() => {
 </script>
 
 <template>
-  <header class="toolbar" @mousedown="handleMouseDown" @dblclick="handleDblClick">
+  <header class="toolbar" @dblclick="handleToggleMaximise">
     <div class="toolbar-left">
       <button class="toolbar-btn" title="新建窗口 (Ctrl+N)" @click="emit('newWindow')">
         <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
@@ -237,6 +197,7 @@ onUnmounted(() => {
   border-bottom: 1px solid var(--border-color);
   min-height: 48px;
   user-select: none;
+  --wails-draggable: drag;
 }
 
 .toolbar-left,
@@ -273,6 +234,7 @@ onUnmounted(() => {
   font-size: 0.875rem;
   cursor: pointer;
   transition: background-color 0.15s ease, border-color 0.15s ease;
+  --wails-draggable: no-drag;
 }
 
 .toolbar-btn:hover {
@@ -295,6 +257,7 @@ onUnmounted(() => {
   border: 1px solid var(--border-color);
   border-radius: 6px;
   padding: 0.25rem;
+  --wails-draggable: no-drag;
 }
 
 .view-mode-btn {
@@ -323,6 +286,7 @@ onUnmounted(() => {
   margin-right: -0.5rem;
   border-radius: 6px;
   overflow: hidden;
+  --wails-draggable: no-drag;
 }
 
 .win-btn {
@@ -362,6 +326,7 @@ onUnmounted(() => {
   margin-left: 0.5rem; padding: 0.1875rem 0.5rem;
   background-color: var(--bg-secondary); border: 1px solid var(--border-color);
   border-radius: 4px;
+  --wails-draggable: no-drag;
 }
 .autosave-track { width: 40px; height: 4px; background-color: var(--text-muted); border-radius: 2px; overflow: hidden; opacity: 0.5; }
 .autosave-fill { height: 100%; background-color: var(--accent-color); border-radius: 2px; transition: width 0.9s linear; }

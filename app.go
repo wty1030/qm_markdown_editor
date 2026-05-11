@@ -486,13 +486,3 @@ func (a *App) CloseWindow() {
 func (a *App) IsWindowMaximised() bool {
 	return runtime.WindowIsMaximised(a.ctx)
 }
-
-// MoveWindow sets the window position
-func (a *App) MoveWindow(x, y int) {
-	runtime.WindowSetPosition(a.ctx, x, y)
-}
-
-// GetWindowPos returns the current window position
-func (a *App) GetWindowPos() (int, int) {
-	return runtime.WindowGetPosition(a.ctx)
-}

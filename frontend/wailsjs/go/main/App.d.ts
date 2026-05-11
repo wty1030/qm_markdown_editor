@@ -14,8 +14,6 @@ export function FileExists(arg1:string):Promise<boolean>;
 
 export function GetCurrentFile():Promise<string>;
 
-export function GetWindowPos():Promise<number|number>;
-
 export function IsMarkdownFile(arg1:string):Promise<boolean>;
 
 export function IsWindowMaximised():Promise<boolean>;
@@ -23,8 +21,6 @@ export function IsWindowMaximised():Promise<boolean>;
 export function ListDirectory(arg1:string):Promise<Array<main.FileInfo>>;
 
 export function MinimiseWindow():Promise<void>;
-
-export function MoveWindow(arg1:number,arg2:number):Promise<void>;
 
 export function NewFile():Promise<void>;
 
