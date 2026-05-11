@@ -66,13 +66,35 @@ const handleToggleMaximise = async () => {
 }
 const handleClose = () => CloseWindow()
 
+// --- 拖拽逻辑：移动超过阈值才触发窗口拖动，否则让 click 正常传递 ---
+const DRAG_THRESHOLD = 3
+let dragStartX = 0
+let dragStartY = 0
+
 const handleMouseDown = (e: MouseEvent) => {
-  if ((e.target as HTMLElement).closest('button')) return
-  StartDrag()
+  if (e.button !== 0) return
+  dragStartX = e.clientX
+  dragStartY = e.clientY
+  document.addEventListener('mousemove', handleMouseMove)
+  document.addEventListener('mouseup', handleMouseUp)
+}
+
+const handleMouseMove = (e: MouseEvent) => {
+  const dx = e.clientX - dragStartX
+  const dy = e.clientY - dragStartY
+  if (Math.abs(dx) + Math.abs(dy) > DRAG_THRESHOLD) {
+    document.removeEventListener('mousemove', handleMouseMove)
+    document.removeEventListener('mouseup', handleMouseUp)
+    StartDrag()
+  }
+}
+
+const handleMouseUp = () => {
+  document.removeEventListener('mousemove', handleMouseMove)
+  document.removeEventListener('mouseup', handleMouseUp)
 }
 
 const handleDblClick = (e: MouseEvent) => {
-  if ((e.target as HTMLElement).closest('button')) return
   handleToggleMaximise()
 }
 
