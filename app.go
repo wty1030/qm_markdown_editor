@@ -467,3 +467,22 @@ func openInBrowser(path string) error {
 
 	return cmd.Start()
 }
+// MinimiseWindow minimises the window
+func (a *App) MinimiseWindow() {
+	runtime.WindowMinimise(a.ctx)
+}
+
+// ToggleMaximiseWindow toggles the window between maximised and normal
+func (a *App) ToggleMaximiseWindow() {
+	runtime.WindowToggleMaximise(a.ctx)
+}
+
+// CloseWindow closes the window
+func (a *App) CloseWindow() {
+	runtime.Quit(a.ctx)
+}
+
+// IsWindowMaximised returns whether the window is maximised
+func (a *App) IsWindowMaximised() bool {
+	return runtime.WindowIsMaximised(a.ctx)
+}

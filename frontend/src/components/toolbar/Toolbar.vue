@@ -1,6 +1,12 @@
 <script setup lang="ts">
 import { ref, computed, onMounted, onUnmounted } from 'vue'
 import { useSettings, type ViewMode } from '../../composables/useSettings'
+import {
+  MinimiseWindow,
+  ToggleMaximiseWindow,
+  CloseWindow,
+  IsWindowMaximised
+} from '../../../wailsjs/go/main/App'
 import type { ExportFormat } from '../../composables/useFileOperations'
 
 interface Props {
@@ -29,7 +35,9 @@ const emit = defineEmits<{
   openSettings: []
 }>()
 
-const { viewMode, setViewMode, viewModeOptions, currentViewModeOption } = useSettings()
+const { viewMode, setViewMode, viewModeOptions } = useSettings()
+
+const isMaximised = ref(false)
 
 const fileName = computed(() => {
   if (!props.currentFile) return '未命名'
@@ -41,10 +49,30 @@ const timerProgress = computed(() => {
   return props.autoSaveRemaining / props.autoSaveInterval
 })
 
+const checkMaximised = async () => {
+  isMaximised.value = await IsWindowMaximised()
+}
+
 const handleViewModeChange = (mode: ViewMode) => {
   setViewMode(mode)
   emit('viewModeChange', mode)
 }
+
+const handleMinimise = () => MinimiseWindow()
+const handleToggleMaximise = async () => {
+  await ToggleMaximiseWindow()
+  await checkMaximised()
+}
+const handleClose = () => CloseWindow()
+
+onMounted(() => {
+  checkMaximised()
+  window.addEventListener('resize', checkMaximised)
+})
+
+onUnmounted(() => {
+  window.removeEventListener('resize', checkMaximised)
+})
 </script>
 
 <template>
@@ -124,17 +152,14 @@ const handleViewModeChange = (mode: ViewMode) => {
           :title="option.label"
           @click="handleViewModeChange(option.value)"
         >
-          <!-- 编辑图标 -->
           <svg v-if="option.icon === 'edit'" class="mode-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
             <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/>
             <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/>
           </svg>
-          <!-- 预览图标 -->
           <svg v-else-if="option.icon === 'preview'" class="mode-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
             <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/>
             <circle cx="12" cy="12" r="3"/>
           </svg>
-          <!-- 分栏图标 -->
           <svg v-else-if="option.icon === 'split'" class="mode-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
             <rect x="3" y="3" width="18" height="18" rx="2" ry="2"/>
             <line x1="12" y1="3" x2="12" y2="21"/>
@@ -156,6 +181,29 @@ const handleViewModeChange = (mode: ViewMode) => {
         </svg>
         <span class="btn-text">设置</span>
       </button>
+
+      <div class="window-controls">
+        <button class="win-btn" title="最小化" @click="handleMinimise">
+          <svg width="10" height="1" viewBox="0 0 10 1"><rect width="10" height="1" fill="currentColor"/></svg>
+        </button>
+        <button class="win-btn" :title="isMaximised ? '还原' : '最大化'" @click="handleToggleMaximise">
+          <svg v-if="!isMaximised" width="10" height="10" viewBox="0 0 10 10">
+            <rect x=".5" y=".5" width="9" height="9" fill="none" stroke="currentColor"/>
+          </svg>
+          <svg v-else width="10" height="10" viewBox="0 0 10 10">
+            <rect x="2" y="0" width="8" height="8" rx="0" fill="none" stroke="currentColor"/>
+            <rect x="0" y="2" width="8" height="8" rx="0" fill="none" stroke="currentColor" stroke-width="1"/>
+            <line x1="2" y1="2" x2="10" y2="2" stroke="currentColor" stroke-width=".6" opacity=".5"/>
+            <line x1="2" y1="2" x2="2" y2="10" stroke="currentColor" stroke-width=".6" opacity=".5"/>
+          </svg>
+        </button>
+        <button class="win-btn close-btn" title="关闭" @click="handleClose">
+          <svg width="10" height="10" viewBox="0 0 10 10">
+            <line x1="1" y1="1" x2="9" y2="9" stroke="currentColor" stroke-width="1.2"/>
+            <line x1="9" y1="1" x2="1" y2="9" stroke="currentColor" stroke-width="1.2"/>
+          </svg>
+        </button>
+      </div>
     </div>
   </header>
 </template>
@@ -165,10 +213,17 @@ const handleViewModeChange = (mode: ViewMode) => {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 0.5rem 1rem;
+  padding: 0 1rem;
   background-color: var(--bg-toolbar);
   border-bottom: 1px solid var(--border-color);
   min-height: 48px;
+  -webkit-app-region: drag;
+}
+
+.toolbar button,
+.toolbar .autosave-bar,
+.toolbar .view-mode-group {
+  -webkit-app-region: no-drag;
 }
 
 .toolbar-left,
@@ -269,6 +324,39 @@ const handleViewModeChange = (mode: ViewMode) => {
 
 .mode-label {
   font-size: 0.75rem;
+}
+
+/* Window Controls */
+.window-controls {
+  display: flex;
+  align-items: center;
+  margin-left: 0.25rem;
+  margin-right: -0.5rem;
+  border-radius: 6px;
+  overflow: hidden;
+}
+
+.win-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 34px;
+  height: 28px;
+  background: transparent;
+  border: none;
+  color: var(--text-secondary);
+  cursor: pointer;
+  transition: background-color 0.15s ease, color 0.15s ease;
+}
+
+.win-btn:hover {
+  background-color: var(--bg-hover);
+  color: var(--text-primary);
+}
+
+.win-btn.close-btn:hover {
+  background-color: #e81123;
+  color: #ffffff;
 }
 
 /* Responsive */
