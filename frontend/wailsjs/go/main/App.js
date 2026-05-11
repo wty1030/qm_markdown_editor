@@ -70,6 +70,10 @@ export function SaveFileDialog(arg1, arg2) {
   return window['go']['main']['App']['SaveFileDialog'](arg1, arg2);
 }
 
+export function StartDrag() {
+  return window['go']['main']['App']['StartDrag']();
+}
+
 export function ToggleMaximiseWindow() {
   return window['go']['main']['App']['ToggleMaximiseWindow']();
 }

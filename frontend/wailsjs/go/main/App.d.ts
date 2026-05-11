@@ -36,6 +36,8 @@ export function SaveFile(arg1:string):Promise<main.FileResult>;
 
 export function SaveFileDialog(arg1:string,arg2:string):Promise<string>;
 
+export function StartDrag():Promise<void>;
+
 export function ToggleMaximiseWindow():Promise<void>;
 
 export function WriteFile(arg1:string,arg2:string):Promise<main.FileResult>;

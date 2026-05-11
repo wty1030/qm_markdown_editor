@@ -5,7 +5,8 @@ import {
   MinimiseWindow,
   ToggleMaximiseWindow,
   CloseWindow,
-  IsWindowMaximised
+  IsWindowMaximised,
+  StartDrag
 } from '../../../wailsjs/go/main/App'
 import type { ExportFormat } from '../../composables/useFileOperations'
 
@@ -65,6 +66,16 @@ const handleToggleMaximise = async () => {
 }
 const handleClose = () => CloseWindow()
 
+const handleMouseDown = (e: MouseEvent) => {
+  if ((e.target as HTMLElement).closest('button')) return
+  StartDrag()
+}
+
+const handleDblClick = (e: MouseEvent) => {
+  if ((e.target as HTMLElement).closest('button')) return
+  handleToggleMaximise()
+}
+
 onMounted(() => {
   checkMaximised()
   window.addEventListener('resize', checkMaximised)
@@ -76,7 +87,7 @@ onUnmounted(() => {
 </script>
 
 <template>
-  <header class="toolbar">
+  <header class="toolbar" @mousedown="handleMouseDown" @dblclick="handleDblClick">
     <div class="toolbar-left">
       <button
         class="toolbar-btn"
@@ -191,8 +202,8 @@ onUnmounted(() => {
             <rect x=".5" y=".5" width="9" height="9" fill="none" stroke="currentColor"/>
           </svg>
           <svg v-else width="10" height="10" viewBox="0 0 10 10">
-            <rect x="2" y="0" width="8" height="8" rx="0" fill="none" stroke="currentColor"/>
-            <rect x="0" y="2" width="8" height="8" rx="0" fill="none" stroke="currentColor" stroke-width="1"/>
+            <rect x="2" y="0" width="8" height="8" fill="none" stroke="currentColor"/>
+            <rect x="0" y="2" width="8" height="8" fill="none" stroke="currentColor" stroke-width="1"/>
             <line x1="2" y1="2" x2="10" y2="2" stroke="currentColor" stroke-width=".6" opacity=".5"/>
             <line x1="2" y1="2" x2="2" y2="10" stroke="currentColor" stroke-width=".6" opacity=".5"/>
           </svg>
@@ -217,13 +228,7 @@ onUnmounted(() => {
   background-color: var(--bg-toolbar);
   border-bottom: 1px solid var(--border-color);
   min-height: 48px;
-  -webkit-app-region: drag;
-}
-
-.toolbar button,
-.toolbar .autosave-bar,
-.toolbar .view-mode-group {
-  -webkit-app-region: no-drag;
+  user-select: none;
 }
 
 .toolbar-left,
