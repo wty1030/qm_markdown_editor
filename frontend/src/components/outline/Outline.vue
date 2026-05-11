@@ -17,7 +17,6 @@ const emit = defineEmits<{
   scrollToLine: [lineNumber: number]
 }>()
 
-// 解析 markdown 内容，提取标题
 const outlineItems = computed<OutlineItem[]>(() => {
   const lines = props.content.split('\n')
   const items: OutlineItem[] = []
@@ -28,7 +27,7 @@ const outlineItems = computed<OutlineItem[]>(() => {
       items.push({
         level: match[1].length,
         text: match[2].trim(),
-        line: index + 1  // 1-indexed for display
+        line: index + 1
       })
     }
   })
@@ -36,7 +35,6 @@ const outlineItems = computed<OutlineItem[]>(() => {
   return items
 })
 
-// 点击标题跳转到对应行
 const scrollToLine = (lineNumber: number) => {
   emit('scrollToLine', lineNumber)
 }
@@ -44,7 +42,6 @@ const scrollToLine = (lineNumber: number) => {
 
 <template>
   <div class="outline">
-    <div class="outline-header">大纲</div>
     <div class="outline-list">
       <div
         v-for="item in outlineItems"
@@ -67,14 +64,6 @@ const scrollToLine = (lineNumber: number) => {
   display: flex;
   flex-direction: column;
   height: 100%;
-}
-
-.outline-header {
-  padding: 0.5rem;
-  font-size: 12px;
-  font-weight: 600;
-  color: var(--text-primary);
-  border-bottom: 1px solid var(--border-color);
 }
 
 .outline-list {
@@ -113,7 +102,6 @@ const scrollToLine = (lineNumber: number) => {
   text-overflow: ellipsis;
 }
 
-/* 标题层级缩进 */
 .outline-item.level-1 { padding-left: 0.5rem; font-weight: 600; }
 .outline-item.level-2 { padding-left: 1rem; }
 .outline-item.level-3 { padding-left: 1.5rem; font-size: 12px; }
