@@ -43,7 +43,7 @@ const highlightedContent = computed(() => {
   text = text.replace(/`([^`\n]+)`/g, '<span class="md-inline-code">`$1`</span>')
 
   // 标题 (# ## ### #### ##### ######)
-  text = text.replace(/^(#{1,6})\s+(.*)$/gm, '<span class="md-heading"><span class="md-heading-mark">$1</span> $2</span>')
+  text = text.replace(/^(#{1,6})[ \t]+(.*)$/gm, '<span class="md-heading"><span class="md-heading-mark">$1</span> $2</span>')
 
   // 粗体 (**text** 或 __text__)
   text = text.replace(/\*\*([^*\n]+)\*\*/g, '<span class="md-bold">**$1**</span>')
@@ -63,16 +63,16 @@ const highlightedContent = computed(() => {
   text = text.replace(/!\[([^\]]*)\]\(([^)]+)\)/g, '<span class="md-image">![<span class="md-image-alt">$1</span>](<span class="md-image-url">$2</span>)</span>')
 
   // 引用 (> text)
-  text = text.replace(/^(&gt;|>)\s*(.*)$/gm, '<span class="md-quote"><span class="md-quote-mark">$1</span> $2</span>')
+  text = text.replace(/^(&gt;|>)[ \t]*(.*)$/gm, '<span class="md-quote"><span class="md-quote-mark">$1</span> $2</span>')
 
   // 无序列表 (- * +)
-  text = text.replace(/^(\s*)([-*+])\s+/gm, '$1<span class="md-list-mark">$2</span> ')
+  text = text.replace(/^(\s*)([-*+])[ \t]+/gm, '$1<span class="md-list-mark">$2</span> ')
 
   // 有序列表 (1. 2. etc)
-  text = text.replace(/^(\s*)(\d+\.)\s+/gm, '$1<span class="md-list-mark">$2</span> ')
+  text = text.replace(/^(\s*)(\d+\.)[ \t]+/gm, '$1<span class="md-list-mark">$2</span> ')
 
   // 任务列表 (- [ ] 或 - [x])
-  text = text.replace(/^(\s*)([-*+])\s+\[([ xX])\]/gm, '$1<span class="md-list-mark">$2</span> [<span class="md-task-$3"> </span>]')
+  text = text.replace(/^(\s*)([-*+])[ \t]+\[([ xX])\]/gm, '$1<span class="md-list-mark">$2</span> [<span class="md-task-$3"> </span>]')
 
   // 水平分割线 (--- *** ___)
   text = text.replace(/^(---|\*\*\*|___)$/gm, '<span class="md-hr">$1</span>')
