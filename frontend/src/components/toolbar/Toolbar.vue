@@ -67,7 +67,7 @@ const handleToggleMaximise = async () => {
 }
 const handleClose = () => CloseWindow()
 
-// --- 拖拽：mousedown 记录起点，mousemove 移动窗口 ---
+// --- 拖拽：mousedown 时获取窗口位置，mousemove 移动窗口 ---
 const DRAG_THRESHOLD = 3
 let dragging = false
 let dragStartSX = 0
@@ -75,27 +75,23 @@ let dragStartSY = 0
 let dragWinX = 0
 let dragWinY = 0
 
-const handleMouseDown = (e: MouseEvent) => {
+const handleMouseDown = async (e: MouseEvent) => {
   if (e.button !== 0) return
   dragStartSX = e.screenX
   dragStartSY = e.screenY
+  const [x, y] = await GetWindowPos()
+  dragWinX = x
+  dragWinY = y
   dragging = false
   document.addEventListener('mousemove', handleMouseMove)
   document.addEventListener('mouseup', handleMouseUp)
 }
 
-const handleMouseMove = async (e: MouseEvent) => {
+const handleMouseMove = (e: MouseEvent) => {
   const dx = e.screenX - dragStartSX
   const dy = e.screenY - dragStartSY
-
-  if (!dragging) {
-    if (Math.abs(dx) + Math.abs(dy) <= DRAG_THRESHOLD) return
-    dragging = true
-    const [x, y] = await GetWindowPos()
-    dragWinX = x
-    dragWinY = y
-  }
-
+  if (!dragging && Math.abs(dx) + Math.abs(dy) <= DRAG_THRESHOLD) return
+  dragging = true
   MoveWindow(dragWinX + dx, dragWinY + dy)
 }
 
