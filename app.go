@@ -7,7 +7,6 @@ import (
 	"os/exec"
 	"path/filepath"
 	"strings"
-	"syscall"
 
 	"github.com/wailsapp/wails/v2/pkg/runtime"
 )
@@ -488,16 +487,12 @@ func (a *App) IsWindowMaximised() bool {
 	return runtime.WindowIsMaximised(a.ctx)
 }
 
-// StartDrag initiates a window drag using Windows native API
-func (a *App) StartDrag() {
-	user32 := syscall.NewLazyDLL("user32.dll")
-	releaseCapture := user32.NewProc("ReleaseCapture")
-	sendMessage := user32.NewProc("SendMessageW")
-	getForegroundWindow := user32.NewProc("GetForegroundWindow")
+// MoveWindow sets the window position
+func (a *App) MoveWindow(x, y int) {
+	runtime.WindowSetPosition(a.ctx, x, y)
+}
 
-	releaseCapture.Call()
-	hwnd, _, _ := getForegroundWindow.Call()
-	if hwnd != 0 {
-		sendMessage.Call(hwnd, 0x00A1, 2, 0) // WM_NCLBUTTONDOWN, HTCAPTION
-	}
+// GetWindowPos returns the current window position
+func (a *App) GetWindowPos() (int, int) {
+	return runtime.WindowGetPosition(a.ctx)
 }

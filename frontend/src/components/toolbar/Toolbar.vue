@@ -6,7 +6,8 @@ import {
   ToggleMaximiseWindow,
   CloseWindow,
   IsWindowMaximised,
-  StartDrag
+  MoveWindow,
+  GetWindowPos
 } from '../../../wailsjs/go/main/App'
 import type { ExportFormat } from '../../composables/useFileOperations'
 
@@ -66,35 +67,45 @@ const handleToggleMaximise = async () => {
 }
 const handleClose = () => CloseWindow()
 
-// --- 拖拽逻辑：移动超过阈值才触发窗口拖动，否则让 click 正常传递 ---
+// --- 拖拽：mousedown 记录起点，mousemove 移动窗口 ---
 const DRAG_THRESHOLD = 3
-let dragStartX = 0
-let dragStartY = 0
+let dragging = false
+let dragStartSX = 0
+let dragStartSY = 0
+let dragWinX = 0
+let dragWinY = 0
 
 const handleMouseDown = (e: MouseEvent) => {
   if (e.button !== 0) return
-  dragStartX = e.clientX
-  dragStartY = e.clientY
+  dragStartSX = e.screenX
+  dragStartSY = e.screenY
+  dragging = false
   document.addEventListener('mousemove', handleMouseMove)
   document.addEventListener('mouseup', handleMouseUp)
 }
 
-const handleMouseMove = (e: MouseEvent) => {
-  const dx = e.clientX - dragStartX
-  const dy = e.clientY - dragStartY
-  if (Math.abs(dx) + Math.abs(dy) > DRAG_THRESHOLD) {
-    document.removeEventListener('mousemove', handleMouseMove)
-    document.removeEventListener('mouseup', handleMouseUp)
-    StartDrag()
+const handleMouseMove = async (e: MouseEvent) => {
+  const dx = e.screenX - dragStartSX
+  const dy = e.screenY - dragStartSY
+
+  if (!dragging) {
+    if (Math.abs(dx) + Math.abs(dy) <= DRAG_THRESHOLD) return
+    dragging = true
+    const [x, y] = await GetWindowPos()
+    dragWinX = x
+    dragWinY = y
   }
+
+  MoveWindow(dragWinX + dx, dragWinY + dy)
 }
 
 const handleMouseUp = () => {
+  dragging = false
   document.removeEventListener('mousemove', handleMouseMove)
   document.removeEventListener('mouseup', handleMouseUp)
 }
 
-const handleDblClick = (e: MouseEvent) => {
+const handleDblClick = () => {
   handleToggleMaximise()
 }
 
@@ -111,11 +122,7 @@ onUnmounted(() => {
 <template>
   <header class="toolbar" @mousedown="handleMouseDown" @dblclick="handleDblClick">
     <div class="toolbar-left">
-      <button
-        class="toolbar-btn"
-        title="新建窗口 (Ctrl+N)"
-        @click="emit('newWindow')"
-      >
+      <button class="toolbar-btn" title="新建窗口 (Ctrl+N)" @click="emit('newWindow')">
         <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
           <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
           <polyline points="14,2 14,8 20,8"/>
@@ -125,22 +132,14 @@ onUnmounted(() => {
         <span class="btn-text">新建</span>
       </button>
 
-      <button
-        class="toolbar-btn"
-        title="打开文件 (Ctrl+O)"
-        @click="emit('openFile')"
-      >
+      <button class="toolbar-btn" title="打开文件 (Ctrl+O)" @click="emit('openFile')">
         <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
           <path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/>
         </svg>
         <span class="btn-text">打开</span>
       </button>
 
-      <button
-        class="toolbar-btn"
-        title="打开文件夹 (Ctrl+Shift+O)"
-        @click="emit('openFolder')"
-      >
+      <button class="toolbar-btn" title="打开文件夹 (Ctrl+Shift+O)" @click="emit('openFolder')">
         <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
           <path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/>
           <line x1="12" y1="11" x2="12" y2="17"/>
@@ -149,11 +148,7 @@ onUnmounted(() => {
         <span class="btn-text">文件夹</span>
       </button>
 
-      <button
-        class="toolbar-btn"
-        title="保存 (Ctrl+S)"
-        @click="emit('save')"
-      >
+      <button class="toolbar-btn" title="保存 (Ctrl+S)" @click="emit('save')">
         <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
           <path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/>
           <polyline points="17,21 17,13 7,13 7,21"/>
@@ -166,7 +161,6 @@ onUnmounted(() => {
     <div class="toolbar-center">
       <span class="file-status-dot" :class="props.isModified ? 'unsaved' : 'saved'" />
       <span class="file-name">{{ fileName }}</span>
-
       <div v-if="props.autoSaveActive" class="autosave-bar">
         <div class="autosave-track">
           <div class="autosave-fill" :style="{ width: timerProgress * 100 + '%' }" />
@@ -203,11 +197,7 @@ onUnmounted(() => {
     </div>
 
     <div class="toolbar-right">
-      <button
-        class="toolbar-btn settings-btn"
-        title="设置"
-        @click="emit('openSettings')"
-      >
+      <button class="toolbar-btn settings-btn" title="设置" @click="emit('openSettings')">
         <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
           <circle cx="12" cy="12" r="3"/>
           <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/>
@@ -299,17 +289,9 @@ onUnmounted(() => {
   color: var(--btn-active-text);
 }
 
-.icon {
-  width: 16px;
-  height: 16px;
-  flex-shrink: 0;
-}
+.icon { width: 16px; height: 16px; flex-shrink: 0; }
+.btn-text { white-space: nowrap; }
 
-.btn-text {
-  white-space: nowrap;
-}
-
-/* View Mode Group Button */
 .view-mode-group {
   display: flex;
   align-items: center;
@@ -333,27 +315,11 @@ onUnmounted(() => {
   transition: all 0.15s ease;
 }
 
-.view-mode-btn:hover {
-  color: var(--text-primary);
-  background-color: var(--bg-hover);
-}
+.view-mode-btn:hover { color: var(--text-primary); background-color: var(--bg-hover); }
+.view-mode-btn.active { background-color: var(--accent-color); color: var(--btn-active-text); }
+.mode-icon { width: 14px; height: 14px; flex-shrink: 0; }
+.mode-label { font-size: 0.75rem; }
 
-.view-mode-btn.active {
-  background-color: var(--accent-color);
-  color: var(--btn-active-text);
-}
-
-.mode-icon {
-  width: 14px;
-  height: 14px;
-  flex-shrink: 0;
-}
-
-.mode-label {
-  font-size: 0.75rem;
-}
-
-/* Window Controls */
 .window-controls {
   display: flex;
   align-items: center;
@@ -376,94 +342,32 @@ onUnmounted(() => {
   transition: background-color 0.15s ease, color 0.15s ease;
 }
 
-.win-btn:hover {
-  background-color: var(--bg-hover);
-  color: var(--text-primary);
-}
+.win-btn:hover { background-color: var(--bg-hover); color: var(--text-primary); }
+.win-btn.close-btn:hover { background-color: #e81123; color: #ffffff; }
 
-.win-btn.close-btn:hover {
-  background-color: #e81123;
-  color: #ffffff;
-}
-
-/* Responsive */
 @media (max-width: 600px) {
-  .btn-text {
-    display: none;
-  }
-
-  .toolbar-btn {
-    padding: 0.5rem;
-  }
-
-  .mode-label {
-    display: none;
-  }
-
-  .view-mode-btn {
-    padding: 0.5rem;
-  }
-
-  .file-name {
-    display: none;
-  }
+  .btn-text { display: none; }
+  .toolbar-btn { padding: 0.5rem; }
+  .mode-label { display: none; }
+  .view-mode-btn { padding: 0.5rem; }
+  .file-name { display: none; }
 }
 
 .file-status-dot {
-  width: 8px;
-  height: 8px;
-  border-radius: 50%;
-  flex-shrink: 0;
-  transition: background-color 0.3s ease;
+  width: 8px; height: 8px; border-radius: 50%;
+  flex-shrink: 0; transition: background-color 0.3s ease;
 }
+.file-status-dot.saved { background-color: var(--success-color); }
+.file-status-dot.unsaved { background-color: var(--warning-color); }
+.file-name { overflow: hidden; text-overflow: ellipsis; }
 
-.file-status-dot.saved {
-  background-color: var(--success-color);
-}
-
-.file-status-dot.unsaved {
-  background-color: var(--warning-color);
-}
-
-.file-name {
-  overflow: hidden;
-  text-overflow: ellipsis;
-}
-
-/* Auto-save progress bar */
 .autosave-bar {
-  display: flex;
-  align-items: center;
-  gap: 0.375rem;
-  margin-left: 0.5rem;
-  padding: 0.1875rem 0.5rem;
-  background-color: var(--bg-secondary);
-  border: 1px solid var(--border-color);
+  display: flex; align-items: center; gap: 0.375rem;
+  margin-left: 0.5rem; padding: 0.1875rem 0.5rem;
+  background-color: var(--bg-secondary); border: 1px solid var(--border-color);
   border-radius: 4px;
 }
-
-.autosave-track {
-  width: 40px;
-  height: 4px;
-  background-color: var(--text-muted);
-  border-radius: 2px;
-  overflow: hidden;
-  opacity: 0.5;
-}
-
-.autosave-fill {
-  height: 100%;
-  background-color: var(--accent-color);
-  border-radius: 2px;
-  transition: width 0.9s linear;
-}
-
-.autosave-label {
-  font-size: 10px;
-  font-weight: 600;
-  color: var(--text-primary);
-  font-variant-numeric: tabular-nums;
-  line-height: 1.4;
-  white-space: nowrap;
-}
+.autosave-track { width: 40px; height: 4px; background-color: var(--text-muted); border-radius: 2px; overflow: hidden; opacity: 0.5; }
+.autosave-fill { height: 100%; background-color: var(--accent-color); border-radius: 2px; transition: width 0.9s linear; }
+.autosave-label { font-size: 10px; font-weight: 600; color: var(--text-primary); font-variant-numeric: tabular-nums; line-height: 1.4; white-space: nowrap; }
 </style>
