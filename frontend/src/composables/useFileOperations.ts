@@ -1,4 +1,4 @@
-import { ref } from 'vue'
+import { ref, computed } from 'vue'
 import { marked } from 'marked'
 import {
   ReadFile,
@@ -30,9 +30,21 @@ export type ExportFormat = 'md' | 'html' | 'pdf'
 
 export function useFileOperations() {
   const currentFile = ref<string>('')
-  const isModified = ref(false)
+  const savedContent = ref<string>('')
+  const isModified = computed(() => markdownContent.value !== savedContent.value)
   const fileTree = ref<FileInfo[]>([])
   const currentDirectory = ref<string>('')
+
+  // 外部持有的 markdown 内容引用，需要由 App.vue 注入
+  let markdownContent: { value: string } = { value: '' }
+
+  const setContentRef = (ref: { value: string }) => {
+    markdownContent = ref
+  }
+
+  const markSaved = (content: string) => {
+    savedContent.value = content
+  }
 
   const openNewWindow = async () => {
     await OpenNewWindow()
@@ -49,7 +61,21 @@ export function useFileOperations() {
       const result = await ReadFile(path) as FileResult
       if (result.success) {
         currentFile.value = path
-        isModified.value = false
+        markSaved(result.content || '')
+
+        // 打开文件所在文件夹，自动选中该文件
+        const sep = path.includes('\\') ? '\\' : '/'
+        const lastSep = path.lastIndexOf(sep)
+        const dir = lastSep > 0 ? path.substring(0, lastSep) : ''
+        if (dir) {
+          try {
+            const files = await ListDirectory(dir) as FileInfo[]
+            currentDirectory.value = dir
+            fileTree.value = files
+          } catch {
+            // 文件夹加载失败不影响文件打开
+          }
+        }
       }
       return result
     } catch (error) {
@@ -61,7 +87,7 @@ export function useFileOperations() {
     const result = await ReadFile(path) as FileResult
     if (result.success) {
       currentFile.value = path
-      isModified.value = false
+      markSaved(result.content || '')
     }
     return result
   }
@@ -73,7 +99,7 @@ export function useFileOperations() {
 
     const result = await SaveFile(content) as FileResult
     if (result.success) {
-      isModified.value = false
+      markSaved(content)
     }
     return result
   }
@@ -105,7 +131,7 @@ export function useFileOperations() {
 
       if (result.success && format === 'md') {
         currentFile.value = path
-        isModified.value = false
+        markSaved(content)
       }
       return result
     } catch (error) {
@@ -142,10 +168,6 @@ export function useFileOperations() {
     } catch (error) {
       return { success: false, error: String(error) }
     }
-  }
-
-  const markModified = () => {
-    isModified.value = true
   }
 
   const getWindowTitle = () => {
@@ -188,7 +210,7 @@ export function useFileOperations() {
     saveFileAs,
     openDirectory,
     refreshDirectory,
-    markModified,
+    setContentRef,
     getWindowTitle
   }
 }

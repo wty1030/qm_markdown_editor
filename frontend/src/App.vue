@@ -36,8 +36,11 @@ const {
   saveFile,
   saveFileAs,
   openDirectory,
-  markModified
+  setContentRef,
+  getWindowTitle
 } = useFileOperations()
+
+setContentRef(markdownContent)
 
 const { handleEditorScroll, handlePreviewScroll } = useScrollSync()
 const { format, insertLink, insertImage, insertCodeBlock, insertColor, insertTable } = useFormat(textareaRef)
@@ -109,10 +112,9 @@ const handleNewWindow = async () => {
 const handleOpenFile = async () => {
   const result = await openFile()
   if (result.success && result.content !== undefined) {
-    loadingFile = true
     markdownContent.value = result.content
     reset(result.content)
-    nextTick(() => { loadingFile = false })
+    showSidebar.value = true
   }
 }
 
@@ -149,10 +151,8 @@ const handleOpenFolder = async () => {
 const handleSelectFile = async (path: string) => {
   const result = await openFileByPath(path)
   if (result.success && result.content !== undefined) {
-    loadingFile = true
     markdownContent.value = result.content
     reset(result.content)
-    nextTick(() => { loadingFile = false })
   }
 }
 
@@ -265,13 +265,8 @@ onUnmounted(() => {
   stopAutoSaveTimer()
 })
 
-// Track modifications and history
-let loadingFile = false
-
+// Track history
 watch(markdownContent, (newContent) => {
-  if (!loadingFile) {
-    markModified()
-  }
   pushHistory(newContent)
 })
 </script>
