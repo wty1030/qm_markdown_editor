@@ -10,18 +10,18 @@ const darkThemes = new Set(['vscode-dark', 'one-dark', 'monokai', 'dracula', 'gi
 let mermaidCounter = 0
 let lastMermaidTheme = 'dark'
 
-// 主题到 highlight.js 主题的映射
+// 主题到 highlight.js 主题的映射（全部使用本地主题文件）
 const themeToHljs: Record<string, { dark: boolean; theme: string }> = {
   'vscode-dark': { dark: true, theme: 'atom-one-dark' },
   'vscode-light': { dark: false, theme: 'atom-one-light' },
   'one-dark': { dark: true, theme: 'atom-one-dark' },
   'one-light': { dark: false, theme: 'atom-one-light' },
   'monokai': { dark: true, theme: 'monokai' },
-  'dracula': { dark: true, theme: 'dracula' },
+  'dracula': { dark: true, theme: 'a11y-dark' },
   'github-dark': { dark: true, theme: 'github-dark' },
-  'solarized-dark': { dark: true, theme: 'solarized-dark' },
+  'solarized-dark': { dark: true, theme: 'atom-one-dark' },
   'nord': { dark: true, theme: 'nord' },
-  'gruvbox-dark': { dark: true, theme: 'gruvbox-dark' },
+  'gruvbox-dark': { dark: true, theme: 'monokai' },
 }
 
 // 动态加载主题
@@ -38,7 +38,7 @@ const loadTheme = (themeName: string) => {
   const link = document.createElement('link')
   link.id = 'hljs-theme'
   link.rel = 'stylesheet'
-  link.href = `https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/${hljsConfig.theme}.min.css`
+  link.href = `/hljs-themes/${hljsConfig.theme}.min.css`
   document.head.appendChild(link)
 }
 
