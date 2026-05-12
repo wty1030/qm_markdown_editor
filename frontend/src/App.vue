@@ -109,8 +109,10 @@ const handleNewWindow = async () => {
 const handleOpenFile = async () => {
   const result = await openFile()
   if (result.success && result.content !== undefined) {
+    loadingFile = true
     markdownContent.value = result.content
     reset(result.content)
+    nextTick(() => { loadingFile = false })
   }
 }
 
@@ -147,8 +149,10 @@ const handleOpenFolder = async () => {
 const handleSelectFile = async (path: string) => {
   const result = await openFileByPath(path)
   if (result.success && result.content !== undefined) {
+    loadingFile = true
     markdownContent.value = result.content
     reset(result.content)
+    nextTick(() => { loadingFile = false })
   }
 }
 
@@ -262,8 +266,12 @@ onUnmounted(() => {
 })
 
 // Track modifications and history
+let loadingFile = false
+
 watch(markdownContent, (newContent) => {
-  markModified()
+  if (!loadingFile) {
+    markModified()
+  }
   pushHistory(newContent)
 })
 </script>
