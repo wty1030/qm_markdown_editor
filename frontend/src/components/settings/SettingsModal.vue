@@ -125,9 +125,8 @@ const isCustomWallpaper = computed(() => {
 
               <!-- 自定义上传 -->
               <label class="wallpaper-option custom-upload">
-                <div class="wallpaper-preview upload-preview" :class="{ 'has-custom': isCustomWallpaper }">
-                  <img v-if="isCustomWallpaper" :src="wallpaper.replace('url(', '').replace(')', '')" alt="自定义壁纸" />
-                  <svg v-else class="upload-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <div class="wallpaper-preview upload-preview" :style="isCustomWallpaper ? { backgroundImage: wallpaper } : {}">
+                  <svg v-if="!isCustomWallpaper" class="upload-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                     <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
                     <polyline points="17,8 12,3 7,8"/>
                     <line x1="12" y1="3" x2="12" y2="15"/>
@@ -430,18 +429,8 @@ const isCustomWallpaper = computed(() => {
   flex-shrink: 0;
 }
 
-.wallpaper-preview img {
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-}
-
 .upload-preview {
   background-color: var(--bg-primary);
-}
-
-.upload-preview.has-custom {
-  padding: 0;
 }
 
 .upload-icon,
