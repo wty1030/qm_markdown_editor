@@ -214,7 +214,7 @@ defineExpose({
 .markdown-body {
   padding: 1rem;
   color: var(--text-primary);
-  font-size: 14px;
+  font-size: 16px;
   line-height: 1.6;
 }
 

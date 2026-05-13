@@ -212,7 +212,7 @@ defineExpose({
   background-color: var(--bg-secondary);
   color: var(--text-secondary);
   font-family: 'Consolas', 'Monaco', 'Courier New', monospace;
-  font-size: 14px;
+  font-size: 16px;
   line-height: 1.6;
   text-align: right;
   overflow-y: hidden;
@@ -237,7 +237,7 @@ defineExpose({
   right: 0;
   padding: 1rem;
   font-family: 'Consolas', 'Monaco', 'Courier New', monospace;
-  font-size: 14px;
+  font-size: 16px;
   line-height: 1.6;
   white-space: pre-wrap;
   word-wrap: break-word;
@@ -261,7 +261,7 @@ defineExpose({
   outline: none;
   resize: none;
   font-family: 'Consolas', 'Monaco', 'Courier New', monospace;
-  font-size: 14px;
+  font-size: 16px;
   line-height: 1.6;
   overflow-y: auto;
   overflow-x: auto;
