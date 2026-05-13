@@ -1,5 +1,6 @@
 import { ref, watchEffect, computed } from 'vue'
 import { useLocalStorage } from '@vueuse/core'
+import { WindowSetLightTheme, WindowSetDarkTheme } from '../../wailsjs/runtime/runtime'
 
 export type ThemeName = 'vscode-dark' | 'vscode-light' | 'one-dark' | 'one-light' | 'monokai' | 'dracula' | 'github-dark' | 'solarized-dark' | 'nord' | 'gruvbox-dark'
 
@@ -58,6 +59,11 @@ export function useTheme() {
   // Apply theme to document root element
   watchEffect(() => {
     document.documentElement.setAttribute('data-theme', theme.value)
+    if (isDark.value) {
+      WindowSetDarkTheme()
+    } else {
+      WindowSetLightTheme()
+    }
   })
 
   return {

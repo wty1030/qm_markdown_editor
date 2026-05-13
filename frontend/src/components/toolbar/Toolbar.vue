@@ -221,7 +221,7 @@ onUnmounted(() => {
 }
 
 .view-mode-center {
-  flex: 1;
+  flex: 1 0 auto;
   justify-content: center;
 }
 
