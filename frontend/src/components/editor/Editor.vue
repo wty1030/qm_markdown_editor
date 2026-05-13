@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, computed, watch, onMounted, onUnmounted } from 'vue'
+import { ref, computed, watch, onMounted, onUnmounted, nextTick } from 'vue'
 import { useSettings } from '../../composables/useSettings'
 
 interface Props {
@@ -24,63 +24,82 @@ const lines = computed(() => {
   return Array.from({ length: lineCount }, (_, i) => i + 1)
 })
 
-// Markdown 语法高亮
-const highlightedContent = computed(() => {
-  let text = props.content
-
-  // 转义 HTML
-  text = text
+const escapeHtml = (text: string): string => {
+  return text
     .replace(/&/g, '&amp;')
     .replace(/</g, '&lt;')
     .replace(/>/g, '&gt;')
+}
 
-  // 代码块 (```code```)
-  text = text.replace(/```(\w*)\n([\s\S]*?)```/g, (match, lang, code) => {
-    return `<span class="md-code-block">\<span class="md-code-fence">\`\`\`</span><span class="md-code-lang">${lang}</span>\n${code}<span class="md-code-fence">\`\`\`</span></span>`
-  })
+const processLine = (text: string): string => {
+  let line = escapeHtml(text)
 
   // 行内代码 (`code`)
-  text = text.replace(/`([^`\n]+)`/g, '<span class="md-inline-code">`$1`</span>')
+  line = line.replace(/`([^`\n]+)`/g, '<span class="md-inline-code">`$1`</span>')
 
   // 标题 (# ## ### #### ##### ######)
-  text = text.replace(/^(#{1,6})[ \t]+(.*)$/gm, '<span class="md-heading"><span class="md-heading-mark">$1</span> $2</span>')
+  line = line.replace(/^(#{1,6})[ \t]+(.*)$/, '<span class="md-heading"><span class="md-heading-mark">$1</span> $2</span>')
 
   // 粗体 (**text** 或 __text__)
-  text = text.replace(/\*\*([^*\n]+)\*\*/g, '<span class="md-bold">**$1**</span>')
-  text = text.replace(/__([^_\n]+)__/g, '<span class="md-bold">__$1__</span>')
+  line = line.replace(/\*\*([^*\n]+)\*\*/g, '<span class="md-bold">**$1**</span>')
+  line = line.replace(/__([^_\n]+)__/g, '<span class="md-bold">__$1__</span>')
 
   // 斜体 (*text* 或 _text_)
-  text = text.replace(/\*([^*\n]+)\*/g, '<span class="md-italic">*$1*</span>')
-  text = text.replace(/_([^_\n]+)_/g, '<span class="md-italic">_$1_</span>')
+  line = line.replace(/\*([^*\n]+)\*/g, '<span class="md-italic">*$1*</span>')
+  line = line.replace(/_([^_\n]+)_/g, '<span class="md-italic">_$1_</span>')
 
   // 删除线 (~~text~~)
-  text = text.replace(/~~([^~\n]+)~~/g, '<span class="md-strikethrough">~~$1~~</span>')
+  line = line.replace(/~~([^~\n]+)~~/g, '<span class="md-strikethrough">~~$1~~</span>')
+
+  // 图片 ![alt](url) — 必须在链接之前
+  line = line.replace(/!\[([^\]]*)\]\(([^)]+)\)/g, '<span class="md-image">![<span class="md-image-alt">$1</span>](<span class="md-image-url">$2</span>)</span>')
 
   // 链接 [text](url)
-  text = text.replace(/\[([^\]]+)\]\(([^)]+)\)/g, '<span class="md-link">[<span class="md-link-text">$1</span>](<span class="md-link-url">$2</span>)</span>')
-
-  // 图片 ![alt](url)
-  text = text.replace(/!\[([^\]]*)\]\(([^)]+)\)/g, '<span class="md-image">![<span class="md-image-alt">$1</span>](<span class="md-image-url">$2</span>)</span>')
+  line = line.replace(/\[([^\]]+)\]\(([^)]+)\)/g, '<span class="md-link">[<span class="md-link-text">$1</span>](<span class="md-link-url">$2</span>)</span>')
 
   // 引用 (> text)
-  text = text.replace(/^(&gt;|>)[ \t]*(.*)$/gm, '<span class="md-quote"><span class="md-quote-mark">$1</span> $2</span>')
+  line = line.replace(/^(&gt;|>)[ \t]*(.*)$/, '<span class="md-quote"><span class="md-quote-mark">$1</span> $2</span>')
+
+  // 任务列表 (- [ ] 或 - [x]) — 必须在无序列表之前
+  line = line.replace(/^(\s*)([-*+])[ \t]+\[([ xX])\]/, '$1<span class="md-list-mark">$2</span> [<span class="md-task-$3"> </span>]')
 
   // 无序列表 (- * +)
-  text = text.replace(/^(\s*)([-*+])[ \t]+/gm, '$1<span class="md-list-mark">$2</span> ')
+  line = line.replace(/^(\s*)([-*+])[ \t]+/, '$1<span class="md-list-mark">$2</span> ')
 
   // 有序列表 (1. 2. etc)
-  text = text.replace(/^(\s*)(\d+\.)[ \t]+/gm, '$1<span class="md-list-mark">$2</span> ')
-
-  // 任务列表 (- [ ] 或 - [x])
-  text = text.replace(/^(\s*)([-*+])[ \t]+\[([ xX])\]/gm, '$1<span class="md-list-mark">$2</span> [<span class="md-task-$3"> </span>]')
+  line = line.replace(/^(\s*)(\d+\.)[ \t]+/, '$1<span class="md-list-mark">$2</span> ')
 
   // 水平分割线 (--- *** ___)
-  text = text.replace(/^(---|\*\*\*|___)$/gm, '<span class="md-hr">$1</span>')
+  line = line.replace(/^(---|\*\*\*|___)$/, '<span class="md-hr">$1</span>')
 
-  // 换行处理
-  text = text.replace(/\n/g, '<br>')
+  return line
+}
 
-  return text
+const highlightedContent = computed(() => {
+  const lines = props.content.split('\n')
+  const result: string[] = []
+  let inCodeBlock = false
+
+  for (const line of lines) {
+    if (!inCodeBlock && line.startsWith('```')) {
+      inCodeBlock = true
+      const lang = line.slice(3).trim()
+      result.push(`<span class="md-code-fence">\`\`\`</span><span class="md-code-lang">${escapeHtml(lang)}</span>`)
+    } else if (inCodeBlock && line.startsWith('```')) {
+      inCodeBlock = false
+      result.push(`<span class="md-code-fence">\`\`\`</span>`)
+    } else if (inCodeBlock) {
+      result.push(escapeHtml(line))
+    } else {
+      result.push(processLine(line))
+    }
+  }
+
+  return result.join('<br>')
+})
+
+watch(highlightedContent, () => {
+  nextTick(syncHighlightScroll)
 })
 
 const handleInput = (event: Event) => {
@@ -249,6 +268,8 @@ defineExpose({
   line-height: 1.6;
   overflow-y: auto;
   overflow-x: auto;
+  overflow-wrap: break-word;
+  word-wrap: break-word;
 }
 
 .editor-textarea::placeholder {
@@ -282,10 +303,6 @@ defineExpose({
 .editor-highlight :deep(.md-strikethrough) {
   color: var(--text-secondary);
   text-decoration: line-through;
-}
-
-.editor-highlight :deep(.md-code-block) {
-  display: block;
 }
 
 .editor-highlight :deep(.md-code-fence) {
