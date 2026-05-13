@@ -428,7 +428,8 @@ const codeLanguages = [
   padding: 0.375rem 0.75rem;
   background-color: var(--bg-secondary);
   border-bottom: 1px solid var(--border-color);
-  min-height: 40px;
+  height: 40px;
+  flex-shrink: 0;
 }
 
 .format-btn {

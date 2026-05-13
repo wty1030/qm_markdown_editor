@@ -195,7 +195,8 @@ onUnmounted(() => {
   padding: 0 1rem;
   background-color: var(--bg-toolbar);
   border-bottom: 1px solid var(--border-color);
-  min-height: 48px;
+  height: 48px;
+  flex-shrink: 0;
   user-select: none;
   --wails-draggable: drag;
 }
