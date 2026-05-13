@@ -235,7 +235,7 @@ onUnmounted(() => {
   border-radius: 4px;
   color: var(--text-primary);
   font-size: 0.875rem;
-  cursor: pointer;
+  cursor: var(--cursor-pointer);
   transition: background-color 0.15s ease, border-color 0.15s ease;
   --wails-draggable: no-drag;
 }
@@ -273,7 +273,7 @@ onUnmounted(() => {
   border-radius: 4px;
   color: var(--text-secondary);
   font-size: 0.8125rem;
-  cursor: pointer;
+  cursor: var(--cursor-pointer);
   transition: all 0.15s ease;
 }
 

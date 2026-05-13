@@ -208,6 +208,7 @@ defineExpose({
   height: 100%;
   overflow-y: auto;
   background-color: var(--bg-primary);
+  cursor: var(--cursor-default);
 }
 
 .markdown-body {
@@ -276,6 +277,7 @@ defineExpose({
 
 .markdown-body :deep(a:hover) {
   text-decoration: underline;
+  cursor: var(--cursor-pointer);
 }
 
 /* Code */

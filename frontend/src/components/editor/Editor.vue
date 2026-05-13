@@ -267,6 +267,7 @@ defineExpose({
   overflow-x: auto;
   overflow-wrap: break-word;
   word-wrap: break-word;
+  cursor: var(--cursor-default);
 }
 
 .editor-textarea::placeholder {
