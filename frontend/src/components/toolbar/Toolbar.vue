@@ -205,6 +205,7 @@ onUnmounted(() => {
   display: flex;
   align-items: center;
   gap: 0.5rem;
+  flex-shrink: 0;
 }
 
 .toolbar-center {
@@ -215,6 +216,8 @@ onUnmounted(() => {
   font-size: 0.8125rem;
   white-space: nowrap;
   overflow: hidden;
+  flex: 0 1 auto;
+  min-width: 0;
 }
 
 .view-mode-center {
@@ -319,7 +322,7 @@ onUnmounted(() => {
 }
 .file-status-dot.saved { background-color: var(--success-color); }
 .file-status-dot.unsaved { background-color: var(--warning-color); }
-.file-name { overflow: hidden; text-overflow: ellipsis; }
+.file-name { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; min-width: 0; }
 
 .autosave-bar {
   display: flex; align-items: center; gap: 0.375rem;

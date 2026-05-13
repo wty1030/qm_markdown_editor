@@ -134,8 +134,7 @@ const handleScroll = () => {
   if (!textareaRef.value || !lineNumbersRef.value || !highlightRef.value) return
 
   lineNumbersRef.value.scrollTop = textareaRef.value.scrollTop
-  highlightRef.value.scrollTop = textareaRef.value.scrollTop
-  highlightRef.value.scrollLeft = textareaRef.value.scrollLeft
+  highlightRef.value.style.transform = `translate(${-textareaRef.value.scrollLeft}px, ${-textareaRef.value.scrollTop}px)`
 
   emit('scroll', textareaRef.value.scrollTop, textareaRef.value.scrollHeight, textareaRef.value.clientHeight)
 }
@@ -150,8 +149,7 @@ const syncScrollFromPreview = (scrollTop: number) => {
 // 同步滚动高亮层
 const syncHighlightScroll = () => {
   if (!textareaRef.value || !highlightRef.value) return
-  highlightRef.value.scrollTop = textareaRef.value.scrollTop
-  highlightRef.value.scrollLeft = textareaRef.value.scrollLeft
+  highlightRef.value.style.transform = `translate(${-textareaRef.value.scrollLeft}px, ${-textareaRef.value.scrollTop}px)`
 }
 
 // 滚动到指定行号（1-indexed）
@@ -237,17 +235,16 @@ defineExpose({
   top: 0;
   left: 0;
   right: 0;
-  bottom: 0;
   padding: 1rem;
   font-family: 'Consolas', 'Monaco', 'Courier New', monospace;
   font-size: 14px;
   line-height: 1.6;
   white-space: pre-wrap;
   word-wrap: break-word;
-  overflow-y: auto;
-  overflow-x: auto;
+  overflow: hidden;
   pointer-events: none;
   color: var(--text-primary);
+  will-change: transform;
 }
 
 .editor-textarea {
