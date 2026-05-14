@@ -264,7 +264,7 @@ defineExpose({
   font-size: 16px;
   line-height: 1.6;
   overflow-y: auto;
-  overflow-x: auto;
+  overflow-x: hidden;
   overflow-wrap: break-word;
   word-wrap: break-word;
   cursor: var(--cursor-default);
