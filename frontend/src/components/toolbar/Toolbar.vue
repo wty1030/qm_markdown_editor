@@ -41,7 +41,7 @@ const isMaximised = ref(false)
 
 const fileName = computed(() => {
   if (!props.currentFile) return '未命名'
-  return props.currentFile.split('/').pop() || props.currentFile.split('\\').pop() || props.currentFile
+  return props.currentFile.replace(/.*[/\\]/, '')
 })
 
 const timerProgress = computed(() => {

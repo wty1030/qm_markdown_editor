@@ -40,7 +40,7 @@ watch(() => props.currentDirectory, (newDir) => {
 
 const directoryName = computed(() => {
   if (!props.currentDirectory) return ''
-  return props.currentDirectory.split('/').pop() || props.currentDirectory.split('\\').pop() || props.currentDirectory
+  return props.currentDirectory.replace(/.*[/\\]/, '')
 })
 
 const toggleCollapse = () => {

@@ -174,7 +174,7 @@ export function useFileOperations() {
     if (!currentFile.value) {
       return 'QMMD - 未命名'
     }
-    const fileName = currentFile.value.split('/').pop() || currentFile.value.split('\\').pop() || currentFile.value
+    const fileName = currentFile.value.replace(/.*[/\\]/, '')
     return `QMMD - ${fileName}${isModified.value ? ' *' : ''}`
   }
 
@@ -193,7 +193,7 @@ export function useFileOperations() {
 
   const getFileNameWithoutExtension = (path: string) => {
     if (!path) return ''
-    const fileName = path.split('/').pop() || path.split('\\').pop() || path
+    const fileName = path.replace(/.*[/\\]/, '')
     const lastDot = fileName.lastIndexOf('.')
     return lastDot > 0 ? fileName.substring(0, lastDot) : fileName
   }

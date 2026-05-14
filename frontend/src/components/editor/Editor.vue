@@ -241,6 +241,7 @@ defineExpose({
   line-height: 1.6;
   white-space: pre-wrap;
   word-wrap: break-word;
+  word-break: break-all;
   overflow: hidden;
   pointer-events: none;
   color: var(--text-primary);
@@ -263,11 +264,17 @@ defineExpose({
   font-family: 'Consolas', 'Monaco', 'Courier New', monospace;
   font-size: 16px;
   line-height: 1.6;
-  overflow-y: overlay;
+  overflow-y: auto;
   overflow-x: hidden;
   overflow-wrap: break-word;
   word-wrap: break-word;
+  word-break: break-all;
   cursor: var(--cursor-default);
+  scrollbar-width: none;
+}
+
+.editor-textarea::-webkit-scrollbar {
+  display: none;
 }
 
 .editor-textarea::placeholder {
