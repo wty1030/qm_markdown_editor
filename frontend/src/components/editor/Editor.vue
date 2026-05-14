@@ -263,7 +263,7 @@ defineExpose({
   font-family: 'Consolas', 'Monaco', 'Courier New', monospace;
   font-size: 16px;
   line-height: 1.6;
-  overflow-y: auto;
+  overflow-y: overlay;
   overflow-x: hidden;
   overflow-wrap: break-word;
   word-wrap: break-word;
