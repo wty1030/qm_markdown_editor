@@ -279,7 +279,7 @@ const isCustomWallpaper = computed(() => {
               </div>
               <div class="app-info">
                 <span class="app-name">QMMD</span>
-                <span class="app-version">v1.1.0</span>
+                <span class="app-version">v1.2.0</span>
               </div>
             </div>
             <p class="about-desc">轻量级 Markdown 编辑器</p>
