@@ -21,7 +21,6 @@ const props = defineProps<Props>()
 
 const emit = defineEmits<{
   selectFile: [path: string]
-  selectDirectory: [path: string]
   close: []
   scrollToLine: [lineNumber: number]
 }>()
@@ -122,7 +121,6 @@ onUnmounted(() => {
         :files="files"
         :current-path="currentFile"
         @select-file="emit('selectFile', $event)"
-        @select-directory="emit('selectDirectory', $event)"
       />
 
       <Outline

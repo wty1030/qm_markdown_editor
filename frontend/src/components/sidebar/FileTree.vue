@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { ref, computed } from 'vue'
+import { ListDirectory } from '../../../wailsjs/go/main/App'
 
 interface FileInfo {
   name: string
@@ -11,49 +12,65 @@ interface FileInfo {
 interface Props {
   files: FileInfo[]
   currentPath: string
+  depth?: number
 }
 
-const props = defineProps<Props>()
+const props = withDefaults(defineProps<Props>(), {
+  depth: 0
+})
 
 const emit = defineEmits<{
   selectFile: [path: string]
-  selectDirectory: [path: string]
 }>()
 
 const expandedPaths = ref<Set<string>>(new Set())
+const childrenMap = ref<Map<string, FileInfo[]>>(new Map())
+const loadingPaths = ref<Set<string>>(new Set())
 
 const sortedFiles = computed(() => {
   return [...props.files].sort((a, b) => {
-    // Directories first
     if (a.isDir && !b.isDir) return -1
     if (!a.isDir && b.isDir) return 1
-    // Then alphabetically
     return a.name.localeCompare(b.name)
   })
 })
 
-const toggleExpand = (path: string) => {
-  if (expandedPaths.value.has(path)) {
-    expandedPaths.value.delete(path)
+const toggleExpand = async (file: FileInfo) => {
+  if (expandedPaths.value.has(file.path)) {
+    expandedPaths.value.delete(file.path)
   } else {
-    expandedPaths.value.add(path)
+    if (!childrenMap.value.has(file.path)) {
+      loadingPaths.value.add(file.path)
+      try {
+        const children = await ListDirectory(file.path) as FileInfo[]
+        childrenMap.value.set(file.path, children)
+      } catch {
+        // failed to load
+      }
+      loadingPaths.value.delete(file.path)
+    }
+    expandedPaths.value.add(file.path)
   }
 }
 
 const handleClick = (file: FileInfo) => {
   if (file.isDir) {
-    toggleExpand(file.path)
-    emit('selectDirectory', file.path)
+    toggleExpand(file)
   } else {
     emit('selectFile', file.path)
   }
 }
 
-const getFileIcon = (file: FileInfo): string => {
-  if (file.isDir) {
-    return expandedPaths.value.has(file.path) ? '📂' : '📁'
-  }
+const getChildren = (path: string): FileInfo[] => {
+  return childrenMap.value.get(path) || []
+}
 
+const isActive = (file: FileInfo): boolean => {
+  return file.path === props.currentPath
+}
+
+const getFileIcon = (file: FileInfo): string => {
+  if (file.isDir) return '📁'
   const ext = file.name.split('.').pop()?.toLowerCase()
   switch (ext) {
     case 'md':
@@ -71,10 +88,6 @@ const getFileIcon = (file: FileInfo): string => {
       return '📄'
   }
 }
-
-const isActive = (file: FileInfo): boolean => {
-  return file.path === props.currentPath
-}
 </script>
 
 <template>
@@ -82,12 +95,29 @@ const isActive = (file: FileInfo): boolean => {
     <div
       v-for="file in sortedFiles"
       :key="file.path"
-      class="file-item"
-      :class="{ active: isActive(file), directory: file.isDir }"
-      @click="handleClick(file)"
+      class="file-item-group"
     >
-      <span class="file-icon">{{ getFileIcon(file) }}</span>
-      <span class="file-name">{{ file.name }}</span>
+      <div
+        class="file-item"
+        :class="{ active: isActive(file), directory: file.isDir }"
+        :style="{ paddingLeft: (depth * 16 + 8) + 'px' }"
+        @click="handleClick(file)"
+      >
+        <span v-if="file.isDir" class="dir-arrow">
+          {{ expandedPaths.has(file.path) ? '▼' : '▶' }}
+        </span>
+        <span class="file-icon">{{ getFileIcon(file) }}</span>
+        <span class="file-name">{{ file.name }}</span>
+        <span v-if="loadingPaths.has(file.path)" class="loading-hint">···</span>
+      </div>
+      <div v-if="file.isDir && expandedPaths.has(file.path)">
+        <FileTree
+          :files="getChildren(file.path)"
+          :current-path="currentPath"
+          :depth="depth + 1"
+          @select-file="emit('selectFile', $event)"
+        />
+      </div>
     </div>
     <div v-if="files.length === 0" class="empty-message">
       空文件夹
@@ -97,14 +127,17 @@ const isActive = (file: FileInfo): boolean => {
 
 <style scoped>
 .file-tree {
-  padding: 0.5rem;
   font-size: 13px;
+}
+
+.file-item-group {
+  /* no extra spacing */
 }
 
 .file-item {
   display: flex;
   align-items: center;
-  gap: 0.5rem;
+  gap: 0.375rem;
   padding: 0.375rem 0.5rem;
   border-radius: 4px;
   cursor: pointer;
@@ -120,6 +153,14 @@ const isActive = (file: FileInfo): boolean => {
   color: var(--btn-active-text);
 }
 
+.dir-arrow {
+  width: 12px;
+  font-size: 9px;
+  flex-shrink: 0;
+  text-align: center;
+  color: var(--text-secondary);
+}
+
 .file-icon {
   width: 16px;
   text-align: center;
@@ -130,6 +171,12 @@ const isActive = (file: FileInfo): boolean => {
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
+}
+
+.loading-hint {
+  color: var(--text-secondary);
+  font-size: 10px;
+  flex-shrink: 0;
 }
 
 .empty-message {

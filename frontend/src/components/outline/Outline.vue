@@ -49,7 +49,6 @@ const scrollToLine = (lineNumber: number) => {
         :class="['outline-item', `level-${item.level}`]"
         @click="scrollToLine(item.line)"
       >
-        <span class="outline-marker">{{ '#'.repeat(item.level) }}</span>
         <span class="outline-text">{{ item.text }}</span>
       </div>
       <div v-if="outlineItems.length === 0" class="empty-message">
@@ -88,12 +87,6 @@ const scrollToLine = (lineNumber: number) => {
 
 .outline-item:hover {
   background-color: var(--bg-hover);
-}
-
-.outline-marker {
-  color: var(--accent-color);
-  font-weight: 600;
-  flex-shrink: 0;
 }
 
 .outline-text {
