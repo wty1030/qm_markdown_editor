@@ -27,12 +27,26 @@ const expandedPaths = ref<Set<string>>(new Set())
 const childrenMap = ref<Map<string, FileInfo[]>>(new Map())
 const loadingPaths = ref<Set<string>>(new Set())
 
+const EDITABLE_EXTENSIONS = new Set([
+  'md', 'markdown', 'mdown',
+  'txt', 'log',
+  'json', 'yaml', 'yml', 'toml', 'xml', 'csv',
+  'js', 'ts', 'jsx', 'tsx',
+  'html', 'css', 'scss', 'less',
+  'py', 'rb', 'go', 'rs', 'java', 'c', 'cpp', 'h', 'hpp',
+  'sh', 'bash', 'zsh', 'ps1',
+  'sql',
+  'vue', 'svelte',
+])
+
 const sortedFiles = computed(() => {
-  return [...props.files].sort((a, b) => {
-    if (a.isDir && !b.isDir) return -1
-    if (!a.isDir && b.isDir) return 1
-    return a.name.localeCompare(b.name)
-  })
+  return [...props.files]
+    .filter(f => f.isDir || EDITABLE_EXTENSIONS.has(f.name.split('.').pop()?.toLowerCase() || ''))
+    .sort((a, b) => {
+      if (a.isDir && !b.isDir) return -1
+      if (!a.isDir && b.isDir) return 1
+      return a.name.localeCompare(b.name)
+    })
 })
 
 const toggleExpand = async (file: FileInfo) => {
