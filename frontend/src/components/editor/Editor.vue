@@ -119,13 +119,91 @@ const handleKeyDown = (event: KeyboardEvent) => {
     const value = textarea.value
     const tabStr = getTabString()
 
-    // 插入缩进字符
     const newValue = value.substring(0, start) + tabStr + value.substring(end)
     emit('update', newValue)
 
-    // 恢复光标位置
     requestAnimationFrame(() => {
       textarea.selectionStart = textarea.selectionEnd = start + tabStr.length
+    })
+    return
+  }
+
+  if (event.key === 'Enter') {
+    event.preventDefault()
+    const textarea = textareaRef.value
+    if (!textarea) return
+
+    const start = textarea.selectionStart
+    const end = textarea.selectionEnd
+    const value = textarea.value
+
+    let lineStart = start
+    while (lineStart > 0 && value[lineStart - 1] !== '\n') lineStart--
+    let lineEnd = start
+    while (lineEnd < value.length && value[lineEnd] !== '\n') lineEnd++
+    const fullLine = value.substring(lineStart, lineEnd)
+
+    const taskMatch = fullLine.match(/^(\s*[-*+] \[[ xX]\] )/)
+    const olMatch = fullLine.match(/^(\s*\d+\. )/)
+    const ulMatch = fullLine.match(/^(\s*[-*+] )/)
+    const quoteMatch = fullLine.match(/^(> )+/)
+
+    let prefix = ''
+    let originalPrefixLen = 0
+
+    if (taskMatch) {
+      originalPrefixLen = taskMatch[1].length
+      prefix = taskMatch[1].replace(/\[[ xX]\]/, '[ ]')
+    } else if (olMatch) {
+      originalPrefixLen = olMatch[1].length
+      const num = olMatch[1].match(/(\d+)\./)
+      if (num) {
+        prefix = olMatch[1].replace(/\d+/, String(parseInt(num[1]) + 1))
+      }
+    } else if (ulMatch) {
+      originalPrefixLen = ulMatch[1].length
+      prefix = ulMatch[1]
+    } else if (quoteMatch) {
+      originalPrefixLen = quoteMatch[0].length
+      prefix = quoteMatch[0]
+    }
+
+    if (!prefix) {
+      const newValue = value.substring(0, start) + '\n' + value.substring(end)
+      emit('update', newValue)
+      requestAnimationFrame(() => {
+        textarea.selectionStart = textarea.selectionEnd = start + 1
+      })
+      return
+    }
+
+    const afterPrefix = fullLine.substring(originalPrefixLen)
+
+    // Empty content after prefix → exit the block
+    if (afterPrefix.trim() === '') {
+      const newValue = value.substring(0, lineStart) + value.substring(lineEnd)
+      emit('update', newValue)
+      requestAnimationFrame(() => {
+        textarea.selectionStart = textarea.selectionEnd = lineStart
+      })
+      return
+    }
+
+    // Cursor inside the prefix → normal newline
+    if (start < lineStart + originalPrefixLen) {
+      const newValue = value.substring(0, start) + '\n' + value.substring(end)
+      emit('update', newValue)
+      requestAnimationFrame(() => {
+        textarea.selectionStart = textarea.selectionEnd = start + 1
+      })
+      return
+    }
+
+    // Continue with prefix
+    const newValue = value.substring(0, start) + '\n' + prefix + value.substring(end)
+    emit('update', newValue)
+    requestAnimationFrame(() => {
+      textarea.selectionStart = textarea.selectionEnd = start + 1 + prefix.length
     })
   }
 }
