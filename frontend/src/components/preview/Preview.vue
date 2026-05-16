@@ -5,6 +5,9 @@ import hljs from 'highlight.js'
 import mermaid from 'mermaid'
 import { createMarkdownParser } from '../../utils/markdown'
 import { OpenInBrowser } from '../../../wailsjs/go/main/App'
+import Lightbox from './Lightbox.vue'
+
+type LightboxSource = { type: 'image'; src: string } | { type: 'mermaid'; code: string }
 
 mermaid.initialize({ startOnLoad: false, theme: 'dark' })
 
@@ -78,6 +81,18 @@ const emit = defineEmits<{
 }>()
 
 const previewRef = ref<HTMLDivElement | null>(null)
+const lightboxVisible = ref(false)
+const lightboxSource = ref<LightboxSource | null>(null)
+
+const openLightbox = (source: LightboxSource) => {
+  lightboxSource.value = source
+  lightboxVisible.value = true
+}
+
+const closeLightbox = () => {
+  lightboxVisible.value = false
+  lightboxSource.value = null
+}
 
 // Custom renderer with highlight.js
 const renderer = new marked.Renderer()
@@ -180,6 +195,27 @@ const handleScroll = () => {
 
 const handleClick = (e: MouseEvent) => {
   const target = e.target as HTMLElement
+
+  const img = target.closest('img') as HTMLImageElement | null
+  if (img) {
+    const src = img.getAttribute('src')
+    if (src) {
+      e.preventDefault()
+      openLightbox({ type: 'image', src })
+      return
+    }
+  }
+
+  const mermaidEl = target.closest('.mermaid-diagram') as HTMLElement | null
+  if (mermaidEl) {
+    const source = decodeURIComponent(mermaidEl.dataset.mermaidSource || '')
+    if (source) {
+      e.preventDefault()
+      openLightbox({ type: 'mermaid', code: source })
+      return
+    }
+  }
+
   const anchor = target.closest('a') as HTMLAnchorElement | null
   if (!anchor) return
 
@@ -210,6 +246,11 @@ defineExpose({
     @scroll="handleScroll"
   >
     <div class="markdown-body" v-html="renderedContent" @click="handleClick" />
+    <Lightbox
+      :visible="lightboxVisible"
+      :source="lightboxSource"
+      @close="closeLightbox"
+    />
   </div>
 </template>
 
@@ -379,6 +420,7 @@ defineExpose({
 .markdown-body :deep(img) {
   max-width: 100%;
   height: auto;
+  cursor: var(--cursor-pointer);
 }
 
 /* Math formulas */
@@ -399,6 +441,7 @@ defineExpose({
   margin: 0 0 1rem;
   padding: 1rem;
   overflow-x: auto;
+  cursor: var(--cursor-pointer);
 }
 
 .markdown-body :deep(.mermaid-diagram svg) {
