@@ -4,6 +4,7 @@ import { marked, type Tokens } from 'marked'
 import hljs from 'highlight.js'
 import mermaid from 'mermaid'
 import { createMarkdownParser } from '../../utils/markdown'
+import { OpenInBrowser } from '../../../wailsjs/go/main/App'
 
 mermaid.initialize({ startOnLoad: false, theme: 'dark' })
 
@@ -177,6 +178,18 @@ const handleScroll = () => {
   emit('scroll', previewRef.value.scrollTop, previewRef.value.scrollHeight, previewRef.value.clientHeight)
 }
 
+const handleClick = (e: MouseEvent) => {
+  const target = e.target as HTMLElement
+  const anchor = target.closest('a') as HTMLAnchorElement | null
+  if (!anchor) return
+
+  e.preventDefault()
+  const href = anchor.getAttribute('href')
+  if (href && (href.startsWith('http://') || href.startsWith('https://'))) {
+    OpenInBrowser(href)
+  }
+}
+
 const syncScrollFromEditor = (scrollTop: number) => {
   if (!previewRef.value) return
 
@@ -196,7 +209,7 @@ defineExpose({
     class="preview-container"
     @scroll="handleScroll"
   >
-    <div class="markdown-body" v-html="renderedContent" />
+    <div class="markdown-body" v-html="renderedContent" @click="handleClick" />
   </div>
 </template>
 

@@ -467,6 +467,10 @@ func openInBrowser(path string) error {
 
 	return cmd.Start()
 }
+func (a *App) OpenInBrowser(url string) {
+	runtime.BrowserOpenURL(a.ctx, url)
+}
+
 // MinimiseWindow minimises the window
 func (a *App) MinimiseWindow() {
 	runtime.WindowMinimise(a.ctx)
