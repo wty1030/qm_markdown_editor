@@ -3,6 +3,7 @@ import { ref, computed, watch, onMounted, onUnmounted, nextTick } from 'vue'
 import { marked, type Tokens } from 'marked'
 import hljs from 'highlight.js'
 import mermaid from 'mermaid'
+import { createMarkdownParser } from '../../utils/markdown'
 
 mermaid.initialize({ startOnLoad: false, theme: 'dark' })
 
@@ -103,16 +104,12 @@ renderer.code = (token: Tokens.Code): string => {
   return `<pre><code class="hljs language-${lang}">${highlighted}</code></pre>`
 }
 
-marked.setOptions({
-  renderer,
-  breaks: true,
-  gfm: true
-})
+const markdownParser = createMarkdownParser({ renderer })
 
 const renderedContent = computed(() => {
   try {
     mermaidCounter = 0
-    return marked.parse(props.content) as string
+    return markdownParser.parse(props.content) as string
   } catch {
     return '<p>渲染错误</p>'
   }
@@ -369,6 +366,18 @@ defineExpose({
 .markdown-body :deep(img) {
   max-width: 100%;
   height: auto;
+}
+
+/* Math formulas */
+.markdown-body :deep(.katex) {
+  font-size: 1.05em;
+}
+
+.markdown-body :deep(.katex-display) {
+  margin: 0 0 1rem;
+  padding: 0.25rem 0;
+  overflow-x: auto;
+  overflow-y: hidden;
 }
 
 /* Mermaid diagrams */

@@ -1,19 +1,12 @@
-import { describe, it, expect, vi } from 'vitest'
+import { describe, expect, it, vi } from 'vitest'
 import { mount } from '@vue/test-utils'
 import Toolbar from '../Toolbar.vue'
 
-// Mock the useTheme composable
-vi.mock('../../../composables/useTheme', () => ({
-  useTheme: () => ({
-    theme: { value: 'vscode-dark' },
-    isDark: { value: true },
-    setTheme: vi.fn(),
-    currentThemeOption: { value: { name: 'vscode-dark', label: 'VS Code Dark', icon: '🌙' } },
-    themeOptions: [
-      { name: 'vscode-dark', label: 'VS Code Dark', icon: '🌙' },
-      { name: 'vscode-light', label: 'VS Code Light', icon: '☀️' },
-    ]
-  })
+vi.mock('../../../../wailsjs/go/main/App', () => ({
+  MinimiseWindow: vi.fn(),
+  ToggleMaximiseWindow: vi.fn(),
+  CloseWindow: vi.fn(),
+  IsWindowMaximised: vi.fn().mockResolvedValue(false)
 }))
 
 describe('Toolbar', () => {
@@ -21,15 +14,14 @@ describe('Toolbar', () => {
     const wrapper = mount(Toolbar)
 
     const buttons = wrapper.findAll('.toolbar-btn')
-    // 新建、打开、文件夹、保存、导出 = 5 buttons
     expect(buttons.length).toBeGreaterThanOrEqual(4)
   })
 
-  it('renders theme toggle button', () => {
+  it('renders settings button', () => {
     const wrapper = mount(Toolbar)
 
-    const themeToggle = wrapper.find('.theme-toggle')
-    expect(themeToggle.exists()).toBe(true)
+    const settingsButton = wrapper.find('.settings-btn')
+    expect(settingsButton.exists()).toBe(true)
   })
 
   it('emits newWindow event when New button is clicked', async () => {
@@ -44,9 +36,8 @@ describe('Toolbar', () => {
   it('emits openFile event when Open button is clicked', async () => {
     const wrapper = mount(Toolbar)
 
-    const buttons = wrapper.findAll('.toolbar-btn')
-    const openButton = buttons.find(btn => btn.text().includes('打开'))
-    await openButton?.trigger('click')
+    const openButton = wrapper.findAll('.toolbar-btn')[1]
+    await openButton.trigger('click')
 
     expect(wrapper.emitted('openFile')).toBeTruthy()
   })
@@ -54,9 +45,8 @@ describe('Toolbar', () => {
   it('emits save event when Save button is clicked', async () => {
     const wrapper = mount(Toolbar)
 
-    const buttons = wrapper.findAll('.toolbar-btn')
-    const saveButton = buttons.find(btn => btn.text().includes('保存') && !btn.text().includes('导出'))
-    await saveButton?.trigger('click')
+    const saveButton = wrapper.findAll('.toolbar-btn')[3]
+    await saveButton.trigger('click')
 
     expect(wrapper.emitted('save')).toBeTruthy()
   })

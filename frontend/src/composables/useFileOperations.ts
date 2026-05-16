@@ -1,5 +1,6 @@
 import { ref, computed } from 'vue'
-import { marked } from 'marked'
+import katexStyles from 'katex/dist/katex.min.css?raw'
+import { renderMarkdown } from '../utils/markdown'
 import {
   ReadFile,
   WriteFile,
@@ -27,6 +28,16 @@ interface FileResult {
 }
 
 export type ExportFormat = 'md' | 'html' | 'pdf'
+
+const exportKatexStyles = katexStyles.replace(
+  /url\(fonts\//g,
+  'url(https://cdn.jsdelivr.net/npm/katex@0.16.45/dist/fonts/'
+)
+
+const exportMarkdownToHtml = (content: string) => {
+  const htmlContent = renderMarkdown(content)
+  return `<style>${exportKatexStyles}</style>\n${htmlContent}`
+}
 
 export function useFileOperations() {
   const currentFile = ref<string>('')
@@ -117,13 +128,11 @@ export function useFileOperations() {
 
       if (format === 'html') {
         const title = getFileNameWithoutExtension(currentFile.value) || '未命名'
-        // Convert Markdown to HTML before exporting
-        const htmlContent = await marked.parse(content) as string
+        const htmlContent = exportMarkdownToHtml(content)
         result = await ExportToHTML(path, htmlContent, title) as FileResult
       } else if (format === 'pdf') {
         const title = getFileNameWithoutExtension(currentFile.value) || '未命名'
-        // Convert Markdown to HTML before exporting
-        const htmlContent = await marked.parse(content) as string
+        const htmlContent = exportMarkdownToHtml(content)
         result = await ExportToPDF(path, htmlContent, title) as FileResult
       } else {
         result = await WriteFile(path, content) as FileResult
