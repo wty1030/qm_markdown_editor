@@ -335,13 +335,13 @@ func generateHTMLDocument(content, title string) string {
         ul, ol { padding-left: 2rem; margin: 0 0 1rem; }
         li { margin: 0.25rem 0; }
 
-        table { border-collapse: collapse; width: 100%; margin: 0 0 1rem; }
+        table { border-collapse: collapse; width: 100%%; margin: 0 0 1rem; }
         th, td { border: 1px solid var(--border-color); padding: 0.5rem 0.75rem; }
         th { background-color: #f3f3f3; font-weight: 600; }
 
         hr { border: none; border-top: 1px solid var(--border-color); margin: 1rem 0; }
 
-        img { max-width: 100%; height: auto; }
+        img { max-width: 100%%; height: auto; }
 
         /* Syntax highlighting */
         .hljs { background: #f3f3f3; }
@@ -422,11 +422,11 @@ func generateHTMLDocumentForPDF(content, title string) string {
         pre code { background: none; padding: 0; }
         blockquote { border-left: 4px solid #5a8a4a; background-color: rgba(90, 138, 74, 0.1); padding: 0.5rem 1rem; margin: 0 0 1rem; color: var(--text-secondary); }
         ul, ol { padding-left: 2rem; margin: 0 0 1rem; }
-        table { border-collapse: collapse; width: 100%; margin: 0 0 1rem; }
+        table { border-collapse: collapse; width: 100%%; margin: 0 0 1rem; }
         th, td { border: 1px solid var(--border-color); padding: 0.5rem 0.75rem; }
         th { background-color: #f3f3f3; font-weight: 600; }
         hr { border: none; border-top: 1px solid var(--border-color); margin: 1rem 0; }
-        img { max-width: 100%; height: auto; }
+        img { max-width: 100%%; height: auto; }
     </style>
 </head>
 <body>
