@@ -9,7 +9,7 @@ import Sidebar from './components/sidebar/Sidebar.vue'
 import SettingsModal from './components/settings/SettingsModal.vue'
 import { useScrollSync } from './composables/useScrollSync'
 import { useFileOperations, type ExportFormat } from './composables/useFileOperations'
-import { useFormat, type FormatType, type LinkData, type ImageData, type CodeBlockData, type ColorData, type TableData } from './composables/useFormat'
+import { useFormat, type FormatType, type LinkData, type ImageData, type CodeBlockData, type ColorData, type TableData, type MathData } from './composables/useFormat'
 import { useUndoRedo } from './composables/useUndoRedo'
 import { useSettings, type ViewMode } from './composables/useSettings'
 
@@ -43,7 +43,7 @@ const {
 setContentRef(markdownContent)
 
 const { handleEditorScroll, handlePreviewScroll } = useScrollSync()
-const { format, insertLink, insertImage, insertCodeBlock, insertColor, insertTable } = useFormat(textareaRef)
+const { format, insertLink, insertImage, insertCodeBlock, insertColor, insertTable, insertMath } = useFormat(textareaRef)
 const { canUndo, canRedo, pushHistory, pushHistoryImmediate, undo, redo, reset } = useUndoRedo(markdownContent)
 const { viewMode, hasWallpaper, autoSaveEnabled, autoSaveInterval } = useSettings()
 
@@ -209,6 +209,14 @@ const handleInsertTable = (data: TableData) => {
   }
 }
 
+const handleInsertMath = (data: MathData) => {
+  const newText = insertMath(data, markdownContent)
+  if (newText !== undefined) {
+    markdownContent.value = newText
+    pushHistoryImmediate(newText)
+  }
+}
+
 // Keyboard shortcuts
 const handleKeydown = (e: KeyboardEvent) => {
   if (e.ctrlKey || e.metaKey) {
@@ -297,6 +305,7 @@ watch(markdownContent, (newContent) => {
       @insert-code-block="handleInsertCodeBlock"
       @insert-color="handleInsertColor"
       @insert-table="handleInsertTable"
+      @insert-math="handleInsertMath"
     />
     <main class="main-content">
       <div class="content-wrapper">

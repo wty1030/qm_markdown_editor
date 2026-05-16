@@ -1,9 +1,9 @@
 <script setup lang="ts">
 import { ref } from 'vue'
 import Modal from '../common/Modal.vue'
-import { colorPresets, type FormatType, type LinkData, type ImageData, type CodeBlockData, type ColorData, type TableData } from '../../composables/useFormat'
+import { colorPresets, type FormatType, type LinkData, type ImageData, type CodeBlockData, type ColorData, type TableData, type MathData } from '../../composables/useFormat'
 
-export type { FormatType, LinkData, ImageData, CodeBlockData, ColorData, TableData }
+export type { FormatType, LinkData, ImageData, CodeBlockData, ColorData, TableData, MathData }
 
 const emit = defineEmits<{
   format: [type: FormatType]
@@ -12,11 +12,13 @@ const emit = defineEmits<{
   insertCodeBlock: [data: CodeBlockData]
   insertColor: [data: ColorData]
   insertTable: [data: TableData]
+  insertMath: [data: MathData]
 }>()
 
 const showHeadingMenu = ref(false)
 const showCodeMenu = ref(false)
 const showColorMenu = ref(false)
+const showMathMenu = ref(false)
 const showLinkModal = ref(false)
 const showImageModal = ref(false)
 const showTableModal = ref(false)
@@ -28,30 +30,47 @@ const handleFormat = (type: FormatType) => {
   showHeadingMenu.value = false
   showCodeMenu.value = false
   showColorMenu.value = false
+  showMathMenu.value = false
 }
 
 const toggleHeadingMenu = () => {
   showHeadingMenu.value = !showHeadingMenu.value
   showCodeMenu.value = false
   showColorMenu.value = false
+  showMathMenu.value = false
 }
 
 const toggleCodeMenu = () => {
   showCodeMenu.value = !showCodeMenu.value
   showHeadingMenu.value = false
   showColorMenu.value = false
+  showMathMenu.value = false
 }
 
 const toggleColorMenu = () => {
   showColorMenu.value = !showColorMenu.value
   showHeadingMenu.value = false
   showCodeMenu.value = false
+  showMathMenu.value = false
+}
+
+const toggleMathMenu = () => {
+  showMathMenu.value = !showMathMenu.value
+  showHeadingMenu.value = false
+  showCodeMenu.value = false
+  showColorMenu.value = false
+}
+
+const handleMathSelect = (displayMode: boolean) => {
+  emit('insertMath', { displayMode })
+  showMathMenu.value = false
 }
 
 const closeMenu = () => {
   showHeadingMenu.value = false
   showCodeMenu.value = false
   showColorMenu.value = false
+  showMathMenu.value = false
 }
 
 const handleCodeSelect = (language: string) => {
@@ -347,6 +366,39 @@ const codeLanguages = [
       </svg>
       <span class="btn-label">表格</span>
     </button>
+
+    <div class="dropdown">
+      <button
+        class="format-btn"
+        :class="{ active: showMathMenu }"
+        title="数学公式"
+        @click="toggleMathMenu"
+      >
+        <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <text x="3" y="18" font-size="16" fill="currentColor" stroke="none" font-family="serif" font-style="italic">f</text>
+          <text x="13" y="18" font-size="12" fill="currentColor" stroke="none">(x)</text>
+        </svg>
+        <span class="btn-label">公式</span>
+        <svg class="chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <polyline points="6,9 12,15 18,9"/>
+        </svg>
+      </button>
+
+      <div v-if="showMathMenu" class="dropdown-menu">
+        <button
+          class="dropdown-option"
+          @click="handleMathSelect(false)"
+        >
+          行内公式 $...$
+        </button>
+        <button
+          class="dropdown-option"
+          @click="handleMathSelect(true)"
+        >
+          块级公式 $$...$$
+        </button>
+      </div>
+    </div>
 
     <!-- 链接弹窗 -->
     <Modal

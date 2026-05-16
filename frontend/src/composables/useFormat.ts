@@ -37,6 +37,10 @@ export interface TableData {
   cols: number
 }
 
+export interface MathData {
+  displayMode: boolean
+}
+
 // 预定义颜色列表
 export const colorPresets = [
   { name: '默认', value: '' },
@@ -247,6 +251,14 @@ export function useFormat(editorRef: Ref<HTMLTextAreaElement | null>) {
     return insertAtCursor(table)
   }
 
+  const insertMath = (data: MathData, content: Ref<string>): string | undefined => {
+    const delimiter = data.displayMode ? '$$' : '$'
+    if (data.displayMode) {
+      return insertAtCursor(`$$\n公式\n$$`)
+    }
+    return wrapSelection(delimiter, delimiter)
+  }
+
   return {
     format,
     wrapSelection,
@@ -256,6 +268,7 @@ export function useFormat(editorRef: Ref<HTMLTextAreaElement | null>) {
     insertImage,
     insertCodeBlock,
     insertColor,
-    insertTable
+    insertTable,
+    insertMath
   }
 }
