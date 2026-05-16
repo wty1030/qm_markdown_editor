@@ -38,7 +38,7 @@ const processLine = (text: string): string => {
   line = line.replace(/`([^`\n]+)`/g, '<span class="md-inline-code">`$1`</span>')
 
   // 标题 (# ## ### #### ##### ######)
-  line = line.replace(/^(#{1,6})[ \t]+(.*)$/, '<span class="md-heading"><span class="md-heading-mark">$1</span> $2</span>')
+  line = line.replace(/^(#{1,6})([ \t]+)(.*)$/, '<span class="md-heading"><span class="md-heading-mark">$1</span>$2$3</span>')
 
   // 粗体 (**text** 或 __text__)
   line = line.replace(/\*\*([^*\n]+)\*\*/g, '<span class="md-bold">**$1**</span>')
@@ -58,16 +58,16 @@ const processLine = (text: string): string => {
   line = line.replace(/\[([^\]]+)\]\(([^)]+)\)/g, '<span class="md-link">[<span class="md-link-text">$1</span>](<span class="md-link-url">$2</span>)</span>')
 
   // 引用 (> text)
-  line = line.replace(/^(&gt;|>)[ \t]*(.*)$/, '<span class="md-quote"><span class="md-quote-mark">$1</span> $2</span>')
+  line = line.replace(/^(&gt;|>)([ \t]*)(.*)$/, '<span class="md-quote"><span class="md-quote-mark">$1</span>$2$3</span>')
 
   // 任务列表 (- [ ] 或 - [x]) — 必须在无序列表之前
-  line = line.replace(/^(\s*)([-*+])[ \t]+\[([ xX])\]/, '$1<span class="md-list-mark">$2</span> [<span class="md-task-$3"> </span>]')
+  line = line.replace(/^(\s*)([-*+])([ \t]+)\[([ xX])\]/, '$1<span class="md-list-mark">$2</span>$3[<span class="md-task-$4"> </span>]')
 
   // 无序列表 (- * +)
-  line = line.replace(/^(\s*)([-*+])[ \t]+/, '$1<span class="md-list-mark">$2</span> ')
+  line = line.replace(/^(\s*)([-*+])([ \t]+)/, '$1<span class="md-list-mark">$2</span>$3')
 
   // 有序列表 (1. 2. etc)
-  line = line.replace(/^(\s*)(\d+\.)[ \t]+/, '$1<span class="md-list-mark">$2</span> ')
+  line = line.replace(/^(\s*)(\d+\.)([ \t]+)/, '$1<span class="md-list-mark">$2</span>$3')
 
   // 水平分割线 (--- *** ___)
   line = line.replace(/^(---|\*\*\*|___)$/, '<span class="md-hr">$1</span>')
@@ -150,6 +150,7 @@ const handleKeyDown = (event: KeyboardEvent) => {
 
     let prefix = ''
     let originalPrefixLen = 0
+    let olRenumber: { indent: string; nextNum: number } | null = null
 
     if (taskMatch) {
       originalPrefixLen = taskMatch[1].length
@@ -159,6 +160,10 @@ const handleKeyDown = (event: KeyboardEvent) => {
       const num = olMatch[1].match(/(\d+)\./)
       if (num) {
         prefix = olMatch[1].replace(/\d+/, String(parseInt(num[1]) + 1))
+        olRenumber = {
+          indent: olMatch[1].match(/^\s*/)![0],
+          nextNum: parseInt(num[1]) + 2
+        }
       }
     } else if (ulMatch) {
       originalPrefixLen = ulMatch[1].length
@@ -200,10 +205,38 @@ const handleKeyDown = (event: KeyboardEvent) => {
     }
 
     // Continue with prefix
-    const newValue = value.substring(0, start) + '\n' + prefix + value.substring(end)
+    let newValue = value.substring(0, start) + '\n' + prefix + value.substring(end)
+    const cursorPos = start + 1 + prefix.length
+
+    // Renumber subsequent ordered list items
+    if (olRenumber) {
+      let pos = cursorPos
+      while (pos < newValue.length && newValue[pos] !== '\n') pos++
+      if (pos < newValue.length) pos++
+
+      let nextNum = olRenumber.nextNum
+
+      while (pos < newValue.length) {
+        let lineEnd = pos
+        while (lineEnd < newValue.length && newValue[lineEnd] !== '\n') lineEnd++
+        const line = newValue.substring(pos, lineEnd)
+
+        const lineMatch = line.match(/^(\s*)(\d+)\. /)
+        if (!lineMatch || lineMatch[1] !== olRenumber.indent) break
+
+        const newPrefix = olRenumber.indent + nextNum + '. '
+        const oldLen = lineMatch[0].length
+        newValue = newValue.substring(0, pos) + newPrefix + newValue.substring(pos + oldLen)
+        lineEnd += newPrefix.length - oldLen
+
+        nextNum++
+        pos = lineEnd < newValue.length ? lineEnd + 1 : newValue.length
+      }
+    }
+
     emit('update', newValue)
     requestAnimationFrame(() => {
-      textarea.selectionStart = textarea.selectionEnd = start + 1 + prefix.length
+      textarea.selectionStart = textarea.selectionEnd = cursorPos
     })
   }
 }
