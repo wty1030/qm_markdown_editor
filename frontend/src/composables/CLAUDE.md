@@ -7,7 +7,7 @@ Vue 组合式函数，封装业务逻辑和状态管理。App.vue 持有 ref 并
 | 文件 | 职责 |
 |------|------|
 | `useFileOperations.ts` | 文件打开/保存/导出、目录浏览、文件树状态。调用 Wails Go 后端函数 |
-| `useFormat.ts` | Markdown 格式化操作（加粗、斜体、链接、代码块、表格、颜色等） |
+| `useFormat.ts` | Markdown 格式化操作（加粗、斜体、链接、代码块、表格、颜色、数学公式插入） |
 | `useUndoRedo.ts` | 撤销/重做栈（历史记录管理） |
 | `useScrollSync.ts` | 编辑器 ↔ 预览区滚动同步（按比例映射 scrollTop） |
 | `useSettings.ts` | 用户设置（主题、视图模式、Tab 配置、壁纸），持久化到 localStorage |
@@ -25,8 +25,14 @@ App.vue (markdownContent ref)
 
 `useFileOperations` 是核心 composable，管理 `currentFile`、`fileTree`、`currentDirectory` 三个关键响应式状态。
 
+## 格式化（useFormat.ts）
+
+`useFormat` 支持两类操作：
+- **wrapSelection**：包裹选区（加粗、斜体、代码、标题、列表、引用）
+- **insertMath**：插入数学公式（行内 `$...$` 或块级 `$$...$$`），通过 FormatBar 按钮触发
+
 ## 外部依赖
 
 - 文件操作通过 `frontend/wailsjs/go/main/App.js`（Wails 自动生成）调用 Go 后端
-- Markdown 渲染用 `marked` 库
+- Markdown 渲染用 `marked` + `katex`（在 `utils/markdown.ts` 中配置）
 - 无 Vuex/Pinia，状态全靠 composable + props/events
