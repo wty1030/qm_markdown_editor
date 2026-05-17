@@ -54,6 +54,10 @@ export function OpenFileDialog() {
   return window['go']['main']['App']['OpenFileDialog']();
 }
 
+export function OpenInBrowser(arg1) {
+  return window['go']['main']['App']['OpenInBrowser'](arg1);
+}
+
 export function OpenNewWindow() {
   return window['go']['main']['App']['OpenNewWindow']();
 }

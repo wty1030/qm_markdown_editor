@@ -28,6 +28,8 @@ export function OpenDirectoryDialog():Promise<string>;
 
 export function OpenFileDialog():Promise<string>;
 
+export function OpenInBrowser(arg1:string):Promise<void>;
+
 export function OpenNewWindow():Promise<void>;
 
 export function ReadFile(arg1:string):Promise<main.FileResult>;
