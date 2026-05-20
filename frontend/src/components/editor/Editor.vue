@@ -700,7 +700,7 @@ defineExpose({
 .search-btn {
   padding: 2px 6px;
   background: none;
-  border: none;
+  border: 1px solid transparent;
   color: var(--text-secondary);
   cursor: pointer;
   font-size: 12px;
