@@ -95,7 +95,7 @@ const highlightedContent = computed(() => {
     }
   }
 
-  return result.join('<br>')
+  return result.join('\n')
 })
 
 watch(highlightedContent, () => {
@@ -351,6 +351,7 @@ defineExpose({
   font-size: 16px;
   line-height: 1.6;
   white-space: pre-wrap;
+  overflow-wrap: break-word;
   word-wrap: break-word;
   word-break: break-all;
   overflow: hidden;
@@ -366,6 +367,7 @@ defineExpose({
   width: 100%;
   height: 100%;
   padding: 1rem;
+  box-sizing: border-box;
   background-color: transparent;
   color: transparent;
   caret-color: var(--editor-cursor);
