@@ -32,6 +32,7 @@ Go 后端通过 Wails 绑定暴露为 JS 函数（自动生成在 `frontend/wail
 - [frontend/src/components/](frontend/src/components/CLAUDE.md) — UI 组件结构
 - [frontend/src/composables/](frontend/src/composables/CLAUDE.md) — 业务逻辑层
 - [frontend/src/styles/](frontend/src/styles/CLAUDE.md) — 主题和样式系统
+- [frontend/src/utils/](frontend/src/utils/CLAUDE.md) — Markdown 渲染和数学公式
 
 ## 关键约定
 

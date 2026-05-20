@@ -33,6 +33,6 @@ App.vue (markdownContent ref)
 
 ## 外部依赖
 
-- 文件操作通过 `frontend/wailsjs/go/main/App.js`（Wails 自动生成）调用 Go 后端
+- 文件操作通过 `frontend/wailsjs/go/main/App.js`（Wails 自动生成，已加入 `.gitignore`）调用 Go 后端
 - Markdown 渲染用 `marked` + `katex`（在 `utils/markdown.ts` 中配置）
 - 无 Vuex/Pinia，状态全靠 composable + props/events

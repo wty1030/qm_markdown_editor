@@ -2,6 +2,15 @@
 
 UI 组件层，按功能模块组织。
 
+## App.vue（顶层调度）
+
+App.vue 是唯一的顶层状态容器，持有 `markdownContent` ref 并协调所有子组件：
+- **状态管理**：无 Vuex/Pinia，所有状态通过 ref + props/events 管理
+- **Composable 注入**：初始化 useFileOperations（注入 contentRef）、useUndoRedo、useScrollSync、useFormat、useSettings
+- **视图模式**：根据 `viewMode`（editor/preview/split）切换布局
+- **快捷键**：全局监听 Ctrl+N/O/S/Z/Y（新建、打开、保存、撤销/重做）
+- **自动保存**：可配置间隔的自动保存定时器
+
 ## 目录结构
 
 | 目录 | 职责 | 关键文件 |
