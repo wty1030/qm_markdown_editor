@@ -25,7 +25,7 @@ qmmd/
 └── release/          # 发布包
 ```
 
-Go 后端通过 Wails 绑定暴露为 JS 函数（自动生成在 `frontend/wailsjs/go/main/App.js`）。前端通过调用这些函数完成文件读写、对话框、窗口控制等操作。
+Go 后端通过 Wails 绑定暴露为 JS 函数（自动生成在 `frontend/wailsjs/`，已加入 `.gitignore` 不纳入版本管理）。前端通过调用这些函数完成文件读写、对话框、窗口控制等操作。
 
 ## 详细文档
 

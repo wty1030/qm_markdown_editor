@@ -7,7 +7,7 @@ UI 组件层，按功能模块组织。
 | 目录 | 职责 | 关键文件 |
 |------|------|----------|
 | `toolbar/` | 顶部工具栏（文件操作、视图切换、窗口控制）和格式栏（Markdown 格式化按钮、数学公式按钮） | `Toolbar.vue`, `FormatBar.vue` |
-| `editor/` | Markdown 编辑器（textarea + 语法高亮叠层），Enter 键自动续行（引用/有序列表/无序列表/任务列表） | `Editor.vue` |
+| `editor/` | Markdown 编辑器（textarea + 语法高亮叠层），Enter 键自动续行，Ctrl+F 搜索（区分大小写、全部高亮、上下导航） | `Editor.vue` |
 | `preview/` | HTML 预览（marked 渲染 + highlight.js + mermaid + katex），图片/Mermaid 图表点击放大预览 | `Preview.vue`, `Lightbox.vue` |
 | `sidebar/` | 侧边栏（文件树 + 大纲切换标签） | `Sidebar.vue`, `FileTree.vue` |
 | `outline/` | 大纲面板（提取标题列表，点击跳转行号） | `Outline.vue` |
@@ -37,6 +37,15 @@ Enter 键按下时自动识别当前行类型并续行：
 - **任务列表**：延续 `- [ ] ` 前缀
 - **引用块**：延续 `> ` 前缀
 - 空行（只有前缀无内容）清除前缀
+
+## 编辑器搜索（Editor.vue）
+
+Ctrl+F 打开搜索栏：
+- 支持完全匹配和忽略大小写（Aa 按钮切换）
+- 所有匹配项黄色高亮，当前项橙色高亮
+- Enter 向下搜索，Shift+Enter 向上搜索，Esc 关闭
+- 从光标位置开始搜索，跳转时自动滚动到匹配位置
+- 搜索高亮通过 `applySearchHighlights` 在语法高亮 HTML 上叠加，正确处理 HTML 标签和实体
 
 ## 预览区 Lightbox（Preview.vue + Lightbox.vue）
 
