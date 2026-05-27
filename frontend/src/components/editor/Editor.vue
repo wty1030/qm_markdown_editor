@@ -26,48 +26,44 @@ const searchCaseSensitive = ref(false)
 const searchCurrentIndex = ref(-1)
 const searchInputRef = ref<HTMLInputElement | null>(null)
 
-// DOM 测量：创建隐藏 div 镜像 textarea 渲染，让浏览器计算真实换行
-// 关键：每个逻辑行用 block div（不是 inline span），确保行间有真实换行
-let measureWrapper: HTMLDivElement | null = null
-
-const getMeasureWrapper = (width: number): HTMLDivElement => {
-  if (!measureWrapper) {
-    measureWrapper = document.createElement('div')
-    measureWrapper.style.cssText = 'position:absolute;visibility:hidden;left:-9999px;top:0;'
-    document.body.appendChild(measureWrapper)
-  }
-  const textarea = textareaRef.value
-  if (textarea) {
-    const cs = window.getComputedStyle(textarea)
-    measureWrapper.style.font = `${cs.fontSize} ${cs.fontFamily}`
-    measureWrapper.style.lineHeight = cs.lineHeight
-    measureWrapper.style.letterSpacing = cs.letterSpacing
-  }
-  measureWrapper.style.width = width + 'px'
-  measureWrapper.style.whiteSpace = 'pre-wrap'
-  measureWrapper.style.wordBreak = 'break-all'
-  measureWrapper.style.overflowWrap = 'break-word'
-  return measureWrapper
-}
+// 用隐藏 textarea 测量：与真实 textarea 完全相同的渲染引擎
+let measureTa: HTMLTextAreaElement | null = null
 
 const measureVisualLines = (logicalLines: string[], width: number): number[] => {
   if (logicalLines.length === 0 || width <= 0) return logicalLines.map(() => 1)
 
-  const wrapper = getMeasureWrapper(width)
-  const lineHeight = parseFloat(window.getComputedStyle(wrapper).lineHeight) || 25.6
+  const textarea = textareaRef.value
+  if (!textarea) return logicalLines.map(() => 1)
+  const cs = window.getComputedStyle(textarea)
+  const lineHeight = parseFloat(cs.lineHeight) || 25.6
 
-  // 每行一个 block div，浏览器自动计算换行，量 offsetHeight 得到真实视觉行数
-  const divs: HTMLDivElement[] = []
-  for (const line of logicalLines) {
-    const div = document.createElement('div')
-    div.textContent = line.length === 0 ? '\u200b' : line
-    wrapper.appendChild(div)
-    divs.push(div)
+  if (!measureTa) {
+    measureTa = document.createElement('textarea')
+    measureTa.style.cssText =
+      'position:fixed !important;left:-9999px !important;top:0 !important;' +
+      'visibility:hidden !important;overflow:hidden !important;' +
+      'white-space:pre-wrap !important;word-break:break-all !important;overflow-wrap:break-word !important;' +
+      'resize:none !important;border:0 !important;outline:none !important;'
+    document.body.appendChild(measureTa)
   }
 
-  const result = divs.map(div => Math.max(1, Math.round(div.offsetHeight / lineHeight)))
+  // 复制所有影响布局的样式
+  measureTa.style.width = width + 'px'
+  measureTa.style.font = cs.font
+  measureTa.style.lineHeight = cs.lineHeight
+  measureTa.style.letterSpacing = cs.letterSpacing
+  measureTa.style.padding = cs.padding
 
-  wrapper.innerHTML = ''
+  // 先测空 textarea 的 scrollHeight（基线）
+  measureTa.value = ''
+  const baseH = measureTa.scrollHeight
+
+  const result: number[] = []
+  for (const line of logicalLines) {
+    measureTa.value = line || '\u200b'
+    const h = measureTa.scrollHeight
+    result.push(Math.max(1, Math.round((h - baseH) / lineHeight) + 1))
+  }
   return result
 }
 
@@ -537,6 +533,9 @@ defineExpose({
       <span v-for="(line, idx) in lines" :key="idx" class="line-number">{{ line }}</span>
     </div>
     <div class="editor-wrapper">
+      <div style="position:absolute;top:4px;left:4px;z-index:99;background:rgba(0,0,0,.8);color:#0f0;font-size:11px;padding:4px 8px;border-radius:4px;white-space:pre;font-family:monospace;pointer-events:none;">containerWidth: {{ containerWidth }}
+lines count: {{ lines.length }}
+logicalLines: {{ content.split('\n').length }}</div>
       <div class="search-bar" v-if="searchOpen">
         <input
           ref="searchInputRef"
