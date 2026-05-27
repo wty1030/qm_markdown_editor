@@ -27,6 +27,7 @@ const searchCurrentIndex = ref(-1)
 const searchInputRef = ref<HTMLInputElement | null>(null)
 
 // DOM 测量：创建隐藏 div 镜像 textarea 渲染，让浏览器计算真实换行
+// 关键：每个逻辑行用 block div（不是 inline span），确保行间有真实换行
 let measureWrapper: HTMLDivElement | null = null
 
 const getMeasureWrapper = (width: number): HTMLDivElement => {
@@ -50,51 +51,22 @@ const getMeasureWrapper = (width: number): HTMLDivElement => {
 }
 
 const measureVisualLines = (logicalLines: string[], width: number): number[] => {
-  if (logicalLines.length === 0 || width <= 0) return []
+  if (logicalLines.length === 0 || width <= 0) return logicalLines.map(() => 1)
 
   const wrapper = getMeasureWrapper(width)
   const lineHeight = parseFloat(window.getComputedStyle(wrapper).lineHeight) || 25.6
 
-  // 每行一个 span，浏览器计算实际换行
-  const spans: HTMLSpanElement[] = []
+  // 每行一个 block div，浏览器自动计算换行，量 offsetHeight 得到真实视觉行数
+  const divs: HTMLDivElement[] = []
   for (const line of logicalLines) {
-    const span = document.createElement('span')
-    span.style.display = 'inline'
-    span.textContent = line.length === 0 ? '\u200b' : line
-    wrapper.appendChild(span)
-    spans.push(span)
+    const div = document.createElement('div')
+    div.textContent = line.length === 0 ? '\u200b' : line
+    wrapper.appendChild(div)
+    divs.push(div)
   }
 
-  // 根据每个 span 的 offsetTop 判断视觉行归属
-  const result: number[] = []
-  let prevVisualLine = -1
-  let charsOnLine = 0
-  let lineStartIdx = 0
+  const result = divs.map(div => Math.max(1, Math.round(div.offsetHeight / lineHeight)))
 
-  for (let i = 0; i < spans.length; i++) {
-    const visualLine = Math.round(spans[i].offsetTop / lineHeight)
-    if (visualLine !== prevVisualLine) {
-      if (i > 0) {
-        // 从 lineStartIdx 到 i-1 的所有逻辑行共享一个视觉行
-        // 每个算 1 个视觉行（它们在同一行内）
-        for (let k = lineStartIdx; k < i; k++) {
-          result.push(1)
-        }
-      }
-      prevVisualLine = visualLine
-      lineStartIdx = i
-    }
-  }
-  // 最后一组：计算最后一个 span 占几个视觉行
-  const lastSpan = spans[spans.length - 1]
-  const lastLine = Math.round((lastSpan.offsetTop + lastSpan.offsetHeight) / lineHeight)
-  const firstOfGroup = Math.round(spans[lineStartIdx].offsetTop / lineHeight)
-  const visualCount = lastLine - firstOfGroup
-  for (let k = lineStartIdx; k < spans.length; k++) {
-    result.push(k === lineStartIdx ? visualCount : 1)
-  }
-
-  // 清理
   wrapper.innerHTML = ''
   return result
 }
