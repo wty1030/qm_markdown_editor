@@ -68,14 +68,9 @@ const measureVisualLines = (logicalLines: string[], maxWidth: number): number[] 
 
 // 每个逻辑行对应的行号显示：第一个视觉行显示行号，后续视觉行显示空字符串
 const lines = computed(() => {
-  // containerWidth 作为依赖，窗口/面板大小变化时自动重算
-  void containerWidth.value
+  // containerWidth.value 作为唯一响应式触发器
+  const maxWidth = containerWidth.value
   const logicalLines = props.content.split('\n')
-  const textarea = textareaRef.value
-  const cs = textarea ? window.getComputedStyle(textarea) : null
-  const pl = cs ? parseFloat(cs.paddingLeft) || 0 : 0
-  const pr = cs ? parseFloat(cs.paddingRight) || 0 : 0
-  const maxWidth = textarea ? textarea.clientWidth - pl - pr : 0
   const visualCounts = measureVisualLines(logicalLines, maxWidth)
   const result: (number | string)[] = []
   for (let i = 0; i < logicalLines.length; i++) {
@@ -504,15 +499,21 @@ let resizeObserver: ResizeObserver | null = null
 
 onMounted(() => {
   const textarea = textareaRef.value
-  if (textarea) {
-    containerWidth.value = textarea.clientWidth
-    resizeObserver = new ResizeObserver(entries => {
-      for (const entry of entries) {
-        containerWidth.value = entry.contentRect.width
-      }
-    })
-    resizeObserver.observe(textarea)
+  if (!textarea) return
+
+  const updateWidth = () => {
+    const cs = window.getComputedStyle(textarea)
+    const pl = parseFloat(cs.paddingLeft) || 0
+    const pr = parseFloat(cs.paddingRight) || 0
+    containerWidth.value = textarea.clientWidth - pl - pr
   }
+
+  updateWidth()
+  resizeObserver = new ResizeObserver(() => updateWidth())
+  resizeObserver.observe(textarea)
+
+  // 字体加载后重新测量
+  document.fonts.ready.then(() => updateWidth())
 })
 
 onUnmounted(() => {
