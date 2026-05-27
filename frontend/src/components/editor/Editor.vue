@@ -26,45 +26,28 @@ const searchCaseSensitive = ref(false)
 const searchCurrentIndex = ref(-1)
 const searchInputRef = ref<HTMLInputElement | null>(null)
 
-// 用隐藏 textarea 测量：与真实 textarea 完全相同的渲染引擎
-let measureTa: HTMLTextAreaElement | null = null
+// canvas 测量：测量整行文字总宽度，除以可用宽度得到视觉行数
+let measureCanvas: HTMLCanvasElement | null = null
+let measureCtx: CanvasRenderingContext2D | null = null
 
-const measureVisualLines = (logicalLines: string[], width: number): number[] => {
-  if (logicalLines.length === 0 || width <= 0) return logicalLines.map(() => 1)
-
+const measureVisualLines = (logicalLines: string[], maxWidth: number): number[] => {
+  if (!measureCanvas) {
+    measureCanvas = document.createElement('canvas')
+    measureCtx = measureCanvas.getContext('2d')
+  }
+  const ctx = measureCtx!
   const textarea = textareaRef.value
-  if (!textarea) return logicalLines.map(() => 1)
-  const cs = window.getComputedStyle(textarea)
-  const lineHeight = parseFloat(cs.lineHeight) || 25.6
-
-  if (!measureTa) {
-    measureTa = document.createElement('textarea')
-    measureTa.style.cssText =
-      'position:fixed !important;left:-9999px !important;top:0 !important;' +
-      'visibility:hidden !important;overflow:hidden !important;' +
-      'white-space:pre-wrap !important;word-break:break-all !important;overflow-wrap:break-word !important;' +
-      'resize:none !important;border:0 !important;outline:none !important;'
-    document.body.appendChild(measureTa)
+  if (textarea) {
+    const cs = window.getComputedStyle(textarea)
+    ctx.font = cs.fontSize + ' ' + cs.fontFamily
   }
+  if (maxWidth <= 0) return logicalLines.map(() => 1)
 
-  // 复制所有影响布局的样式
-  measureTa.style.width = width + 'px'
-  measureTa.style.font = cs.font
-  measureTa.style.lineHeight = cs.lineHeight
-  measureTa.style.letterSpacing = cs.letterSpacing
-  measureTa.style.padding = cs.padding
-
-  // 先测空 textarea 的 scrollHeight（基线）
-  measureTa.value = ''
-  const baseH = measureTa.scrollHeight
-
-  const result: number[] = []
-  for (const line of logicalLines) {
-    measureTa.value = line || '\u200b'
-    const h = measureTa.scrollHeight
-    result.push(Math.max(1, Math.round((h - baseH) / lineHeight) + 1))
-  }
-  return result
+  return logicalLines.map(line => {
+    if (line.length === 0) return 1
+    const w = ctx.measureText(line).width
+    return Math.max(1, Math.ceil(w / maxWidth))
+  })
 }
 
 // 每个逻辑行对应的行号显示：第一个视觉行显示行号，后续视觉行显示空字符串
@@ -533,9 +516,6 @@ defineExpose({
       <span v-for="(line, idx) in lines" :key="idx" class="line-number">{{ line }}</span>
     </div>
     <div class="editor-wrapper">
-      <div style="position:absolute;top:4px;left:4px;z-index:99;background:rgba(0,0,0,.8);color:#0f0;font-size:11px;padding:4px 8px;border-radius:4px;white-space:pre;font-family:monospace;pointer-events:none;">containerWidth: {{ containerWidth }}
-lines count: {{ lines.length }}
-logicalLines: {{ content.split('\n').length }}</div>
       <div class="search-bar" v-if="searchOpen">
         <input
           ref="searchInputRef"
