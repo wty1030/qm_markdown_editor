@@ -26,49 +26,81 @@ const searchCaseSensitive = ref(false)
 const searchCurrentIndex = ref(-1)
 const searchInputRef = ref<HTMLInputElement | null>(null)
 
-// canvas 测量用
-let measureCanvas: HTMLCanvasElement | null = null
-let measureCtx: CanvasRenderingContext2D | null = null
-let cachedFont = ''
+// DOM 测量：创建隐藏 div 镜像 textarea 渲染，让浏览器计算真实换行
+let measureWrapper: HTMLDivElement | null = null
 
-const getMeasureCtx = (): CanvasRenderingContext2D | null => {
+const getMeasureWrapper = (width: number): HTMLDivElement => {
+  if (!measureWrapper) {
+    measureWrapper = document.createElement('div')
+    measureWrapper.style.cssText = 'position:absolute;visibility:hidden;left:-9999px;top:0;'
+    document.body.appendChild(measureWrapper)
+  }
   const textarea = textareaRef.value
-  if (!textarea) return null
-  const cs = window.getComputedStyle(textarea)
-  const font = `${cs.fontSize} ${cs.fontFamily}`
-  if (!measureCanvas) {
-    measureCanvas = document.createElement('canvas')
-    measureCtx = measureCanvas.getContext('2d')
+  if (textarea) {
+    const cs = window.getComputedStyle(textarea)
+    measureWrapper.style.font = `${cs.fontSize} ${cs.fontFamily}`
+    measureWrapper.style.lineHeight = cs.lineHeight
+    measureWrapper.style.letterSpacing = cs.letterSpacing
   }
-  if (cachedFont !== font) {
-    cachedFont = font
-    if (measureCtx) measureCtx.font = font
-  }
-  return measureCtx
+  measureWrapper.style.width = width + 'px'
+  measureWrapper.style.whiteSpace = 'pre-wrap'
+  measureWrapper.style.wordBreak = 'break-all'
+  measureWrapper.style.overflowWrap = 'break-word'
+  return measureWrapper
 }
 
-const measureVisualLines = (logicalLines: string[], maxWidth: number): number[] => {
-  const ctx = getMeasureCtx()
-  if (!ctx || maxWidth <= 0) return logicalLines.map(() => 1)
+const measureVisualLines = (logicalLines: string[], width: number): number[] => {
+  if (logicalLines.length === 0 || width <= 0) return []
 
-  return logicalLines.map(line => {
-    if (line.length === 0) return 1
-    let count = 1
-    let width = 0
-    for (let i = 0; i < line.length; i++) {
-      width += ctx.measureText(line[i]).width
-      if (width > maxWidth) {
-        count++
-        width = ctx.measureText(line[i]).width
+  const wrapper = getMeasureWrapper(width)
+  const lineHeight = parseFloat(window.getComputedStyle(wrapper).lineHeight) || 25.6
+
+  // 每行一个 span，浏览器计算实际换行
+  const spans: HTMLSpanElement[] = []
+  for (const line of logicalLines) {
+    const span = document.createElement('span')
+    span.style.display = 'inline'
+    span.textContent = line.length === 0 ? '\u200b' : line
+    wrapper.appendChild(span)
+    spans.push(span)
+  }
+
+  // 根据每个 span 的 offsetTop 判断视觉行归属
+  const result: number[] = []
+  let prevVisualLine = -1
+  let charsOnLine = 0
+  let lineStartIdx = 0
+
+  for (let i = 0; i < spans.length; i++) {
+    const visualLine = Math.round(spans[i].offsetTop / lineHeight)
+    if (visualLine !== prevVisualLine) {
+      if (i > 0) {
+        // 从 lineStartIdx 到 i-1 的所有逻辑行共享一个视觉行
+        // 每个算 1 个视觉行（它们在同一行内）
+        for (let k = lineStartIdx; k < i; k++) {
+          result.push(1)
+        }
       }
+      prevVisualLine = visualLine
+      lineStartIdx = i
     }
-    return count
-  })
+  }
+  // 最后一组：计算最后一个 span 占几个视觉行
+  const lastSpan = spans[spans.length - 1]
+  const lastLine = Math.round((lastSpan.offsetTop + lastSpan.offsetHeight) / lineHeight)
+  const firstOfGroup = Math.round(spans[lineStartIdx].offsetTop / lineHeight)
+  const visualCount = lastLine - firstOfGroup
+  for (let k = lineStartIdx; k < spans.length; k++) {
+    result.push(k === lineStartIdx ? visualCount : 1)
+  }
+
+  // 清理
+  wrapper.innerHTML = ''
+  return result
 }
 
 // 每个逻辑行对应的行号显示：第一个视觉行显示行号，后续视觉行显示空字符串
 const lines = computed(() => {
-  // containerWidth.value 作为唯一响应式触发器
   const maxWidth = containerWidth.value
   const logicalLines = props.content.split('\n')
   const visualCounts = measureVisualLines(logicalLines, maxWidth)
