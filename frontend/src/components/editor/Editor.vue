@@ -16,6 +16,7 @@ const emit = defineEmits<{
 const { getTabString } = useSettings()
 
 const textareaRef = ref<HTMLTextAreaElement | null>(null)
+const containerWidth = ref(0)
 const lineNumbersRef = ref<HTMLDivElement | null>(null)
 const highlightRef = ref<HTMLDivElement | null>(null)
 
@@ -25,9 +26,65 @@ const searchCaseSensitive = ref(false)
 const searchCurrentIndex = ref(-1)
 const searchInputRef = ref<HTMLInputElement | null>(null)
 
+// canvas 测量用
+let measureCanvas: HTMLCanvasElement | null = null
+let measureCtx: CanvasRenderingContext2D | null = null
+let cachedFont = ''
+
+const getMeasureCtx = (): CanvasRenderingContext2D | null => {
+  const textarea = textareaRef.value
+  if (!textarea) return null
+  const cs = window.getComputedStyle(textarea)
+  const font = `${cs.fontSize} ${cs.fontFamily}`
+  if (!measureCanvas) {
+    measureCanvas = document.createElement('canvas')
+    measureCtx = measureCanvas.getContext('2d')
+  }
+  if (cachedFont !== font) {
+    cachedFont = font
+    if (measureCtx) measureCtx.font = font
+  }
+  return measureCtx
+}
+
+const measureVisualLines = (logicalLines: string[], maxWidth: number): number[] => {
+  const ctx = getMeasureCtx()
+  if (!ctx || maxWidth <= 0) return logicalLines.map(() => 1)
+
+  return logicalLines.map(line => {
+    if (line.length === 0) return 1
+    let count = 1
+    let width = 0
+    for (let i = 0; i < line.length; i++) {
+      width += ctx.measureText(line[i]).width
+      if (width > maxWidth) {
+        count++
+        width = ctx.measureText(line[i]).width
+      }
+    }
+    return count
+  })
+}
+
+// 每个逻辑行对应的行号显示：第一个视觉行显示行号，后续视觉行显示空字符串
 const lines = computed(() => {
-  const lineCount = props.content.split('\n').length
-  return Array.from({ length: lineCount }, (_, i) => i + 1)
+  // containerWidth 作为依赖，窗口/面板大小变化时自动重算
+  void containerWidth.value
+  const logicalLines = props.content.split('\n')
+  const textarea = textareaRef.value
+  const cs = textarea ? window.getComputedStyle(textarea) : null
+  const pl = cs ? parseFloat(cs.paddingLeft) || 0 : 0
+  const pr = cs ? parseFloat(cs.paddingRight) || 0 : 0
+  const maxWidth = textarea ? textarea.clientWidth - pl - pr : 0
+  const visualCounts = measureVisualLines(logicalLines, maxWidth)
+  const result: (number | string)[] = []
+  for (let i = 0; i < logicalLines.length; i++) {
+    result.push(i + 1)
+    for (let j = 1; j < visualCounts[i]; j++) {
+      result.push('')
+    }
+  }
+  return result
 })
 
 const escapeHtml = (text: string): string => {
@@ -421,24 +478,46 @@ const syncHighlightScroll = () => {
   highlightRef.value.style.transform = `translate(${-textareaRef.value.scrollLeft}px, ${-textareaRef.value.scrollTop}px)`
 }
 
-// 滚动到指定行号（1-indexed）
+// 滚动到指定逻辑行号（1-indexed），考虑自动换行的视觉行偏移
 const scrollToLine = (lineNumber: number) => {
   const textarea = textareaRef.value
   if (!textarea) return
 
-  // 计算目标滚动位置
-  // 使用实际渲染的行高
   const computedStyle = window.getComputedStyle(textarea)
   const lineHeight = parseFloat(computedStyle.lineHeight)
-
-  // 编辑器内边距
   const paddingTop = parseFloat(computedStyle.paddingTop) || 16
+  const pl = parseFloat(computedStyle.paddingLeft) || 0
+  const pr = parseFloat(computedStyle.paddingRight) || 0
+  const maxWidth = textarea.clientWidth - pl - pr
 
-  // 目标滚动位置：让目标行显示在视口顶部附近
-  const targetScrollTop = Math.max(0, (lineNumber - 1) * lineHeight - paddingTop)
+  // 计算目标行之前的视觉行总数
+  const logicalLines = props.content.split('\n')
+  const linesBefore = logicalLines.slice(0, lineNumber - 1)
+  const visualCounts = measureVisualLines(linesBefore, maxWidth)
+  const visualOffset = visualCounts.reduce((sum, c) => sum + c, 0)
 
+  const targetScrollTop = Math.max(0, visualOffset * lineHeight - paddingTop)
   textarea.scrollTop = targetScrollTop
 }
+
+let resizeObserver: ResizeObserver | null = null
+
+onMounted(() => {
+  const textarea = textareaRef.value
+  if (textarea) {
+    containerWidth.value = textarea.clientWidth
+    resizeObserver = new ResizeObserver(entries => {
+      for (const entry of entries) {
+        containerWidth.value = entry.contentRect.width
+      }
+    })
+    resizeObserver.observe(textarea)
+  }
+})
+
+onUnmounted(() => {
+  resizeObserver?.disconnect()
+})
 
 defineExpose({
   syncScrollFromPreview,
@@ -450,7 +529,7 @@ defineExpose({
 <template>
   <div class="editor-container">
     <div class="line-numbers" ref="lineNumbersRef">
-      <span v-for="line in lines" :key="line" class="line-number">{{ line }}</span>
+      <span v-for="(line, idx) in lines" :key="idx" class="line-number">{{ line }}</span>
     </div>
     <div class="editor-wrapper">
       <div class="search-bar" v-if="searchOpen">
