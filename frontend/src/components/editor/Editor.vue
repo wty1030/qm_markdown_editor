@@ -576,6 +576,7 @@ defineExpose({
 
 .line-number {
   display: block;
+  height: 1.6em;
 }
 
 .editor-wrapper {
