@@ -152,7 +152,7 @@ func (a *App) CreateFile(path string) FileResult {
 // IsMarkdownFile checks if a file is a markdown file
 func (a *App) IsMarkdownFile(path string) bool {
 	ext := strings.ToLower(filepath.Ext(path))
-	return ext == ".md" || ext == ".markdown" || ext == ".mdown"
+	return ext == ".md"
 }
 
 // NewFile clears the current file
@@ -165,8 +165,7 @@ func (a *App) OpenFileDialog() string {
 	result, err := runtime.OpenFileDialog(a.ctx, runtime.OpenDialogOptions{
 		Title: "打开 Markdown 文件",
 		Filters: []runtime.FileFilter{
-			{DisplayName: "Markdown 文件", Pattern: "*.md;*.markdown"},
-			{DisplayName: "所有文件", Pattern: "*.*"},
+			{DisplayName: "Markdown 文件", Pattern: "*.md"},
 		},
 	})
 	if err != nil {

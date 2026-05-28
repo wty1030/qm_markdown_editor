@@ -95,6 +95,9 @@ export function useFileOperations() {
   }
 
   const openFileByPath = async (path: string): Promise<{ success: boolean; content?: string; error?: string }> => {
+    if (!path.toLowerCase().endsWith('.md')) {
+      return { success: false, error: '仅支持打开 .md 文件' }
+    }
     const result = await ReadFile(path) as FileResult
     if (result.success) {
       currentFile.value = path

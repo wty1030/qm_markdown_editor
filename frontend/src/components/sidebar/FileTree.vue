@@ -27,17 +27,7 @@ const expandedPaths = ref<Set<string>>(new Set())
 const childrenMap = ref<Map<string, FileInfo[]>>(new Map())
 const loadingPaths = ref<Set<string>>(new Set())
 
-const EDITABLE_EXTENSIONS = new Set([
-  'md', 'markdown', 'mdown',
-  'txt', 'log',
-  'json', 'yaml', 'yml', 'toml', 'xml', 'csv',
-  'js', 'ts', 'jsx', 'tsx',
-  'html', 'css', 'scss', 'less',
-  'py', 'rb', 'go', 'rs', 'java', 'c', 'cpp', 'h', 'hpp',
-  'sh', 'bash', 'zsh', 'ps1',
-  'sql',
-  'vue', 'svelte',
-])
+const EDITABLE_EXTENSIONS = new Set(['md'])
 
 const sortedFiles = computed(() => {
   return [...props.files]
