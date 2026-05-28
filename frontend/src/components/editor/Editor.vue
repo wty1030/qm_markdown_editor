@@ -582,7 +582,7 @@ defineExpose({
       </div>
       <div class="editor-highlight" ref="highlightRef" v-html="highlightedContent"></div>
       <div class="current-line-overlay" ref="currentLineOverlayRef">
-        <div class="current-line-bar" :style="{ top: currentLineTop + 'px' }"></div>
+        <div class="current-line-bar" :style="{ top: (currentLineTop + 16) + 'px' }"></div>
       </div>
       <textarea
         ref="textareaRef"
@@ -654,9 +654,7 @@ defineExpose({
   top: 0;
   left: 0;
   right: 0;
-  padding: 1rem;
-  font-size: 16px;
-  line-height: 1.6;
+  bottom: 0;
   overflow: hidden;
   pointer-events: none;
   will-change: transform;
@@ -666,7 +664,7 @@ defineExpose({
   position: absolute;
   left: 0;
   right: 0;
-  height: 1.6em;
+  height: 25.6px;
   background-color: color-mix(in srgb, var(--bg-secondary, #252526) 60%, transparent);
   border-radius: 2px;
 }
