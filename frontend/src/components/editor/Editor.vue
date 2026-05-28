@@ -19,6 +19,8 @@ const textareaRef = ref<HTMLTextAreaElement | null>(null)
 const containerWidth = ref(0)
 const lineNumbersRef = ref<HTMLDivElement | null>(null)
 const highlightRef = ref<HTMLDivElement | null>(null)
+const currentLineOverlayRef = ref<HTMLDivElement | null>(null)
+const currentLine = ref(-1)
 
 const searchOpen = ref(false)
 const searchQuery = ref('')
@@ -49,6 +51,24 @@ const measureVisualLines = (logicalLines: string[], maxWidth: number): number[] 
     return Math.max(1, Math.ceil(w / maxWidth))
   })
 }
+
+const updateCurrentLine = () => {
+  const textarea = textareaRef.value
+  if (!textarea) return
+  const pos = textarea.selectionStart
+  const textBefore = textarea.value.substring(0, pos)
+  currentLine.value = textBefore.split('\n').length - 1
+}
+
+const currentLineTop = computed(() => {
+  if (currentLine.value < 0) return -100
+  const logicalLines = props.content.split('\n')
+  const maxWidth = containerWidth.value
+  const linesBefore = logicalLines.slice(0, currentLine.value)
+  const visualCounts = measureVisualLines(linesBefore, maxWidth)
+  const visualOffset = visualCounts.reduce((sum, c) => sum + c, 0)
+  return visualOffset * 25.6
+})
 
 // 每个逻辑行对应的行号显示：第一个视觉行显示行号，后续视觉行显示空字符串
 const lines = computed(() => {
@@ -285,6 +305,10 @@ const handleSearchKeydown = (e: KeyboardEvent) => {
   }
 }
 
+watch(() => props.content, () => {
+  nextTick(updateCurrentLine)
+})
+
 watch(highlightedContent, () => {
   nextTick(syncHighlightScroll)
 })
@@ -438,7 +462,11 @@ const handleScroll = () => {
   if (!textareaRef.value || !lineNumbersRef.value || !highlightRef.value) return
 
   lineNumbersRef.value.scrollTop = textareaRef.value.scrollTop
-  highlightRef.value.style.transform = `translate(${-textareaRef.value.scrollLeft}px, ${-textareaRef.value.scrollTop}px)`
+  const transform = `translate(${-textareaRef.value.scrollLeft}px, ${-textareaRef.value.scrollTop}px)`
+  highlightRef.value.style.transform = transform
+  if (currentLineOverlayRef.value) {
+    currentLineOverlayRef.value.style.transform = transform
+  }
 
   emit('scroll', textareaRef.value.scrollTop, textareaRef.value.scrollHeight, textareaRef.value.clientHeight)
 }
@@ -453,7 +481,11 @@ const syncScrollFromPreview = (scrollTop: number) => {
 // 同步滚动高亮层
 const syncHighlightScroll = () => {
   if (!textareaRef.value || !highlightRef.value) return
-  highlightRef.value.style.transform = `translate(${-textareaRef.value.scrollLeft}px, ${-textareaRef.value.scrollTop}px)`
+  const transform = `translate(${-textareaRef.value.scrollLeft}px, ${-textareaRef.value.scrollTop}px)`
+  highlightRef.value.style.transform = transform
+  if (currentLineOverlayRef.value) {
+    currentLineOverlayRef.value.style.transform = transform
+  }
 }
 
 // 滚动到指定逻辑行号（1-indexed），考虑自动换行的视觉行偏移
@@ -495,12 +527,22 @@ onMounted(() => {
   resizeObserver = new ResizeObserver(() => updateWidth())
   resizeObserver.observe(textarea)
 
+  textarea.addEventListener('click', updateCurrentLine)
+  textarea.addEventListener('keyup', updateCurrentLine)
+  textarea.addEventListener('input', updateCurrentLine)
+
   // 字体加载后重新测量
   document.fonts.ready.then(() => updateWidth())
 })
 
 onUnmounted(() => {
   resizeObserver?.disconnect()
+  const textarea = textareaRef.value
+  if (textarea) {
+    textarea.removeEventListener('click', updateCurrentLine)
+    textarea.removeEventListener('keyup', updateCurrentLine)
+    textarea.removeEventListener('input', updateCurrentLine)
+  }
 })
 
 defineExpose({
@@ -539,6 +581,9 @@ defineExpose({
         <button class="search-btn" @click="closeSearch" title="关闭 (Esc)">✕</button>
       </div>
       <div class="editor-highlight" ref="highlightRef" v-html="highlightedContent"></div>
+      <div class="current-line-overlay" ref="currentLineOverlayRef">
+        <div class="current-line-bar" :style="{ top: currentLineTop + 'px' }"></div>
+      </div>
       <textarea
         ref="textareaRef"
         class="editor-textarea"
@@ -602,6 +647,28 @@ defineExpose({
   pointer-events: none;
   color: var(--text-primary);
   will-change: transform;
+}
+
+.current-line-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  padding: 1rem;
+  font-size: 16px;
+  line-height: 1.6;
+  overflow: hidden;
+  pointer-events: none;
+  will-change: transform;
+}
+
+.current-line-bar {
+  position: absolute;
+  left: 0;
+  right: 0;
+  height: 1.6em;
+  background-color: color-mix(in srgb, var(--bg-secondary, #252526) 60%, transparent);
+  border-radius: 2px;
 }
 
 .editor-textarea {
