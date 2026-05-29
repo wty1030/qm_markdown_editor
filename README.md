@@ -1,40 +1,61 @@
 # QMMD
 
-QMMD 是一个基于 Wails v2、Go、Vue 3、Vite 的 Windows 桌面 Markdown 编辑器。
+轻量级 Markdown 桌面编辑器。
 
-## 本次新增
+## 技术栈
 
-- 支持 KaTeX 数学公式渲染。
-- 支持行内公式，例如：`行内公式：$E=mc^2$`
-- 支持块级公式：
+| 层 | 技术 |
+|---|------|
+| 框架 | Wails v2 |
+| 后端 | Go |
+| 前端 | Vue 3 + TypeScript + Vite |
+| Markdown 渲染 | marked |
+| 数学公式 | KaTeX |
+| 图表 | Mermaid |
+| 代码高亮 | highlight.js |
 
-```md
-$$
-a^2+b^2=c^2
-$$
-```
+## 已实现功能
 
-- 行内代码里的 `$not_math$` 不会被渲染为公式。
-- 常见价格文本，例如 `Price $5 and $6.`，不会被误渲染为公式。
-- HTML/PDF 导出会保留公式渲染样式。
+### 编辑器
+- Markdown 语法高亮（标题、粗体、斜体、代码、链接、列表等）
+- 编辑器 / 预览 / 分栏三种视图模式
+- Ctrl+F 搜索（区分大小写、全部高亮、上下导航）
+- Enter 键自动续行（列表、引用块自动延续前缀）
+- 撤销 / 重做（Ctrl+Z / Ctrl+Y）
+- 拖拽 .md 文件到 exe 直接打开
+
+### 预览
+- 实时渲染，编辑器与预览区滚动同步
+- 数学公式（行内 `$...$`、块级 `$$...$$`）
+- Mermaid 图表（流程图、时序图、甘特图等）
+- 代码块语法高亮
+- 图片和 Mermaid 图表点击放大预览（支持滚轮缩放和拖拽）
+
+### 侧边栏
+- 文件树浏览，懒加载子目录
+- 大纲面板，点击标题跳转到对应位置
+
+### 其他
+- 多主题切换（含深色 / 浅色主题）
+- 壁纸背景
+- 可配置的自动保存
+- 导出为 HTML / PDF
+- 格式化工具栏（加粗、斜体、链接、表格、代码块、颜色、数学公式等）
+- Tab 键可配置（制表符 / 2 / 4 / 8 空格）
 
 ## 本地运行
 
-如果本机没有全局安装 `wails` 命令，可以直接用 Go 运行 Wails CLI：
+```powershell
+wails dev
+```
+
+未全局安装 `wails` 时：
 
 ```powershell
 go run github.com/wailsapp/wails/v2/cmd/wails@v2.12.0 dev
 ```
 
-也可以先安装 Wails CLI：
-
-```powershell
-go install github.com/wailsapp/wails/v2/cmd/wails@v2.12.0
-$env:Path += ";$env:USERPROFILE\go\bin"
-wails dev
-```
-
-## 构建与安装
+## 构建
 
 便携版 exe：
 
@@ -42,36 +63,21 @@ wails dev
 wails build
 ```
 
-生成文件：
+生成文件：`build\bin\qmmd.exe`，单文件即可运行。
 
-```text
-build\bin\qmmd.exe
-```
-
-本地使用时，单个 `qmmd.exe` 就可以运行。升级时先关闭旧程序，再用新生成的 `build\bin\qmmd.exe` 覆盖旧文件。
-
-如果需要 Windows 安装包：
+如需 Windows 安装包：
 
 ```powershell
 wails build -nsis
 ```
 
-未全局安装 `wails` 时：
-
-```powershell
-go run github.com/wailsapp/wails/v2/cmd/wails@v2.12.0 build -nsis
-```
-
-安装包会生成在 `build\bin` 下。升级安装版时，关闭 QMMD 后运行新版安装包，保持相同应用名和安装目录即可覆盖升级。
-
-## 验证
+## 测试
 
 ```powershell
 cd frontend
-npm test
-npm run build
-
-cd ..
-go test ./...
+npx vitest run
 ```
 
+## 作者
+
+QQ: 2537820086
