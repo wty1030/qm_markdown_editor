@@ -30,11 +30,12 @@ type FileResult struct {
 type App struct {
 	ctx         context.Context
 	currentFile string
+	startupFile string
 }
 
 // NewApp creates a new App application struct
-func NewApp() *App {
-	return &App{}
+func NewApp(startupFile string) *App {
+	return &App{startupFile: startupFile}
 }
 
 // startup is called when the app starts. The context is saved
@@ -99,6 +100,14 @@ func (a *App) SaveFile(content string) FileResult {
 // GetCurrentFile returns the current file path
 func (a *App) GetCurrentFile() string {
 	return a.currentFile
+}
+
+// GetStartupFile returns the file path passed via command line args (drag onto exe),
+// and clears it so it's only consumed once.
+func (a *App) GetStartupFile() string {
+	path := a.startupFile
+	a.startupFile = ""
+	return path
 }
 
 // ListDirectory lists files and directories in a path

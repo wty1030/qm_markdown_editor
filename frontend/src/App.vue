@@ -12,6 +12,7 @@ import { useFileOperations, type ExportFormat } from './composables/useFileOpera
 import { useFormat, type FormatType, type LinkData, type ImageData, type CodeBlockData, type ColorData, type TableData, type MathData } from './composables/useFormat'
 import { useUndoRedo } from './composables/useUndoRedo'
 import { useSettings, type ViewMode } from './composables/useSettings'
+import { GetStartupFile } from '../wailsjs/go/main/App'
 
 const markdownContent = ref('')
 const showSidebar = ref(true)
@@ -263,9 +264,21 @@ const handleKeydown = (e: KeyboardEvent) => {
   }
 }
 
-onMounted(() => {
+onMounted(async () => {
   document.addEventListener('keydown', handleKeydown)
   startAutoSaveTimer()
+
+  // 检查启动参数（拖拽文件到 exe）
+  const startupFile = await GetStartupFile()
+  if (startupFile) {
+    const result = await openFileByPath(startupFile)
+    if (result.success && result.content !== undefined) {
+      markdownContent.value = result.content
+      reset(result.content)
+    } else if (result.error) {
+      showToast(result.error)
+    }
+  }
 })
 
 onUnmounted(() => {
