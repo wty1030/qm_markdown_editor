@@ -10,6 +10,8 @@ App.vue 是唯一的顶层状态容器，持有 `markdownContent` ref 并协调�
 - **视图模式**：根据 `viewMode`（editor/preview/split）切换布局
 - **快捷键**：全局监听 Ctrl+N/O/S/Z/Y（新建、打开、保存、撤销/重做）
 - **自动保存**：可配置间隔的自动保存定时器
+- **Toast 通知**：`showToast(message, type)` 支持 `TOAST_SUCCESS`（绿色）和 `TOAST_ERROR`（红色）两种类型
+- **启动文件**：`onMounted` 时调用 Go 后端 `GetStartupFile()` 获取命令行参数（拖拽文件到 exe），自动加载 `.md` 文件
 
 ## 目录结构
 

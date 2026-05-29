@@ -52,6 +52,7 @@ Go 后端通过 Wails 绑定暴露为 JS 函数（自动生成在 `frontend/wail
 | `OpenFileDialog()` / `SaveFileDialog(default, filter)` / `OpenDirectoryDialog()` | 系统对话框 |
 | `ExportToHTML(path, content, title)` / `ExportToPDF(path, content, title)` | 导出 |
 | `OpenInBrowser(url)` / `OpenNewWindow()` | 外部操作 |
+| `GetStartupFile()` | 获取启动参数文件路径（拖拽到 exe），只消费一次 |
 | `MinimiseWindow()` / `ToggleMaximiseWindow()` / `CloseWindow()` | 窗口控制 |
 
 所有文件操作返回 `FileResult { Success, Content, Error }`。
