@@ -158,11 +158,11 @@ const processLine = (text: string): string => {
 
   // 粗体 (**text** 或 __text__) — 下划线版本需边界检查，避免 my_variable_name 误匹配
   line = line.replace(/\*\*([^*\n]+)\*\*/g, '<span class="md-bold">**$1**</span>')
-  line = line.replace(/(?<=^|\s)__([^_\n]+)__(?=\s|$)/g, '<span class="md-bold">__$1__</span>')
+  line = line.replace(/(^|[\s])__((?:(?!__)[^\n])+)__((?=[\s])|$)/g, '$1<span class="md-bold">__$2__</span>$3')
 
   // 斜体 (*text* 或 _text_) — 下划线版本需边界检查
   line = line.replace(/\*([^*\n]+)\*/g, '<span class="md-italic">*$1*</span>')
-  line = line.replace(/(?<=^|\s)_([^_\n]+)_(?=\s|$)/g, '<span class="md-italic">_$1_</span>')
+  line = line.replace(/(^|[\s])_((?:(?!_)[^\n])+)_((?=[\s])|$)/g, '$1<span class="md-italic">_$2_</span>$3')
 
   // 删除线 (~~text~~)
   line = line.replace(/~~([^~\n]+)~~/g, '<span class="md-strikethrough">~~$1~~</span>')
