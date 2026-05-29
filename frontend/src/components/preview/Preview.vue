@@ -122,8 +122,13 @@ renderer.code = (token: Tokens.Code): string => {
 
 renderer.link = function(this: any, token: Tokens.Link): string {
   const href = token.href.replace(/[\uff09\uff0c\u3002\uff01\uff1f\uff1b\uff1a\u201c\u201d\u2018\u2019\u3001\u300a\u300b].*/, '')
-  const text = this.parser.parseInline(token.tokens)
   const title = token.title ? ` title="${token.title}"` : ''
+  const isAutolink = token.text === token.href
+  if (isAutolink && href !== token.href) {
+    const trailing = token.text.slice(href.length)
+    return `<a href="${href}"${title}>${href}</a>${trailing}`
+  }
+  const text = this.parser.parseInline(token.tokens)
   return `<a href="${href}"${title}>${text}</a>`
 }
 
