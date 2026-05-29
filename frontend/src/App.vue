@@ -14,10 +14,15 @@ import { useUndoRedo } from './composables/useUndoRedo'
 import { useSettings, type ViewMode } from './composables/useSettings'
 import { GetStartupFile } from '../wailsjs/go/main/App'
 
+type ToastType = 'success' | 'error'
+const TOAST_SUCCESS: ToastType = 'success'
+const TOAST_ERROR: ToastType = 'error'
+
 const markdownContent = ref('')
 const showSidebar = ref(true)
 const showSettings = ref(false)
 const toastMessage = ref('')
+const toastType = ref<ToastType>(TOAST_SUCCESS)
 const toastVisible = ref(false)
 let toastTimer: ReturnType<typeof setTimeout> | null = null
 
@@ -119,8 +124,9 @@ const handleOpenFile = async () => {
   }
 }
 
-const showToast = (message: string) => {
+const showToast = (message: string, type: ToastType = TOAST_SUCCESS) => {
   toastMessage.value = message
+  toastType.value = type
   toastVisible.value = true
   if (toastTimer) clearTimeout(toastTimer)
   toastTimer = setTimeout(() => {
@@ -134,7 +140,7 @@ const handleSave = async () => {
     showToast('保存成功')
     resetAutoSaveTimer()
   } else if (result.error) {
-    showToast(result.error)
+    showToast(result.error, TOAST_ERROR)
   }
 }
 
@@ -276,7 +282,7 @@ onMounted(async () => {
       markdownContent.value = result.content
       reset(result.content)
     } else if (result.error) {
-      showToast(result.error)
+      showToast(result.error, TOAST_ERROR)
     }
   }
 })
@@ -384,7 +390,7 @@ watch(markdownContent, (newContent) => {
 
     <Teleport to="body">
       <Transition name="toast">
-        <div v-if="toastVisible" class="toast">{{ toastMessage }}</div>
+        <div v-if="toastVisible" class="toast" :class="`toast-${toastType}`">{{ toastMessage }}</div>
       </Transition>
     </Teleport>
   </div>
@@ -464,13 +470,21 @@ html, body, #app {
   left: 50%;
   transform: translateX(-50%);
   padding: 0.5rem 1.25rem;
-  background-color: var(--success-color);
-  color: #fff;
   border-radius: 6px;
   font-size: 13px;
   z-index: 9999;
   pointer-events: none;
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+}
+
+.toast-success {
+  background-color: var(--success-color);
+  color: #fff;
+}
+
+.toast-error {
+  background-color: var(--error-color);
+  color: #fff;
 }
 
 .toast-enter-active,
