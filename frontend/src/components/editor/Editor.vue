@@ -156,13 +156,13 @@ const processLine = (text: string): string => {
   // 标题 (# ## ### #### ##### ######)
   line = line.replace(/^(#{1,6})([ \t]+)(.*)$/, '<span class="md-heading"><span class="md-heading-mark">$1</span>$2$3</span>')
 
-  // 粗体 (**text** 或 __text__)
+  // 粗体 (**text** 或 __text__) — 下划线版本需边界检查，避免 my_variable_name 误匹配
   line = line.replace(/\*\*([^*\n]+)\*\*/g, '<span class="md-bold">**$1**</span>')
-  line = line.replace(/__([^_\n]+)__/g, '<span class="md-bold">__$1__</span>')
+  line = line.replace(/(?<=^|\s)__([^_\n]+)__(?=\s|$)/g, '<span class="md-bold">__$1__</span>')
 
-  // 斜体 (*text* 或 _text_)
+  // 斜体 (*text* 或 _text_) — 下划线版本需边界检查
   line = line.replace(/\*([^*\n]+)\*/g, '<span class="md-italic">*$1*</span>')
-  line = line.replace(/_([^_\n]+)_/g, '<span class="md-italic">_$1_</span>')
+  line = line.replace(/(?<=^|\s)_([^_\n]+)_(?=\s|$)/g, '<span class="md-italic">_$1_</span>')
 
   // 删除线 (~~text~~)
   line = line.replace(/~~([^~\n]+)~~/g, '<span class="md-strikethrough">~~$1~~</span>')
@@ -172,6 +172,9 @@ const processLine = (text: string): string => {
 
   // 链接 [text](url)
   line = line.replace(/\[([^\]]+)\]\(([^)]+)\)/g, '<span class="md-link">[<span class="md-link-text">$1</span>](<span class="md-link-url">$2</span>)</span>')
+
+  // 裸 URL 自动高亮（排除尾部半角/全角标点）
+  line = line.replace(/(?:https?|ftp):\/\/[^\s<>\u3000\uff08\uff09\uff0c\u3002\uff01\uff1f\uff1b\uff1a\u201c\u201d\u2018\u2019\u3001\u300a\u300b]*[^\s<>\u3000\uff08\uff09\uff0c\u3002\uff01\uff1f\uff1b\uff1a\u201c\u201d\u2018\u2019\u3001\u300a\u300b>)\]},;!?'"`]/g, '<span class="md-link-url">$&</span>')
 
   // 引用 (> text)
   line = line.replace(/^(&gt;|>)([ \t]*)(.*)$/, '<span class="md-quote"><span class="md-quote-mark">$1</span>$2$3</span>')
