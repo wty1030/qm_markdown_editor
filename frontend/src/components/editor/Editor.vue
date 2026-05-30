@@ -147,6 +147,103 @@ const applySearchHighlights = (html: string, matches: { start: number; end: numb
   return result.join('')
 }
 
+// 代码块内语法高亮（单 pass tokenizer，避免正则嵌套冲突）
+const CODE_KEYWORDS = new Set([
+  'function', 'return', 'if', 'else', 'for', 'while', 'do', 'switch', 'case',
+  'break', 'continue', 'new', 'this', 'class', 'extends', 'import', 'from',
+  'export', 'default', 'try', 'catch', 'finally', 'throw', 'async', 'await',
+  'yield', 'const', 'let', 'var', 'true', 'false', 'null', 'undefined',
+  'None', 'True', 'False', 'def', 'elif', 'except', 'lambda', 'with', 'as',
+  'pass', 'raise', 'in', 'not', 'and', 'or', 'is', 'type', 'interface',
+  'enum', 'struct', 'implements', 'abstract', 'static', 'final', 'public',
+  'private', 'protected', 'override', 'readonly', 'get', 'set', 'package',
+  'super', 'void', 'typeof', 'instanceof', 'delete', 'of'
+])
+
+const processCodeLine = (text: string): string => {
+  const tokens: { type: string; value: string }[] = []
+  let pos = 0
+
+  while (pos < text.length) {
+    // 单行注释 //
+    if (text[pos] === '/' && text[pos + 1] === '/') {
+      tokens.push({ type: 'comment', value: text.slice(pos) })
+      break
+    }
+    // 块注释 /* ... */
+    if (text[pos] === '/' && text[pos + 1] === '*') {
+      const end = text.indexOf('*/', pos + 2)
+      if (end !== -1) {
+        tokens.push({ type: 'comment', value: text.slice(pos, end + 2) })
+        pos = end + 2
+      } else {
+        tokens.push({ type: 'comment', value: text.slice(pos) })
+        break
+      }
+      continue
+    }
+    // # 注释（非 shebang、非预处理指令）
+    if (text[pos] === '#') {
+      const rest = text.slice(pos)
+      if (/^#!/.test(rest) || /^#\s*(include|define|ifdef|ifndef|endif|pragma|if|else|elif|undef|error|warning)\b/.test(rest)) {
+        tokens.push({ type: 'keyword', value: '#' })
+        pos++
+      } else {
+        tokens.push({ type: 'comment', value: rest })
+        break
+      }
+      continue
+    }
+    // 字符串 "..." '...' `...`
+    if (text[pos] === '"' || text[pos] === "'" || text[pos] === '`') {
+      const quote = text[pos]
+      let end = pos + 1
+      while (end < text.length && text[end] !== quote) {
+        if (text[end] === '\\') end++
+        end++
+      }
+      if (end < text.length) end++
+      tokens.push({ type: 'string', value: text.slice(pos, end) })
+      pos = end
+      continue
+    }
+    // 数字
+    if (/[0-9]/.test(text[pos])) {
+      let end = pos + 1
+      while (end < text.length && /[0-9.]/.test(text[end])) end++
+      tokens.push({ type: 'number', value: text.slice(pos, end) })
+      pos = end
+      continue
+    }
+    // 标识符 / 关键字
+    if (/[a-zA-Z_$]/.test(text[pos])) {
+      let end = pos + 1
+      while (end < text.length && /[\w$]/.test(text[end])) end++
+      const word = text.slice(pos, end)
+      if (CODE_KEYWORDS.has(word)) {
+        tokens.push({ type: 'keyword', value: word })
+      } else if (end < text.length && text[end] === '(') {
+        tokens.push({ type: 'function', value: word })
+      } else if (/^[A-Z]/.test(word)) {
+        tokens.push({ type: 'type', value: word })
+      } else {
+        tokens.push({ type: 'plain', value: word })
+      }
+      pos = end
+      continue
+    }
+    // 其他字符逐字输出
+    tokens.push({ type: 'plain', value: text[pos] })
+    pos++
+  }
+
+  return tokens.map(t => {
+    const escaped = escapeHtml(t.value)
+    if (t.type === 'plain') return escaped
+    return `<span class="syntax-${t.type}">${escaped}</span>`
+  }).join('')
+}
+
 const processLine = (text: string): string => {
   let line = escapeHtml(text)
 
@@ -208,7 +305,7 @@ const highlightedContent = computed(() => {
       inCodeBlock = false
       result.push(`<span class="md-code-fence">\`\`\`</span>`)
     } else if (inCodeBlock) {
-      result.push(escapeHtml(line))
+      result.push(processCodeLine(line))
     } else {
       result.push(processLine(line))
     }
@@ -722,6 +819,31 @@ defineExpose({
 
 .editor-highlight :deep(.md-hr) {
   color: var(--border-color);
+}
+
+/* 代码块内语法高亮 */
+.editor-highlight :deep(.syntax-comment) {
+  color: var(--syntax-comment);
+}
+
+.editor-highlight :deep(.syntax-string) {
+  color: var(--syntax-string);
+}
+
+.editor-highlight :deep(.syntax-number) {
+  color: var(--syntax-number);
+}
+
+.editor-highlight :deep(.syntax-keyword) {
+  color: var(--syntax-keyword);
+}
+
+.editor-highlight :deep(.syntax-function) {
+  color: var(--syntax-function);
+}
+
+.editor-highlight :deep(.syntax-type) {
+  color: var(--syntax-attribute);
 }
 
 .editor-highlight :deep(.search-match) {
