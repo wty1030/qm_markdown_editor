@@ -733,9 +733,10 @@ defineExpose({
 <style scoped>
 .editor-container {
   display: flex;
-  flex-direction: column;
   height: 100%;
   background-color: var(--bg-primary);
+  position: relative;
+  padding-bottom: 24px;
 }
 
 .line-numbers {
@@ -1006,6 +1007,10 @@ defineExpose({
 }
 
 .status-bar {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
   display: flex;
   gap: 1rem;
   padding: 2px 12px;
@@ -1013,6 +1018,6 @@ defineExpose({
   color: var(--text-secondary);
   background-color: var(--bg-secondary);
   border-top: 1px solid var(--border-color);
-  flex-shrink: 0;
+  z-index: 5;
 }
 </style>
