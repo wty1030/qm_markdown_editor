@@ -28,6 +28,8 @@ const toastType = ref<ToastType>(TOAST_SUCCESS)
 const toastVisible = ref(false)
 const selectionLines = ref(0)
 const selectionChars = ref(0)
+const isDragging = ref(false)
+let dragCounter = 0
 let toastTimer: ReturnType<typeof setTimeout> | null = null
 
 const editorRef = ref<InstanceType<typeof Editor> | null>(null)
@@ -199,6 +201,33 @@ const handleSelectionChange = (lines?: number, chars?: number) => {
   selectionChars.value = chars ?? 0
 }
 
+const handleDragEnter = (e: DragEvent) => {
+  e.preventDefault()
+  dragCounter++
+  if (e.dataTransfer?.types.includes('Files')) {
+    isDragging.value = true
+  }
+}
+
+const handleDragOver = (e: DragEvent) => {
+  e.preventDefault()
+}
+
+const handleDragLeave = (e: DragEvent) => {
+  e.preventDefault()
+  dragCounter--
+  if (dragCounter <= 0) {
+    dragCounter = 0
+    isDragging.value = false
+  }
+}
+
+const handleDrop = (e: DragEvent) => {
+  e.preventDefault()
+  dragCounter = 0
+  isDragging.value = false
+}
+
 const handleFormat = (type: FormatType) => {
   const newText = format(type)
   if (newText !== undefined) {
@@ -359,7 +388,21 @@ watch(currentFile, (path) => {
   <div v-if="hasWallpaper" class="wallpaper-bg"></div>
   <div v-if="hasWallpaper" class="wallpaper-overlay"></div>
 
-  <div class="app-container">
+  <div
+    class="app-container"
+    @dragenter="handleDragEnter"
+    @dragover="handleDragOver"
+    @dragleave="handleDragLeave"
+    @drop="handleDrop"
+  >
+    <Transition name="fade">
+      <div v-if="isDragging" class="drag-overlay">
+        <div class="drag-overlay-content">
+          <span class="drag-icon">📄</span>
+          <span>释放以打开文件</span>
+        </div>
+      </div>
+    </Transition>
     <Toolbar
       :is-modified="isModified"
       :current-file="currentFile"
@@ -480,6 +523,7 @@ html, body, #app {
   color: var(--text-primary);
   position: relative;
   z-index: 1;
+  --wails-drop-target: drop;
 }
 
 .main-content {
@@ -559,5 +603,47 @@ html, body, #app {
 .toast-leave-to {
   opacity: 0;
   transform: translateX(-50%) translateY(10px);
+}
+
+/* 拖拽视觉反馈覆盖层 */
+.drag-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 1000;
+  background-color: rgba(0, 0, 0, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  pointer-events: none;
+}
+
+.drag-overlay-content {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+  padding: 40px 60px;
+  background-color: var(--bg-secondary);
+  border: 2px dashed var(--accent-color);
+  border-radius: 12px;
+  color: var(--text-primary);
+  font-size: 16px;
+}
+
+.drag-icon {
+  font-size: 48px;
+}
+
+.fade-enter-active,
+.fade-leave-active {
+  transition: opacity 0.2s ease;
+}
+
+.fade-enter-from,
+.fade-leave-to {
+  opacity: 0;
 }
 </style>
