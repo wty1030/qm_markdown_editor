@@ -12,6 +12,7 @@ App.vue 是唯一的顶层状态容器，持有 `markdownContent` ref 并协调�
 - **自动保存**：可配置间隔的自动保存定时器
 - **Toast 通知**：`showToast(message, type)` 支持 `TOAST_SUCCESS`（绿色）和 `TOAST_ERROR`（红色）两种类型
 - **启动文件**：`onMounted` 时调用 Go 后端 `GetStartupFile()` 获取命令行参数（拖拽文件到 exe），自动加载 `.md` 文件
+- **选中统计**：接收 Editor 的 `selection-change` 事件，将选中行数/字符数传递给 StatusBar
 
 ## 目录结构
 
@@ -25,6 +26,7 @@ App.vue 是唯一的顶层状态容器，持有 `markdownContent` ref 并协调�
 | `settings/` | 设置弹窗（主题、壁纸、自动保存等配置） | `SettingsModal.vue` |
 | `layout/` | 布局组件（分栏容器） | `SplitPaneLayout.vue` |
 | `common/` | 通用组件 | `Modal.vue` |
+| `StatusBar.vue` | 底部状态栏（全文统计 + 选中统计） | 根目录组件 |
 
 ## 组件通信
 
@@ -69,6 +71,14 @@ Ctrl+F 打开搜索栏：
 - Enter 向下搜索，Shift+Enter 向上搜索，Esc 关闭
 - 从光标位置开始搜索，跳转时自动滚动到匹配位置
 - 搜索高亮通过 `applySearchHighlights` 在语法高亮 HTML 上叠加，正确处理 HTML 标签和实体
+
+## 编辑器选中统计（Editor.vue → StatusBar.vue）
+
+Editor 监听 textarea 的 `select`、`mouseup`、`keyup` 事件，计算选中范围的行数和字符数，通过 `selection-change` 事件上报给 App.vue，再传递给 StatusBar。
+
+- 选中文字时，StatusBar 右下角显示 `已选中 X 行 · Y 字符`
+- 没有选中时，右侧保持空白
+- 事件参数：`selectionChange(lines: number, chars: number)` 或无参（表示无选中）
 
 ## 预览区 Lightbox（Preview.vue + Lightbox.vue）
 

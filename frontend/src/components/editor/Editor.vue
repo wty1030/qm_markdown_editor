@@ -11,6 +11,7 @@ const props = defineProps<Props>()
 const emit = defineEmits<{
   update: [content: string]
   scroll: [scrollTop: number, scrollHeight: number, clientHeight: number]
+  selectionChange: [lines: number, chars: number] | []
 }>()
 
 const { getTabString } = useSettings()
@@ -590,6 +591,21 @@ const handleScroll = () => {
   emit('scroll', textareaRef.value.scrollTop, textareaRef.value.scrollHeight, textareaRef.value.clientHeight)
 }
 
+const emitSelectionChange = () => {
+  const textarea = textareaRef.value
+  if (!textarea) return
+  const start = textarea.selectionStart
+  const end = textarea.selectionEnd
+  if (start === end) {
+    emit('selectionChange')
+    return
+  }
+  const selected = props.content.slice(start, end)
+  const chars = selected.length
+  const lines = selected.split('\n').length
+  emit('selectionChange', lines, chars)
+}
+
 const syncScrollFromPreview = (scrollTop: number) => {
   if (!textareaRef.value) return
 
@@ -706,6 +722,9 @@ defineExpose({
         @input="handleInput"
         @scroll="handleScroll"
         @keydown="handleKeyDown"
+        @select="emitSelectionChange"
+        @mouseup="emitSelectionChange"
+        @keyup="emitSelectionChange"
         placeholder="在此输入 Markdown..."
         spellcheck="false"
       />

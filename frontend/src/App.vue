@@ -26,6 +26,8 @@ const showSettings = ref(false)
 const toastMessage = ref('')
 const toastType = ref<ToastType>(TOAST_SUCCESS)
 const toastVisible = ref(false)
+const selectionLines = ref(0)
+const selectionChars = ref(0)
 let toastTimer: ReturnType<typeof setTimeout> | null = null
 
 const editorRef = ref<InstanceType<typeof Editor> | null>(null)
@@ -190,6 +192,11 @@ const handleClearRecentFiles = () => {
 // 大纲跳转：滚动编辑器到指定行
 const handleScrollToLine = (lineNumber: number) => {
   editorRef.value?.scrollToLine(lineNumber)
+}
+
+const handleSelectionChange = (lines?: number, chars?: number) => {
+  selectionLines.value = lines ?? 0
+  selectionChars.value = chars ?? 0
 }
 
 const handleFormat = (type: FormatType) => {
@@ -398,6 +405,7 @@ watch(currentFile, (path) => {
             :content="markdownContent"
             @update="markdownContent = $event"
             @scroll="handleEditorScrollEvent"
+            @selection-change="handleSelectionChange"
             class="full-pane"
           />
         </template>
@@ -421,6 +429,7 @@ watch(currentFile, (path) => {
                 :content="markdownContent"
                 @update="markdownContent = $event"
                 @scroll="handleEditorScrollEvent"
+                @selection-change="handleSelectionChange"
               />
             </template>
             <template #right>
@@ -435,7 +444,7 @@ watch(currentFile, (path) => {
       </div>
     </main>
 
-    <StatusBar :content="markdownContent" />
+    <StatusBar :content="markdownContent" :selection-lines="selectionLines" :selection-chars="selectionChars" />
 
     <SettingsModal
       :visible="showSettings"
