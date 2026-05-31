@@ -27,7 +27,7 @@ const expandedPaths = ref<Set<string>>(new Set())
 const childrenMap = ref<Map<string, FileInfo[]>>(new Map())
 const loadingPaths = ref<Set<string>>(new Set())
 
-const EDITABLE_EXTENSIONS = new Set(['md'])
+const EDITABLE_EXTENSIONS = new Set(['md', 'markdown'])
 
 const sortedFiles = computed(() => {
   return [...props.files]

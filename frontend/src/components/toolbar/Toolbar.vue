@@ -15,6 +15,7 @@ interface Props {
   autoSaveActive?: boolean
   autoSaveRemaining?: number
   autoSaveInterval?: number
+  recentFiles?: string[]
 }
 
 const props = withDefaults(defineProps<Props>(), {
@@ -22,7 +23,8 @@ const props = withDefaults(defineProps<Props>(), {
   currentFile: '',
   autoSaveActive: false,
   autoSaveRemaining: 0,
-  autoSaveInterval: 30
+  autoSaveInterval: 30,
+  recentFiles: () => []
 })
 
 const emit = defineEmits<{
@@ -33,6 +35,8 @@ const emit = defineEmits<{
   exportAs: [format: ExportFormat]
   viewModeChange: [mode: ViewMode]
   openSettings: []
+  selectRecentFile: [path: string]
+  clearRecentFiles: []
 }>()
 
 const { viewMode, setViewMode, viewModeOptions } = useSettings()
@@ -40,6 +44,8 @@ const { viewMode, setViewMode, viewModeOptions } = useSettings()
 const isMaximised = ref(false)
 const showExportMenu = ref(false)
 const exportMenuRef = ref<HTMLElement | null>(null)
+const showRecentMenu = ref(false)
+const recentMenuRef = ref<HTMLElement | null>(null)
 
 const handleExport = (format: ExportFormat) => {
   showExportMenu.value = false
@@ -54,6 +60,30 @@ const closeExportMenu = (e: MouseEvent) => {
   if (exportMenuRef.value && !exportMenuRef.value.contains(e.target as Node)) {
     showExportMenu.value = false
   }
+}
+
+const toggleRecentMenu = () => {
+  showRecentMenu.value = !showRecentMenu.value
+}
+
+const closeRecentMenu = (e: MouseEvent) => {
+  if (recentMenuRef.value && !recentMenuRef.value.contains(e.target as Node)) {
+    showRecentMenu.value = false
+  }
+}
+
+const handleSelectRecent = (path: string) => {
+  showRecentMenu.value = false
+  emit('selectRecentFile', path)
+}
+
+const handleClearRecent = () => {
+  showRecentMenu.value = false
+  emit('clearRecentFiles')
+}
+
+const getFileName = (path: string): string => {
+  return path.replace(/.*[/\\]/, '')
 }
 
 const fileName = computed(() => {
@@ -86,11 +116,13 @@ onMounted(() => {
   checkMaximised()
   window.addEventListener('resize', checkMaximised)
   document.addEventListener('click', closeExportMenu)
+  document.addEventListener('click', closeRecentMenu)
 })
 
 onUnmounted(() => {
   window.removeEventListener('resize', checkMaximised)
   document.removeEventListener('click', closeExportMenu)
+  document.removeEventListener('click', closeRecentMenu)
 })
 </script>
 
@@ -113,6 +145,27 @@ onUnmounted(() => {
         </svg>
         <span class="btn-text">打开</span>
       </button>
+
+      <div class="recent-wrapper" ref="recentMenuRef" v-if="recentFiles.length > 0">
+        <button class="toolbar-btn" title="最近打开" @click.stop="toggleRecentMenu">
+          <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <circle cx="12" cy="12" r="10"/>
+            <polyline points="12,6 12,12 16,14"/>
+          </svg>
+          <span class="btn-text">最近</span>
+        </button>
+        <div v-if="showRecentMenu" class="recent-menu">
+          <button
+            v-for="path in recentFiles"
+            :key="path"
+            class="recent-option"
+            :title="path"
+            @click="handleSelectRecent(path)"
+          >{{ getFileName(path) }}</button>
+          <div class="recent-divider" />
+          <button class="recent-option recent-clear" @click="handleClearRecent">清除历史</button>
+        </div>
+      </div>
 
       <button class="toolbar-btn" title="打开文件夹 (Ctrl+Shift+O)" @click="emit('openFolder')">
         <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
@@ -378,6 +431,60 @@ onUnmounted(() => {
 
 .export-option:hover {
   background-color: var(--bg-hover);
+}
+
+.recent-wrapper {
+  position: relative;
+  --wails-draggable: no-drag;
+}
+
+.recent-menu {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  margin-top: 4px;
+  background-color: var(--bg-secondary);
+  border: 1px solid var(--border-color);
+  border-radius: 6px;
+  padding: 4px;
+  min-width: 180px;
+  max-width: 320px;
+  max-height: 300px;
+  overflow-y: auto;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+  z-index: 100;
+}
+
+.recent-option {
+  display: block;
+  width: 100%;
+  padding: 6px 12px;
+  background: none;
+  border: none;
+  border-radius: 4px;
+  color: var(--text-primary);
+  font-size: 0.8125rem;
+  text-align: left;
+  cursor: pointer;
+  transition: background-color 0.15s;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.recent-option:hover {
+  background-color: var(--bg-hover);
+}
+
+.recent-divider {
+  height: 1px;
+  background-color: var(--border-color);
+  margin: 4px 0;
+}
+
+.recent-clear {
+  color: var(--text-secondary);
+  font-size: 0.75rem;
 }
 
 @media (max-width: 600px) {

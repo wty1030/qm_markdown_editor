@@ -130,7 +130,7 @@ export function useFormat(editorRef: Ref<HTMLTextAreaElement | null>) {
     return newText
   }
 
-  const format = (type: FormatType, content: Ref<string>): string | undefined => {
+  const format = (type: FormatType): string | undefined => {
     switch (type) {
       case 'bold':
         return wrapSelection('**', '**')
@@ -173,19 +173,19 @@ export function useFormat(editorRef: Ref<HTMLTextAreaElement | null>) {
     }
   }
 
-  const insertLink = (data: LinkData, content: Ref<string>): string | undefined => {
+  const insertLink = (data: LinkData): string | undefined => {
     const text = data.text || '链接'
     const url = data.url || 'https://example.com'
     return insertAtCursor(`[${text}](${url})`)
   }
 
-  const insertImage = (data: ImageData, content: Ref<string>): string | undefined => {
+  const insertImage = (data: ImageData): string | undefined => {
     const alt = data.alt || '图片'
     const url = data.url || 'https://example.com/image.png'
     return insertAtCursor(`![${alt}](${url})`)
   }
 
-  const insertCodeBlock = (data: CodeBlockData, content: Ref<string>): string | undefined => {
+  const insertCodeBlock = (data: CodeBlockData): string | undefined => {
     const lang = data.language || ''
     const codeTemplate = lang
       ? `\`\`\`${lang}\n代码内容\n\`\`\`\n`
@@ -193,7 +193,7 @@ export function useFormat(editorRef: Ref<HTMLTextAreaElement | null>) {
     return insertAtCursor(codeTemplate)
   }
 
-  const insertColor = (data: ColorData, content: Ref<string>): string | undefined => {
+  const insertColor = (data: ColorData): string | undefined => {
     if (!editorRef.value) return
 
     const textarea = editorRef.value
@@ -218,7 +218,7 @@ export function useFormat(editorRef: Ref<HTMLTextAreaElement | null>) {
     return newText
   }
 
-  const insertTable = (data: TableData, content: Ref<string>): string | undefined => {
+  const insertTable = (data: TableData): string | undefined => {
     const rows = Math.max(1, data.rows || 3)
     const cols = Math.max(1, data.cols || 3)
 
@@ -251,7 +251,7 @@ export function useFormat(editorRef: Ref<HTMLTextAreaElement | null>) {
     return insertAtCursor(table)
   }
 
-  const insertMath = (data: MathData, content: Ref<string>): string | undefined => {
+  const insertMath = (data: MathData): string | undefined => {
     const delimiter = data.displayMode ? '$$' : '$'
     if (data.displayMode) {
       return insertAtCursor(`$$\n公式\n$$`)

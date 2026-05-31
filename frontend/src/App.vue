@@ -12,7 +12,8 @@ import { useFileOperations, type ExportFormat } from './composables/useFileOpera
 import { useFormat, type FormatType, type LinkData, type ImageData, type CodeBlockData, type ColorData, type TableData, type MathData } from './composables/useFormat'
 import { useUndoRedo } from './composables/useUndoRedo'
 import { useSettings, type ViewMode } from './composables/useSettings'
-import { GetStartupFile } from '../wailsjs/go/main/App'
+import { GetStartupFile, IsMarkdownFile } from '../wailsjs/go/main/App'
+import { OnFileDrop, OnFileDropOff } from '../wailsjs/runtime/runtime'
 
 type ToastType = 'success' | 'error'
 const TOAST_SUCCESS: ToastType = 'success'
@@ -51,7 +52,7 @@ setContentRef(markdownContent)
 const { handleEditorScroll, handlePreviewScroll } = useScrollSync()
 const { format, insertLink, insertImage, insertCodeBlock, insertColor, insertTable, insertMath } = useFormat(textareaRef)
 const { canUndo, canRedo, pushHistory, pushHistoryImmediate, undo, redo, reset } = useUndoRedo(markdownContent)
-const { viewMode, hasWallpaper, autoSaveEnabled, autoSaveInterval } = useSettings()
+const { viewMode, hasWallpaper, autoSaveEnabled, autoSaveInterval, addRecentFile, recentFiles, removeRecentFile } = useSettings()
 
 // 自动保存计时器
 const autoSaveRemaining = ref(0)
@@ -169,13 +170,29 @@ const handleSelectFile = async (path: string) => {
   }
 }
 
+const handleSelectRecentFile = async (path: string) => {
+  const result = await openFileByPath(path)
+  if (result.success && result.content !== undefined) {
+    markdownContent.value = result.content
+    reset(result.content)
+    showSidebar.value = true
+  } else if (result.error) {
+    showToast(result.error, TOAST_ERROR)
+    removeRecentFile(path)
+  }
+}
+
+const handleClearRecentFiles = () => {
+  recentFiles.value = []
+}
+
 // 大纲跳转：滚动编辑器到指定行
 const handleScrollToLine = (lineNumber: number) => {
   editorRef.value?.scrollToLine(lineNumber)
 }
 
 const handleFormat = (type: FormatType) => {
-  const newText = format(type, markdownContent)
+  const newText = format(type)
   if (newText !== undefined) {
     markdownContent.value = newText
     pushHistoryImmediate(newText)
@@ -183,7 +200,7 @@ const handleFormat = (type: FormatType) => {
 }
 
 const handleInsertLink = (data: LinkData) => {
-  const newText = insertLink(data, markdownContent)
+  const newText = insertLink(data)
   if (newText !== undefined) {
     markdownContent.value = newText
     pushHistoryImmediate(newText)
@@ -191,7 +208,7 @@ const handleInsertLink = (data: LinkData) => {
 }
 
 const handleInsertImage = (data: ImageData) => {
-  const newText = insertImage(data, markdownContent)
+  const newText = insertImage(data)
   if (newText !== undefined) {
     markdownContent.value = newText
     pushHistoryImmediate(newText)
@@ -199,7 +216,7 @@ const handleInsertImage = (data: ImageData) => {
 }
 
 const handleInsertCodeBlock = (data: CodeBlockData) => {
-  const newText = insertCodeBlock(data, markdownContent)
+  const newText = insertCodeBlock(data)
   if (newText !== undefined) {
     markdownContent.value = newText
     pushHistoryImmediate(newText)
@@ -207,7 +224,7 @@ const handleInsertCodeBlock = (data: CodeBlockData) => {
 }
 
 const handleInsertColor = (data: ColorData) => {
-  const newText = insertColor(data, markdownContent)
+  const newText = insertColor(data)
   if (newText !== undefined) {
     markdownContent.value = newText
     pushHistoryImmediate(newText)
@@ -215,7 +232,7 @@ const handleInsertColor = (data: ColorData) => {
 }
 
 const handleInsertTable = (data: TableData) => {
-  const newText = insertTable(data, markdownContent)
+  const newText = insertTable(data)
   if (newText !== undefined) {
     markdownContent.value = newText
     pushHistoryImmediate(newText)
@@ -223,7 +240,7 @@ const handleInsertTable = (data: TableData) => {
 }
 
 const handleInsertMath = (data: MathData) => {
-  const newText = insertMath(data, markdownContent)
+  const newText = insertMath(data)
   if (newText !== undefined) {
     markdownContent.value = newText
     pushHistoryImmediate(newText)
@@ -280,6 +297,25 @@ onMounted(async () => {
   document.addEventListener('keydown', handleKeydown)
   startAutoSaveTimer()
 
+  // 拖拽文件到窗口打开
+  OnFileDrop(async (_x, _y, paths) => {
+    if (paths.length === 0) return
+    const filePath = paths[0]
+    const isMd = await IsMarkdownFile(filePath)
+    if (!isMd) {
+      showToast('只支持打开 .md 文件', TOAST_ERROR)
+      return
+    }
+    const result = await openFileByPath(filePath)
+    if (result.success && result.content !== undefined) {
+      markdownContent.value = result.content
+      reset(result.content)
+      showSidebar.value = true
+    } else if (result.error) {
+      showToast(result.error, TOAST_ERROR)
+    }
+  }, true)
+
   // 检查启动参数（拖拽文件到 exe）
   const startupFile = await GetStartupFile()
   if (startupFile) {
@@ -296,11 +332,17 @@ onMounted(async () => {
 onUnmounted(() => {
   document.removeEventListener('keydown', handleKeydown)
   stopAutoSaveTimer()
+  OnFileDropOff()
 })
 
 // Track history
 watch(markdownContent, (newContent) => {
   pushHistory(newContent)
+})
+
+// 记录最近打开的文件
+watch(currentFile, (path) => {
+  if (path) addRecentFile(path)
 })
 </script>
 
@@ -316,12 +358,15 @@ watch(markdownContent, (newContent) => {
       :auto-save-active="canAutoSave"
       :auto-save-remaining="autoSaveRemaining"
       :auto-save-interval="autoSaveInterval"
+      :recent-files="recentFiles"
       @new-window="handleNewWindow"
       @open-file="handleOpenFile"
       @open-folder="handleOpenFolder"
       @save="handleSave"
       @export-as="handleExportAs"
       @open-settings="showSettings = true"
+      @select-recent-file="handleSelectRecentFile"
+      @clear-recent-files="handleClearRecentFiles"
     />
     <FormatBar
       @format="handleFormat"

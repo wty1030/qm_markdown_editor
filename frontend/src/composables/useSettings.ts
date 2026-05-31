@@ -105,6 +105,7 @@ const storedWallpaperAreas = useLocalStorage<WallpaperArea>('qmmd-wallpaper-area
 const storedOverlayOpacity = useLocalStorage<number>('qmmd-overlay-opacity', 85)
 const storedAutoSaveEnabled = useLocalStorage<boolean>('qmmd-auto-save-enabled', true)
 const storedAutoSaveInterval = useLocalStorage<number>('qmmd-auto-save-interval', 30)
+const storedRecentFiles = useLocalStorage<string[]>('qmmd-recent-files', [])
 
 const tabMode = ref<TabMode>(storedTabMode.value || 'tab')
 const viewMode = ref<ViewMode>(storedViewMode.value || 'split')
@@ -158,6 +159,16 @@ export function useSettings() {
   const setAutoSaveInterval = (interval: number) => {
     autoSaveInterval.value = interval
     storedAutoSaveInterval.value = interval
+  }
+
+  const addRecentFile = (path: string) => {
+    const list = storedRecentFiles.value.filter(p => p !== path)
+    list.unshift(path)
+    storedRecentFiles.value = list.slice(0, 10)
+  }
+
+  const removeRecentFile = (path: string) => {
+    storedRecentFiles.value = storedRecentFiles.value.filter(p => p !== path)
   }
 
   const getTabString = (): string => {
@@ -228,6 +239,9 @@ export function useSettings() {
     autoSaveEnabled,
     autoSaveInterval,
     setAutoSaveEnabled,
-    setAutoSaveInterval
+    setAutoSaveInterval,
+    recentFiles: storedRecentFiles,
+    addRecentFile,
+    removeRecentFile
   }
 }

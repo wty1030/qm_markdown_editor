@@ -25,6 +25,9 @@ const searchQuery = ref('')
 const searchCaseSensitive = ref(false)
 const searchCurrentIndex = ref(-1)
 const searchInputRef = ref<HTMLInputElement | null>(null)
+const replaceOpen = ref(false)
+const replaceQuery = ref('')
+const replaceInputRef = ref<HTMLInputElement | null>(null)
 
 // canvas 测量：测量整行文字总宽度，除以可用宽度得到视觉行数
 let measureCanvas: HTMLCanvasElement | null = null
@@ -353,9 +356,37 @@ const openSearch = () => {
 
 const closeSearch = () => {
   searchOpen.value = false
+  replaceOpen.value = false
   searchQuery.value = ''
+  replaceQuery.value = ''
   searchCurrentIndex.value = -1
   textareaRef.value?.focus()
+}
+
+const openSearchReplace = () => {
+  searchOpen.value = true
+  replaceOpen.value = true
+  nextTick(() => searchInputRef.value?.focus())
+}
+
+const replaceCurrent = () => {
+  if (searchMatches.value.length === 0 || searchCurrentIndex.value < 0) return
+  if (!replaceQuery.value && replaceQuery.value !== '') return
+
+  const match = searchMatches.value[searchCurrentIndex.value]
+  const textarea = textareaRef.value
+  if (!textarea) return
+
+  const text = textarea.value
+  const newText = text.substring(0, match.start) + replaceQuery.value + text.substring(match.end)
+  emit('update', newText)
+
+  nextTick(() => {
+    // Move cursor after the replacement
+    const cursorPos = match.start + replaceQuery.value.length
+    textarea.setSelectionRange(cursorPos, cursorPos)
+    textarea.focus()
+  })
 }
 
 const searchNext = () => {
@@ -374,6 +405,16 @@ const handleSearchKeydown = (e: KeyboardEvent) => {
   if (e.key === 'f' && (e.ctrlKey || e.metaKey)) {
     e.preventDefault()
     searchInputRef.value?.select()
+    return
+  }
+  if (e.key === 'h' && (e.ctrlKey || e.metaKey)) {
+    e.preventDefault()
+    if (!replaceOpen.value) {
+      replaceOpen.value = true
+      nextTick(() => replaceInputRef.value?.focus())
+    } else {
+      replaceInputRef.value?.focus()
+    }
     return
   }
   if (e.key === 'Enter') {
@@ -399,6 +440,12 @@ const handleKeyDown = (event: KeyboardEvent) => {
   if (event.key === 'f' && (event.ctrlKey || event.metaKey)) {
     event.preventDefault()
     openSearch()
+    return
+  }
+
+  if (event.key === 'h' && (event.ctrlKey || event.metaKey)) {
+    event.preventDefault()
+    openSearchReplace()
     return
   }
 
@@ -603,6 +650,18 @@ onUnmounted(() => {
   resizeObserver?.disconnect()
 })
 
+// 字数统计
+const charCount = computed(() => props.content.length)
+const lineCount = computed(() => props.content.split('\n').length)
+const wordCount = computed(() => {
+  const text = props.content.trim()
+  if (!text) return 0
+  // 中文按字符计数，英文按单词计数
+  const chineseChars = (text.match(/[\u4e00-\u9fff\u3400-\u4dbf]/g) || []).length
+  const englishWords = text.replace(/[\u4e00-\u9fff\u3400-\u4dbf]/g, ' ').trim().split(/\s+/).filter(w => w.length > 0).length
+  return chineseChars + englishWords
+})
+
 defineExpose({
   syncScrollFromPreview,
   textareaRef,
@@ -617,26 +676,39 @@ defineExpose({
     </div>
     <div class="editor-wrapper">
       <div class="search-bar" v-if="searchOpen">
-        <input
-          ref="searchInputRef"
-          v-model="searchQuery"
-          class="search-input"
-          placeholder="搜索..."
-          @keydown="handleSearchKeydown"
-          spellcheck="false"
-        />
-        <button
-          class="search-btn"
-          :class="{ active: searchCaseSensitive }"
-          @click="searchCaseSensitive = !searchCaseSensitive"
-          title="区分大小写"
-        >Aa</button>
-        <span class="search-count" v-if="searchQuery">
-          {{ searchMatches.length > 0 ? `${searchCurrentIndex + 1}/${searchMatches.length}` : '无结果' }}
-        </span>
-        <button class="search-btn" @click="searchPrev" title="上一个 (Shift+Enter)">▲</button>
-        <button class="search-btn" @click="searchNext" title="下一个 (Enter)">▼</button>
-        <button class="search-btn" @click="closeSearch" title="关闭 (Esc)">✕</button>
+        <div class="search-row">
+          <input
+            ref="searchInputRef"
+            v-model="searchQuery"
+            class="search-input"
+            placeholder="搜索..."
+            @keydown="handleSearchKeydown"
+            spellcheck="false"
+          />
+          <button
+            class="search-btn"
+            :class="{ active: searchCaseSensitive }"
+            @click="searchCaseSensitive = !searchCaseSensitive"
+            title="区分大小写"
+          >Aa</button>
+          <span class="search-count" v-if="searchQuery">
+            {{ searchMatches.length > 0 ? `${searchCurrentIndex + 1}/${searchMatches.length}` : '无结果' }}
+          </span>
+          <button class="search-btn" @click="searchPrev" title="上一个 (Shift+Enter)">▲</button>
+          <button class="search-btn" @click="searchNext" title="下一个 (Enter)">▼</button>
+          <button class="search-btn" @click="closeSearch" title="关闭 (Esc)">✕</button>
+        </div>
+        <div class="search-row" v-if="replaceOpen">
+          <input
+            ref="replaceInputRef"
+            v-model="replaceQuery"
+            class="search-input"
+            placeholder="替换..."
+            @keydown="handleSearchKeydown"
+            spellcheck="false"
+          />
+          <button class="search-btn replace-btn" @click="replaceCurrent" title="替换">替换</button>
+        </div>
       </div>
       <div class="editor-highlight" ref="highlightRef" v-html="highlightedContent"></div>
       <textarea
@@ -650,12 +722,18 @@ defineExpose({
         spellcheck="false"
       />
     </div>
+    <div class="status-bar">
+      <span>{{ lineCount }} 行</span>
+      <span>{{ charCount }} 字符</span>
+      <span>{{ wordCount }} 字</span>
+    </div>
   </div>
 </template>
 
 <style scoped>
 .editor-container {
   display: flex;
+  flex-direction: column;
   height: 100%;
   background-color: var(--bg-primary);
 }
@@ -683,6 +761,7 @@ defineExpose({
   flex: 1;
   position: relative;
   overflow: hidden;
+  min-height: 0;
 }
 
 .editor-highlight {
@@ -862,13 +941,19 @@ defineExpose({
   right: 8px;
   z-index: 10;
   display: flex;
-  align-items: center;
+  flex-direction: column;
   gap: 4px;
   padding: 4px 8px;
   background-color: var(--bg-secondary);
   border: 1px solid var(--border-color);
   border-radius: 4px;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+}
+
+.search-row {
+  display: flex;
+  align-items: center;
+  gap: 4px;
 }
 
 .search-input {
@@ -912,5 +997,22 @@ defineExpose({
   color: var(--text-secondary);
   min-width: 40px;
   text-align: center;
+}
+
+.replace-btn {
+  font-size: 11px;
+  padding: 2px 8px;
+  white-space: nowrap;
+}
+
+.status-bar {
+  display: flex;
+  gap: 1rem;
+  padding: 2px 12px;
+  font-size: 12px;
+  color: var(--text-secondary);
+  background-color: var(--bg-secondary);
+  border-top: 1px solid var(--border-color);
+  flex-shrink: 0;
 }
 </style>

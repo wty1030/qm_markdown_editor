@@ -10,9 +10,9 @@ Vue 组合式函数，封装业务逻辑和状态管理。App.vue 持有 ref 并
 | `useFormat.ts` | Markdown 格式化操作（加粗、斜体、链接、代码块、表格、颜色、数学公式插入） |
 | `useUndoRedo.ts` | 撤销/重做栈（历史记录管理） |
 | `useScrollSync.ts` | 编辑器 ↔ 预览区滚动同步（按比例映射 scrollTop） |
-| `useSettings.ts` | 用户设置（主题、视图模式、Tab 配置、壁纸），持久化到 localStorage |
+| `useSettings.ts` | 用户设置（主题、视图模式、Tab 配置、壁纸、自动保存），持久化到 localStorage |
+| `useLayoutState.ts` | 分栏布局状态（左右面板尺寸），持久化到 localStorage，SplitPaneLayout 使用 |
 | `useTheme.ts` | 主题应用（设置 data-theme 属性，CSS 变量自动切换） |
-| `useLayoutState.ts` | 布局状态（侧边栏可见性等） |
 
 ## 数据流
 
