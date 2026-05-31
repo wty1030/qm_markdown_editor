@@ -250,44 +250,67 @@ func (a *App) ExportToHTML(path, content, title string) FileResult {
 }
 
 // ExportToPDF exports markdown content to a real PDF file.
-// Uses Edge/Chrome headless --print-to-pdf, falls back to opening browser print dialog.
+// Uses Edge/Chrome headless --print-to-pdf. Returns error if PDF cannot be generated.
 func (a *App) ExportToPDF(path, content, title string) FileResult {
 	htmlContent := generateHTMLDocumentForPDF(content, title)
 
-	if edgePath := findEdgeOrChrome(); edgePath != "" {
-		// Write temp HTML in system temp dir
-		tmpDir := os.TempDir()
-		tmpHTML := filepath.Join(tmpDir, "qmmd_export_tmp.html")
-		if err := os.WriteFile(tmpHTML, []byte(htmlContent), 0644); err == nil {
-			defer os.Remove(tmpHTML)
-
-			absPath, _ := filepath.Abs(path)
-			userDataDir := filepath.Join(tmpDir, "qmmd_edge_pdf")
-			cmd := exec.Command(edgePath,
-				"--headless=new",
-				"--disable-gpu",
-				"--no-pdf-header-footer",
-				"--user-data-dir="+userDataDir,
-				"--print-to-pdf="+absPath,
-				"file:///"+filepath.ToSlash(tmpHTML),
-			)
-			cmd.Run()
-			os.RemoveAll(userDataDir)
-
-			if _, err := os.Stat(absPath); err == nil {
-				return FileResult{Success: true}
-			}
-		}
+	edgePath := findEdgeOrChrome()
+	if edgePath == "" {
+		return FileResult{Success: false, Error: "未安装 Edge 或 Chrome，无法导出 PDF"}
 	}
 
-	// Fallback: write HTML and open browser for manual print
-	htmlPath := strings.TrimSuffix(path, ".pdf") + ".html"
-	if err := os.WriteFile(htmlPath, []byte(htmlContent), 0644); err != nil {
-		return FileResult{Success: false, Error: fmt.Sprintf("无法生成 HTML 文件: %v", err)}
+	// Write temp HTML in system temp dir
+	tmpDir := os.TempDir()
+	tmpHTML := filepath.Join(tmpDir, "qmmd_export_tmp.html")
+	if err := os.WriteFile(tmpHTML, []byte(htmlContent), 0644); err != nil {
+		return FileResult{Success: false, Error: fmt.Sprintf("无法生成临时文件: %v", err)}
 	}
-	if err := openInBrowser(htmlPath); err != nil {
-		return FileResult{Success: false, Error: fmt.Sprintf("无法打开浏览器: %v", err)}
+	defer os.Remove(tmpHTML)
+
+	absPath, _ := filepath.Abs(path)
+
+	// Clean up any previous output at this path
+	os.Remove(absPath)
+
+	userDataDir := filepath.Join(tmpDir, "qmmd_edge_pdf")
+	cmd := exec.Command(edgePath,
+		"--headless=new",
+		"--disable-gpu",
+		"--no-pdf-header-footer",
+		"--user-data-dir="+userDataDir,
+		"--print-to-pdf="+absPath,
+		"file:///"+filepath.ToSlash(tmpHTML),
+	)
+	output, err := cmd.CombinedOutput()
+	os.RemoveAll(userDataDir)
+
+	if err != nil {
+		return FileResult{Success: false, Error: fmt.Sprintf("PDF 生成失败: %v (%s)", err, string(output))}
 	}
+
+	// Verify the PDF file was created and has valid content
+	info, err := os.Stat(absPath)
+	if err != nil {
+		return FileResult{Success: false, Error: "PDF 文件未生成"}
+	}
+	if info.Size() < 500 {
+		os.Remove(absPath)
+		return FileResult{Success: false, Error: fmt.Sprintf("PDF 文件过小 (%d bytes)，可能已损坏", info.Size())}
+	}
+
+	// Verify PDF magic header
+	f, err := os.Open(absPath)
+	if err != nil {
+		return FileResult{Success: false, Error: "无法打开生成的 PDF 文件"}
+	}
+	header := make([]byte, 5)
+	f.Read(header)
+	f.Close()
+	if string(header) != "%PDF-" {
+		os.Remove(absPath)
+		return FileResult{Success: false, Error: "生成的文件不是有效的 PDF 格式"}
+	}
+
 	return FileResult{Success: true}
 }
 
