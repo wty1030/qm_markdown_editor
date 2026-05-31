@@ -1,6 +1,8 @@
 package main
 
 import (
+	"os"
+	"path/filepath"
 	"strings"
 	"testing"
 )
@@ -67,4 +69,41 @@ func TestFindEdgeOrChrome(t *testing.T) {
 	} else {
 		t.Logf("Found browser: %s", path)
 	}
+}
+
+func TestExportToPDF_RealFile(t *testing.T) {
+	edgePath := findEdgeOrChrome()
+	if edgePath == "" {
+		t.Skip("No Edge/Chrome found, skipping PDF test")
+	}
+
+	app := &App{}
+	pdfPath := filepath.Join(os.TempDir(), "qmmd_test_export.pdf")
+	defer os.Remove(pdfPath)
+
+	content := `<h1>测试标题</h1><p>这是一段<strong>加粗</strong>文本。</p><ul><li>列表项1</li><li>列表项2</li></ul>`
+	result := app.ExportToPDF(pdfPath, content, "测试文档")
+
+	if !result.Success {
+		t.Fatalf("ExportToPDF failed: %s", result.Error)
+	}
+
+	info, err := os.Stat(pdfPath)
+	if err != nil {
+		t.Fatalf("PDF file not created: %v", err)
+	}
+	if info.Size() < 100 {
+		t.Fatalf("PDF file too small (%d bytes), likely corrupted", info.Size())
+	}
+
+	// Verify it starts with PDF magic bytes
+	f, _ := os.Open(pdfPath)
+	header := make([]byte, 5)
+	f.Read(header)
+	f.Close()
+	if string(header) != "%PDF-" {
+		t.Fatalf("File is not a valid PDF (header: %q)", string(header))
+	}
+
+	t.Logf("PDF exported successfully: %s (%d bytes)", pdfPath, info.Size())
 }

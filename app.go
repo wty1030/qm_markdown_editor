@@ -250,28 +250,30 @@ func (a *App) ExportToHTML(path, content, title string) FileResult {
 }
 
 // ExportToPDF exports markdown content to a real PDF file.
-// Tries Edge/Chrome headless --print-to-pdf first, falls back to HTML + browser print.
+// Uses Edge/Chrome headless --print-to-pdf, falls back to opening browser print dialog.
 func (a *App) ExportToPDF(path, content, title string) FileResult {
 	htmlContent := generateHTMLDocumentForPDF(content, title)
 
-	// Try Edge/Chrome headless to generate a real PDF
 	if edgePath := findEdgeOrChrome(); edgePath != "" {
-		// Write temp HTML file
-		tmpHTML := strings.TrimSuffix(path, ".pdf") + "_tmp.html"
-		if err := os.WriteFile(tmpHTML, []byte(htmlContent), 0644); err != nil {
-			return FileResult{Success: false, Error: fmt.Sprintf("无法生成临时文件: %v", err)}
-		}
-		defer os.Remove(tmpHTML)
+		// Write temp HTML in system temp dir
+		tmpDir := os.TempDir()
+		tmpHTML := filepath.Join(tmpDir, "qmmd_export_tmp.html")
+		if err := os.WriteFile(tmpHTML, []byte(htmlContent), 0644); err == nil {
+			defer os.Remove(tmpHTML)
 
-		absPath, _ := filepath.Abs(path)
-		cmd := exec.Command(edgePath,
-			"--headless",
-			"--disable-gpu",
-			"--no-pdf-header-footer",
-			"--print-to-pdf="+absPath,
-			tmpHTML,
-		)
-		if err := cmd.Run(); err == nil {
+			absPath, _ := filepath.Abs(path)
+			userDataDir := filepath.Join(tmpDir, "qmmd_edge_pdf")
+			cmd := exec.Command(edgePath,
+				"--headless=new",
+				"--disable-gpu",
+				"--no-pdf-header-footer",
+				"--user-data-dir="+userDataDir,
+				"--print-to-pdf="+absPath,
+				"file:///"+filepath.ToSlash(tmpHTML),
+			)
+			cmd.Run()
+			os.RemoveAll(userDataDir)
+
 			if _, err := os.Stat(absPath); err == nil {
 				return FileResult{Success: true}
 			}
