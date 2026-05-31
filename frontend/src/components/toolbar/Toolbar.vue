@@ -38,6 +38,23 @@ const emit = defineEmits<{
 const { viewMode, setViewMode, viewModeOptions } = useSettings()
 
 const isMaximised = ref(false)
+const showExportMenu = ref(false)
+const exportMenuRef = ref<HTMLElement | null>(null)
+
+const handleExport = (format: ExportFormat) => {
+  showExportMenu.value = false
+  emit('exportAs', format)
+}
+
+const toggleExportMenu = () => {
+  showExportMenu.value = !showExportMenu.value
+}
+
+const closeExportMenu = (e: MouseEvent) => {
+  if (exportMenuRef.value && !exportMenuRef.value.contains(e.target as Node)) {
+    showExportMenu.value = false
+  }
+}
 
 const fileName = computed(() => {
   if (!props.currentFile) return '未命名'
@@ -68,10 +85,12 @@ const handleClose = () => CloseWindow()
 onMounted(() => {
   checkMaximised()
   window.addEventListener('resize', checkMaximised)
+  document.addEventListener('click', closeExportMenu)
 })
 
 onUnmounted(() => {
   window.removeEventListener('resize', checkMaximised)
+  document.removeEventListener('click', closeExportMenu)
 })
 </script>
 
@@ -112,6 +131,22 @@ onUnmounted(() => {
         </svg>
         <span class="btn-text">保存</span>
       </button>
+
+      <div class="export-wrapper" ref="exportMenuRef">
+        <button class="toolbar-btn" title="导出" @click.stop="toggleExportMenu">
+          <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+            <polyline points="7,10 12,15 17,10"/>
+            <line x1="12" y1="15" x2="12" y2="3"/>
+          </svg>
+          <span class="btn-text">导出</span>
+        </button>
+        <div v-if="showExportMenu" class="export-menu">
+          <button class="export-option" @click="handleExport('html')">HTML</button>
+          <button class="export-option" @click="handleExport('pdf')">PDF</button>
+          <button class="export-option" @click="handleExport('md')">Markdown</button>
+        </div>
+      </div>
     </div>
 
     <div class="toolbar-center">
@@ -308,6 +343,43 @@ onUnmounted(() => {
 
 .win-btn:hover { background-color: var(--bg-hover); color: var(--text-primary); }
 .win-btn.close-btn:hover { background-color: #e81123; color: #ffffff; }
+
+.export-wrapper {
+  position: relative;
+  --wails-draggable: no-drag;
+}
+
+.export-menu {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  margin-top: 4px;
+  background-color: var(--bg-secondary);
+  border: 1px solid var(--border-color);
+  border-radius: 6px;
+  padding: 4px;
+  min-width: 100px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+  z-index: 100;
+}
+
+.export-option {
+  display: block;
+  width: 100%;
+  padding: 6px 12px;
+  background: none;
+  border: none;
+  border-radius: 4px;
+  color: var(--text-primary);
+  font-size: 0.8125rem;
+  text-align: left;
+  cursor: pointer;
+  transition: background-color 0.15s;
+}
+
+.export-option:hover {
+  background-color: var(--bg-hover);
+}
 
 @media (max-width: 600px) {
   .btn-text { display: none; }

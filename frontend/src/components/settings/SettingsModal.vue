@@ -6,6 +6,8 @@ import { useTheme, type ThemeName } from '../../composables/useTheme'
 const { tabMode, setTabMode, tabOptions, wallpaper, setWallpaper, wallpaperAreas, setWallpaperAreas, overlayOpacity, setOverlayOpacity, presetWallpapers, autoSaveEnabled, autoSaveInterval, setAutoSaveEnabled, setAutoSaveInterval } = useSettings()
 const { theme, setTheme, themeOptions } = useTheme()
 
+const version = __APP_VERSION__
+
 const props = defineProps<{
   visible: boolean
 }>()
@@ -279,7 +281,7 @@ const isCustomWallpaper = computed(() => {
               </div>
               <div class="app-info">
                 <span class="app-name">QMMD</span>
-                <span class="app-version">v1.2.0</span>
+                <span class="app-version">v{{ version }}</span>
               </div>
             </div>
             <p class="about-desc">轻量级 Markdown 编辑器</p>

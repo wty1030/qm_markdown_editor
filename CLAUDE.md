@@ -94,6 +94,17 @@ App.vue 是唯一的顶层状态容器，无 Vuex/Pinia，所有状态通过 ref
 - **文件树过滤**：只展示白名单内的可编辑文件后缀，过滤掉二进制文件
 - **预览区图片/图表点击**：点击图片或 Mermaid 图表打开 Lightbox 全屏预览，支持滚轮缩放和拖拽移动
 
+## 版本号管理
+
+升级版本时需要同时修改以下位置：
+
+| 文件 | 字段 |
+|------|------|
+| `wails.json` | `"version": "x.y.z"` |
+| `frontend/package.json` | `"version": "x.y.z"` |
+
+`SettingsModal.vue` 的版本号通过 Vite `define` 从 `package.json` 自动注入（`__APP_VERSION__`），无需手动修改。
+
 ## 详细文档
 
 - [frontend/src/components/](frontend/src/components/CLAUDE.md) — UI 组件结构和编辑器机制

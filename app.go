@@ -295,12 +295,12 @@ func (a *App) OpenNewWindow() error {
 
 // generateHTMLDocument creates a complete HTML document with embedded styles
 func generateHTMLDocument(content, title string) string {
-	return fmt.Sprintf(`<!DOCTYPE html>
+	return `<!DOCTYPE html>
 <html lang="zh-CN">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>%s</title>
+    <title>` + title + `</title>
     <style>
         :root {
             --bg-primary: #ffffff;
@@ -343,13 +343,13 @@ func generateHTMLDocument(content, title string) string {
         ul, ol { padding-left: 2rem; margin: 0 0 1rem; }
         li { margin: 0.25rem 0; }
 
-        table { border-collapse: collapse; width: 100%%; margin: 0 0 1rem; }
+        table { border-collapse: collapse; width: 100%; margin: 0 0 1rem; }
         th, td { border: 1px solid var(--border-color); padding: 0.5rem 0.75rem; }
         th { background-color: #f3f3f3; font-weight: 600; }
 
         hr { border: none; border-top: 1px solid var(--border-color); margin: 1rem 0; }
 
-        img { max-width: 100%%; height: auto; }
+        img { max-width: 100%; height: auto; }
 
         /* Syntax highlighting */
         .hljs { background: #f3f3f3; }
@@ -362,19 +362,19 @@ func generateHTMLDocument(content, title string) string {
     </style>
 </head>
 <body>
-%s
+` + content + `
 </body>
-</html>`, title, content)
+</html>`
 }
 
 // generateHTMLDocumentForPDF creates HTML optimized for PDF printing
 func generateHTMLDocumentForPDF(content, title string) string {
-	return fmt.Sprintf(`<!DOCTYPE html>
+	return `<!DOCTYPE html>
 <html lang="zh-CN">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>%s</title>
+    <title>` + title + `</title>
     <style>
         @media print {
             body { padding: 0; margin: 0; }
@@ -430,16 +430,16 @@ func generateHTMLDocumentForPDF(content, title string) string {
         pre code { background: none; padding: 0; }
         blockquote { border-left: 4px solid #5a8a4a; background-color: rgba(90, 138, 74, 0.1); padding: 0.5rem 1rem; margin: 0 0 1rem; color: var(--text-secondary); }
         ul, ol { padding-left: 2rem; margin: 0 0 1rem; }
-        table { border-collapse: collapse; width: 100%%; margin: 0 0 1rem; }
+        table { border-collapse: collapse; width: 100%; margin: 0 0 1rem; }
         th, td { border: 1px solid var(--border-color); padding: 0.5rem 0.75rem; }
         th { background-color: #f3f3f3; font-weight: 600; }
         hr { border: none; border-top: 1px solid var(--border-color); margin: 1rem 0; }
-        img { max-width: 100%%; height: auto; }
+        img { max-width: 100%; height: auto; }
     </style>
 </head>
 <body>
     <button class="print-button" onclick="window.print()">打印/保存为 PDF</button>
-%s
+` + content + `
     <script>
         // Auto-trigger print dialog after page loads
         window.onload = function() {
@@ -450,7 +450,7 @@ func generateHTMLDocumentForPDF(content, title string) string {
         };
     </script>
 </body>
-</html>`, title, content)
+</html>`
 }
 
 // openInBrowser opens a file in the default system browser
