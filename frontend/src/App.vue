@@ -145,7 +145,13 @@ const handleSave = async () => {
 }
 
 const handleExportAs = async (format: ExportFormat) => {
-  await saveFileAs(markdownContent.value, format)
+  const result = await saveFileAs(markdownContent.value, format)
+  if (result.success) {
+    const labels: Record<string, string> = { html: 'HTML', md: 'Markdown', pdf: 'PDF' }
+    showToast(`${labels[format] || format} 导出成功`)
+  } else if (result.error) {
+    showToast(result.error, TOAST_ERROR)
+  }
 }
 
 const handleOpenFolder = async () => {

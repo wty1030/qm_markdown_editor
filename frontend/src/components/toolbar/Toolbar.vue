@@ -143,7 +143,6 @@ onUnmounted(() => {
         </button>
         <div v-if="showExportMenu" class="export-menu">
           <button class="export-option" @click="handleExport('html')">HTML</button>
-          <button class="export-option" @click="handleExport('pdf')">PDF</button>
           <button class="export-option" @click="handleExport('md')">Markdown</button>
         </div>
       </div>
