@@ -650,18 +650,6 @@ onUnmounted(() => {
   resizeObserver?.disconnect()
 })
 
-// 字数统计
-const charCount = computed(() => props.content.length)
-const lineCount = computed(() => props.content.split('\n').length)
-const wordCount = computed(() => {
-  const text = props.content.trim()
-  if (!text) return 0
-  // 中文按字符计数，英文按单词计数
-  const chineseChars = (text.match(/[\u4e00-\u9fff\u3400-\u4dbf]/g) || []).length
-  const englishWords = text.replace(/[\u4e00-\u9fff\u3400-\u4dbf]/g, ' ').trim().split(/\s+/).filter(w => w.length > 0).length
-  return chineseChars + englishWords
-})
-
 defineExpose({
   syncScrollFromPreview,
   textareaRef,
@@ -722,11 +710,6 @@ defineExpose({
         spellcheck="false"
       />
     </div>
-    <div class="status-bar">
-      <span>{{ lineCount }} 行</span>
-      <span>{{ charCount }} 字符</span>
-      <span>{{ wordCount }} 字</span>
-    </div>
   </div>
 </template>
 
@@ -736,7 +719,6 @@ defineExpose({
   height: 100%;
   background-color: var(--bg-primary);
   position: relative;
-  padding-bottom: 24px;
 }
 
 .line-numbers {
@@ -1006,18 +988,4 @@ defineExpose({
   white-space: nowrap;
 }
 
-.status-bar {
-  position: absolute;
-  bottom: 0;
-  left: 0;
-  right: 0;
-  display: flex;
-  gap: 1rem;
-  padding: 2px 12px;
-  font-size: 12px;
-  color: var(--text-secondary);
-  background-color: var(--bg-secondary);
-  border-top: 1px solid var(--border-color);
-  z-index: 5;
-}
 </style>

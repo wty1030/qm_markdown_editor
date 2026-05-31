@@ -6,6 +6,7 @@ import SplitPaneLayout from './components/layout/SplitPaneLayout.vue'
 import Editor from './components/editor/Editor.vue'
 import Preview from './components/preview/Preview.vue'
 import Sidebar from './components/sidebar/Sidebar.vue'
+import StatusBar from './components/StatusBar.vue'
 import SettingsModal from './components/settings/SettingsModal.vue'
 import { useScrollSync } from './composables/useScrollSync'
 import { useFileOperations, type ExportFormat } from './composables/useFileOperations'
@@ -433,6 +434,8 @@ watch(currentFile, (path) => {
         </template>
       </div>
     </main>
+
+    <StatusBar :content="markdownContent" />
 
     <SettingsModal
       :visible="showSettings"
