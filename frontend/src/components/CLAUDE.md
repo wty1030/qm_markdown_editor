@@ -17,7 +17,7 @@ App.vue 是唯一的顶层状态容器，持有 `markdownContent` ref 并协调�
 
 | 目录 | 职责 | 关键文件 |
 |------|------|----------|
-| `toolbar/` | 顶部工具栏（文件操作、视图切换、窗口控制）和格式栏（Markdown 格式化按钮、数学公式按钮） | `Toolbar.vue`, `FormatBar.vue` |
+| `toolbar/` | 顶部工具栏（文件操作、导出下拉菜单[HTML/Markdown]、视图切换、窗口控制）和格式栏（Markdown 格式化按钮、数学公式按钮） | `Toolbar.vue`, `FormatBar.vue` |
 | `editor/` | Markdown 编辑器（textarea + 语法高亮叠层），Enter 键自动续行，Ctrl+F 搜索（区分大小写、全部高亮、上下导航） | `Editor.vue` |
 | `preview/` | HTML 预览（marked 渲染 + highlight.js + mermaid + katex），图片/Mermaid 图表点击放大预览 | `Preview.vue`, `Lightbox.vue` |
 | `sidebar/` | 侧边栏（文件树 + 大纲切换标签） | `Sidebar.vue`, `FileTree.vue` |
@@ -39,6 +39,18 @@ App.vue 是唯一的顶层状态容器，持有 `markdownContent` ref 并协调�
 2. **highlight div**：绝对定位在 textarea 下方，用 `<span>` 标注语法颜色，通过 `transform: translate()` 同步滚动
 
 两者必须保持同宽同折行，否则会错位。关键 CSS：`word-break: break-all` + `scrollbar-width: none`。
+
+### 代码块语法高亮（processCodeLine）
+
+代码块（\`\`\` 围栏内）使用独立的 `processCodeLine` 单 pass tokenizer，不走 `processLine`：
+
+- **注释**：`//`、`/* */`、`#`（排除 shebang 和预处理指令）
+- **字符串**：`"..."`、`'...'`、`` `...` ``，支持转义
+- **数字**：整数和浮点数
+- **关键字**：`CODE_KEYWORDS` Set（function、return、if、const、class 等，覆盖 JS/TS/Python/Go/Java）
+- **函数调用**：标识符后紧跟 `(`
+- **类型**：大写字母开头的标识符
+- CSS 类：`syntax-comment`、`syntax-string`、`syntax-number`、`syntax-keyword`、`syntax-function`、`syntax-type`
 
 ## 编辑器 Enter 键续行（Editor.vue）
 

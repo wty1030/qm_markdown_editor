@@ -6,7 +6,7 @@ Vue 组合式函数，封装业务逻辑和状态管理。App.vue 持有 ref 并
 
 | 文件 | 职责 |
 |------|------|
-| `useFileOperations.ts` | 文件打开/保存/导出、目录浏览、文件树状态。调用 Wails Go 后端函数 |
+| `useFileOperations.ts` | 文件打开/保存/导出（HTML/Markdown）、目录浏览、文件树状态。导出 HTML 时先渲染 Markdown+KaTeX，再调 Go 后端。导出类型 `ExportFormat = 'md' \| 'html'`。导出结果由 App.vue 通过 toast 通知用户 |
 | `useFormat.ts` | Markdown 格式化操作（加粗、斜体、链接、代码块、表格、颜色、数学公式插入） |
 | `useUndoRedo.ts` | 撤销/重做栈（历史记录管理） |
 | `useScrollSync.ts` | 编辑器 ↔ 预览区滚动同步（按比例映射 scrollTop） |
@@ -24,6 +24,8 @@ App.vue (markdownContent ref)
 ```
 
 `useFileOperations` 是核心 composable，管理 `currentFile`、`fileTree`、`currentDirectory` 三个关键响应式状态。
+
+App.vue 的 `handleExportAs` 和 `handleSave` 在操作完成后通过 `showToast()` 显示成功/失败通知（绿色/红色）。
 
 ## 格式化（useFormat.ts）
 

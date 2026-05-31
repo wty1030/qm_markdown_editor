@@ -35,7 +35,8 @@ qmmd/
 │       ├── components/   # UI 组件
 │       ├── composables/  # Vue 组合式函数（状态、业务逻辑）
 │       ├── utils/        # 工具函数（Markdown 解析器、KaTeX 数学公式）
-│       └── styles/       # CSS 变量（主题、壁纸、全局 token）
+│       ├── styles/       # CSS 变量（主题、壁纸、全局 token）
+│       └── env.d.ts      # TypeScript 全局类型声明（__APP_VERSION__）
 └── build/            # 构建输出和资源
 ```
 
@@ -50,7 +51,9 @@ Go 后端通过 Wails 绑定暴露为 JS 函数（自动生成在 `frontend/wail
 | `ReadFile(path)` / `WriteFile(path, content)` / `SaveFile(content)` | 文件读写 |
 | `ListDirectory(path)` / `FileExists(path)` / `CreateFile(path)` | 文件系统操作 |
 | `OpenFileDialog()` / `SaveFileDialog(default, filter)` / `OpenDirectoryDialog()` | 系统对话框 |
-| `ExportToHTML(path, content, title)` / `ExportToPDF(path, content, title)` | 导出 |
+| `ExportToHTML(path, content, title)` | 导出 HTML（字符串拼接，非 fmt.Sprintf） |
+| `ExportToPDF(path, content, title)` | 导出 PDF（Edge/Chrome headless --print-to-pdf） |
+| `GetCurrentFile()` / `IsMarkdownFile(path)` / `NewFile()` | 文件状态查询 |
 | `OpenInBrowser(url)` / `OpenNewWindow()` | 外部操作 |
 | `GetStartupFile()` | 获取启动参数文件路径（拖拽到 exe），只消费一次 |
 | `MinimiseWindow()` / `ToggleMaximiseWindow()` / `CloseWindow()` | 窗口控制 |
@@ -81,6 +84,8 @@ App.vue 是唯一的顶层状态容器，无 Vuex/Pinia，所有状态通过 ref
 
 裸 URL 自动高亮排除全角标点（`）`、`，`、`。` 等），防止中文标点后的文字被当作 URL 一部分。
 
+代码块（\`\`\` 围栏内）使用独立的 `processCodeLine` 单 pass tokenizer，高亮注释、字符串、数字、关键字、函数调用和类型名。`highlightedContent` computed 通过 `inCodeBlock` 状态切换两个 processor。
+
 ### 预览区自定义 renderer（Preview.vue）
 
 `renderer.link` 自动截断 href 中的全角标点。对于 autolink（`token.text === token.href`），链接文本也截断，多余文字作为普通文本显示在链接后面。
@@ -93,6 +98,7 @@ App.vue 是唯一的顶层状态容器，无 Vuex/Pinia，所有状态通过 ref
 - **编辑器高亮层**：textarea 和 highlight div 必须同宽同折行（无滚动条占宽 + `word-break: break-all`）
 - **文件树过滤**：只展示白名单内的可编辑文件后缀，过滤掉二进制文件
 - **预览区图片/图表点击**：点击图片或 Mermaid 图表打开 Lightbox 全屏预览，支持滚轮缩放和拖拽移动
+- **导出下拉菜单**：Toolbar 的导出按钮提供 HTML 和 Markdown 两种格式。导出结果通过 toast 通知（成功绿色、失败红色）
 
 ## 版本号管理
 
