@@ -249,33 +249,61 @@ func (a *App) ExportToHTML(path, content, title string) FileResult {
 	}
 }
 
-// ExportToPDF exports markdown content to PDF using system browser print
-// This creates an HTML file and opens it in the browser for PDF printing
+// ExportToPDF exports markdown content to a real PDF file.
+// Tries Edge/Chrome headless --print-to-pdf first, falls back to HTML + browser print.
 func (a *App) ExportToPDF(path, content, title string) FileResult {
-	// First generate HTML
-	htmlPath := strings.TrimSuffix(path, ".pdf") + "_print.html"
 	htmlContent := generateHTMLDocumentForPDF(content, title)
 
-	err := os.WriteFile(htmlPath, []byte(htmlContent), 0644)
-	if err != nil {
-		return FileResult{
-			Success: false,
-			Error:   fmt.Sprintf("无法生成打印文件: %v", err),
+	// Try Edge/Chrome headless to generate a real PDF
+	if edgePath := findEdgeOrChrome(); edgePath != "" {
+		// Write temp HTML file
+		tmpHTML := strings.TrimSuffix(path, ".pdf") + "_tmp.html"
+		if err := os.WriteFile(tmpHTML, []byte(htmlContent), 0644); err != nil {
+			return FileResult{Success: false, Error: fmt.Sprintf("无法生成临时文件: %v", err)}
+		}
+		defer os.Remove(tmpHTML)
+
+		absPath, _ := filepath.Abs(path)
+		cmd := exec.Command(edgePath,
+			"--headless",
+			"--disable-gpu",
+			"--no-pdf-header-footer",
+			"--print-to-pdf="+absPath,
+			tmpHTML,
+		)
+		if err := cmd.Run(); err == nil {
+			if _, err := os.Stat(absPath); err == nil {
+				return FileResult{Success: true}
+			}
 		}
 	}
 
-	// Open in default browser for printing
-	err = openInBrowser(htmlPath)
-	if err != nil {
-		return FileResult{
-			Success: false,
-			Error:   fmt.Sprintf("无法打开浏览器: %v", err),
+	// Fallback: write HTML and open browser for manual print
+	htmlPath := strings.TrimSuffix(path, ".pdf") + ".html"
+	if err := os.WriteFile(htmlPath, []byte(htmlContent), 0644); err != nil {
+		return FileResult{Success: false, Error: fmt.Sprintf("无法生成 HTML 文件: %v", err)}
+	}
+	if err := openInBrowser(htmlPath); err != nil {
+		return FileResult{Success: false, Error: fmt.Sprintf("无法打开浏览器: %v", err)}
+	}
+	return FileResult{Success: true}
+}
+
+// findEdgeOrChrome looks for Edge or Chrome executable on Windows
+func findEdgeOrChrome() string {
+	candidates := []string{
+		filepath.Join(os.Getenv("ProgramFiles(x86)"), "Microsoft", "Edge", "Application", "msedge.exe"),
+		filepath.Join(os.Getenv("ProgramFiles"), "Microsoft", "Edge", "Application", "msedge.exe"),
+		filepath.Join(os.Getenv("LocalAppData"), "Google", "Chrome", "Application", "chrome.exe"),
+		filepath.Join(os.Getenv("ProgramFiles"), "Google", "Chrome", "Application", "chrome.exe"),
+		filepath.Join(os.Getenv("ProgramFiles(x86)"), "Google", "Chrome", "Application", "chrome.exe"),
+	}
+	for _, p := range candidates {
+		if _, err := os.Stat(p); err == nil {
+			return p
 		}
 	}
-
-	return FileResult{
-		Success: true,
-	}
+	return ""
 }
 
 // OpenNewWindow opens a new instance of the application

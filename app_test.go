@@ -58,3 +58,13 @@ func TestGenerateHTMLDocument_BasicStructure(t *testing.T) {
 		t.Error("HTML should contain body content")
 	}
 }
+
+func TestFindEdgeOrChrome(t *testing.T) {
+	path := findEdgeOrChrome()
+	// On most Windows machines, Edge should be found
+	if path == "" {
+		t.Log("No Edge/Chrome found (OK if not installed)")
+	} else {
+		t.Logf("Found browser: %s", path)
+	}
+}
